@@ -4,9 +4,28 @@ Figure generation code for: **CEACAM5/6 as immunotherapy resistance markers in g
 
 ## Environment Setup
 
+### Main environment (119/120 scripts)
+
 ```bash
 conda env create -f environment.yml
 conda activate stad_ceacam
+```
+
+### Milo environment (Figure 2F only)
+
+The Milo differential abundance analysis requires a separate environment with `pertpy` and R dependencies:
+
+```bash
+conda create -n pertpy_milo -c conda-forge python=3.11 -y
+conda run -n pertpy_milo pip install pertpy scanpy matplotlib seaborn filelock
+conda install -n pertpy_milo -c conda-forge -c bioconda rpy2 r-base bioconductor-edger bioconductor-limma r-statmod -y
+```
+
+### BayesPrism (R, preparation scripts only)
+
+```bash
+conda create -n r_bayesprism -c conda-forge r-base r-data.table r-devtools -y
+conda run -n r_bayesprism R -e 'if (!require("BiocManager")) install.packages("BiocManager"); BiocManager::install(c("NMF","scran")); devtools::install_github("Danko-Lab/BayesPrism/BayesPrism")'
 ```
 
 ## Usage
