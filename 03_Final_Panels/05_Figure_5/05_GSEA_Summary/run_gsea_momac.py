@@ -60,8 +60,10 @@ def main():
         'Term': 'Pathway', 'NOM p-val': 'NOM_pval', 'FDR q-val': 'FDR_qval',
     })
     res_df['CellType'] = 'MoMac'
+    gsea_data_dir = BASE_DIR / 'gsea_data'
+    gsea_data_dir.mkdir(parents=True, exist_ok=True)
     res_df[['CellType', 'Pathway', 'NES', 'NOM_pval', 'FDR_qval']].to_csv(
-        BASE_DIR / 'gsea_data' / 'gsea_momac.csv', index=False)
+        gsea_data_dir / 'gsea_momac.csv', index=False)
 
     # Print all Hallmark pathways sorted by NES
     res_df['NES'] = res_df['NES'].astype(float)

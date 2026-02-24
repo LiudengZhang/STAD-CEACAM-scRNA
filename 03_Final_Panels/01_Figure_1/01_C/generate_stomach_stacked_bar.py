@@ -14,7 +14,7 @@ import sys
 
 # Central config
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
-from paths import FULL_DATASET_H5AD, ST1_CSV
+from paths import FULL_DATASET_H5AD
 
 # Set2 + Set3 palette (12 major cell types, consistent across Fig 1B & 1C)
 CELL_TYPE_COLORS = {
@@ -67,17 +67,12 @@ adata_stomach.obs['major_cell_type_merged'] = adata_stomach.obs['major_cell_type
 proportions = adata_stomach.obs.groupby(['sample', 'major_cell_type_merged'], observed=True).size().unstack(fill_value=0)
 proportions = proportions.div(proportions.sum(axis=1), axis=0)
 
-# Build Original Sample ID → Sample ID mapping from ST1
-st1 = pd.read_csv(ST1_CSV)
-st1_stomach = st1[st1['Anatomical site'] == 'Stomach']
-orig_to_sample = dict(zip(st1_stomach['Original Sample ID'], st1_stomach['Sample']))
-
 # Sort samples alphabetically (no group splitting)
 sample_order = sorted(proportions.index.tolist())
 proportions = proportions.reindex(sample_order)
 
-# Map to ST1 Sample IDs for x-axis labels
-x_labels = [orig_to_sample.get(s, s) for s in sample_order]
+# Use sample IDs directly as x-axis labels (match ST1 'Sample' column)
+x_labels = sample_order
 
 # Define cell type order (most abundant first)
 cell_type_order = proportions.mean().sort_values(ascending=False).index.tolist()
