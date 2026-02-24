@@ -1,0 +1,50 @@
+# Example configuration — update paths before use
+# ============================================================================
+# B_cells MAST Analysis Configuration - Post-Treatment
+# ============================================================================
+
+data:
+  adata_path: "<path_to_h5ad>/B_cells.h5ad"
+  output_dir: "<output_directory>"
+  cell_type_name: "B_cells"
+  single_cell_type_mode: true
+
+analysis:
+  cell_type_level: "major"
+  methods:
+    - "mast"
+  comparisons:
+    - "03_stomach_post_response"
+  mast_parameters:
+    max_cells_mast: 15000
+    min_pct_expressed: 0.1
+    use_patient_effects: true
+    model_formula: "~ condition + sample_id + cngeneson"
+  logfc_threshold: 0.25
+  pval_threshold: 0.05
+  min_cells_per_group: 10
+
+pathway_enrichment:
+  enabled: true
+  run_directional: true
+  pval_threshold: 0.05
+  direction_threshold: 0.25
+  min_genes: 5
+  enrichr_cutoff: 0.05
+  gene_sets:
+    - "MSigDB_Hallmark_2020"
+  run_gsea: false
+  plot_top_n: 15
+  plot_format: "png"
+  plot_dpi: 300
+
+visualization:
+  generate_plots: true
+  plot_format: "png"
+  plot_dpi: 300
+
+metadata:
+  analysis_name: "B_cells Post-Treatment Response Analysis"
+  description: "MAST analysis of B_cells - post-treatment comparison"
+  model: "MAST hurdle model with patient effects"
+  date_created: "2025-10-06"

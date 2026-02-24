@@ -1,0 +1,57 @@
+name: stad_ceacam
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  # Core scientific stack
+  - python=3.10
+  - numpy
+  - pandas
+  - scipy
+  - matplotlib
+  - seaborn
+
+  # Single-cell analysis
+  - scanpy
+  - anndata
+  - mudata
+  - loompy
+
+  # Trajectory & deconvolution
+  - cellrank
+  - pertpy
+
+  # SCENIC pipeline (pySCENIC + dependencies)
+  - pyscenic
+  - arboreto
+  - ctxcore
+
+  # GSEA
+  - gseapy
+
+  # Survival analysis
+  - lifelines
+
+  # Graph / network
+  - networkx
+
+  # Image analysis (IHC quantification)
+  - scikit-image
+  - pillow
+
+  # SVG/PDF figure assembly
+  - lxml
+  - cairosvg
+  - cairocffi
+
+  # YAML config parsing
+  - pyyaml
+
+  # Plotting helpers
+  - adjusttext
+
+  # R dependencies (BayesPrism deconvolution)
+  # Install separately: conda create -n r_bayesprism r-base r-data.table
+  # Then install BayesPrism from GitHub:
+  #   devtools::install_github("Danko-Lab/BayesPrism/BayesPrism")
