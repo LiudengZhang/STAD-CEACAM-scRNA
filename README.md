@@ -21,7 +21,6 @@
 | Differential abundance | **Milo** (`pertpy`) |
 | Gene regulatory networks | **SCENIC** (cisTarget motifs v10nr) |
 | Deconvolution of bulk RNA-seq | **BayesPrism** |
-| Spatial transcriptomics | (per-figure scripts in `02_Preparation_for_Panels/`) |
 | Reproducibility | Conda environments pinned per analysis |
 
 ## Repository layout
@@ -39,16 +38,16 @@ environment.yml              # Main conda env (119/120 scripts)
 
 ## Environment Setup
 
-### Main environment (119/120 scripts)
+### Main environment
 
 ```bash
 conda env create -f environment.yml
 conda activate stad_ceacam
 ```
 
-### Milo environment (Figure 2F only)
+### Milo environment (for Figure 2F)
 
-The Milo differential abundance analysis requires a separate environment with `pertpy` and R dependencies:
+The Milo differential abundance analysis uses a dedicated environment with `pertpy` and R dependencies:
 
 ```bash
 conda create -n pertpy_milo -c conda-forge python=3.11 -y
@@ -56,9 +55,9 @@ conda run -n pertpy_milo pip install pertpy scanpy matplotlib seaborn filelock
 conda install -n pertpy_milo -c conda-forge -c bioconda rpy2 r-base bioconductor-edger bioconductor-limma r-statmod -y
 ```
 
-### BayesPrism (R, needed for `step2_run_bayesprism.R`)
+### BayesPrism (R, for the deconvolution step)
 
-The BayesPrism deconvolution pipeline lives in `02_Preparation_for_Panels/BayesPrism/`. Steps 1, 1b, and 3 (Python — reference prep, gene reduction, plotting) run in the main `stad_ceacam` env. Step 2 (R — the BayesPrism call itself) needs a dedicated R env:
+The BayesPrism pipeline in `02_Preparation_for_Panels/BayesPrism/` runs Python prep and plotting in the main env, with a dedicated R env for the BayesPrism call itself:
 
 ```bash
 conda create -n r_bayesprism -c conda-forge r-base r-data.table r-devtools -y
