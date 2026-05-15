@@ -3,8 +3,7 @@
 > Figure-generation code for the bioRxiv preprint:
 >
 > **CEACAM5/6⁺ Tumor Cells and IL-1β⁺ Macrophages Drive Resistance to Chemo-immunotherapy in Gastric Cancer**
-> Chen J, **Zhang L**, Luo Y, *et al.* (Liang H, senior author). bioRxiv 2026.03.05.708917 (2026).
-> [📄 Preprint](https://www.biorxiv.org/content/10.64898/2026.03.05.708917v1) · [DOI](https://doi.org/10.64898/2026.03.05.708917)
+> bioRxiv 2026.03.05.708917 (2026) — [Preprint](https://www.biorxiv.org/content/10.64898/2026.03.05.708917v1) · [DOI](https://doi.org/10.64898/2026.03.05.708917)
 
 ## Study at a glance
 
@@ -109,12 +108,6 @@ Input data (h5ad files, spatial data, external datasets) are available upon requ
   url     = {https://www.biorxiv.org/content/10.64898/2026.03.05.708917v1}
 }
 ```
-
-## Affiliations
-
-- Zhejiang University School of Medicine — Second Affiliated Hospital (clinical, gastrointestinal surgery)
-- The University of Texas MD Anderson Cancer Center — Bioinformatics & Computational Biology
-- Baylor College of Medicine — Quantitative and Computational Biosciences
 
 ## License
 
