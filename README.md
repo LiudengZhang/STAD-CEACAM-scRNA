@@ -56,7 +56,9 @@ conda run -n pertpy_milo pip install pertpy scanpy matplotlib seaborn filelock
 conda install -n pertpy_milo -c conda-forge -c bioconda rpy2 r-base bioconductor-edger bioconductor-limma r-statmod -y
 ```
 
-### BayesPrism (R, preparation scripts only)
+### BayesPrism (R, needed for `step2_run_bayesprism.R`)
+
+The BayesPrism deconvolution pipeline lives in `02_Preparation_for_Panels/BayesPrism/`. Steps 1, 1b, and 3 (Python — reference prep, gene reduction, plotting) run in the main `stad_ceacam` env. Step 2 (R — the BayesPrism call itself) needs a dedicated R env:
 
 ```bash
 conda create -n r_bayesprism -c conda-forge r-base r-data.table r-devtools -y
