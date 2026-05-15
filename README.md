@@ -1,6 +1,42 @@
 # STAD-CEACAM-scRNA
 
-Figure generation code for: **CEACAM5/6 as immunotherapy resistance markers in gastric cancer** (single-cell RNA-seq study).
+> Figure-generation code for the bioRxiv preprint:
+>
+> **CEACAM5/6⁺ Tumor Cells and IL-1β⁺ Macrophages Drive Resistance to Chemo-immunotherapy in Gastric Cancer**
+> Chen J, **Zhang L**, Luo Y, *et al.* (Liang H, senior author). bioRxiv 2026.03.05.708917 (2026).
+> [📄 Preprint](https://www.biorxiv.org/content/10.64898/2026.03.05.708917v1) · [DOI](https://doi.org/10.64898/2026.03.05.708917)
+
+## Study at a glance
+
+- **542,121 cells** from **35 patients** with advanced gastric cancer treated with anti–PD-1 + chemotherapy
+- **Multi-modal**: single-cell RNA-seq + spatial transcriptomics + immunohistochemistry + bulk RNA-seq
+- **Two resistance programs identified**:
+  - *Intrinsic* — CEACAM5/6⁺ tumor cells form immune-excluded niches with macrophage recruitment & CD8⁺ T-cell exhaustion
+  - *Acquired* — IL-1β⁺ macrophages drive NF-κB activation, PD-L1 upregulation, and EMT
+
+## Methods used
+
+| Domain | Tools |
+|---|---|
+| scRNA-seq core | Scanpy, AnnData |
+| Differential abundance | **Milo** (`pertpy`) |
+| Gene regulatory networks | **SCENIC** (cisTarget motifs v10nr) |
+| Deconvolution of bulk RNA-seq | **BayesPrism** |
+| Spatial transcriptomics | (per-figure scripts in `02_Preparation_for_Panels/`) |
+| Reproducibility | Conda environments pinned per analysis |
+
+## Repository layout
+
+```
+00_Config/                   # Shared config (paths, colors, gene panels)
+01_Raw_Inputs/               # Documented input expectations (h5ad, spatial, bulk)
+02_Preparation_for_Panels/   # Per-method preprocessing (SCENIC, Milo, BayesPrism, ST)
+03_Final_Panels/             # Figure assembly scripts — one folder per main figure
+    ├── 01_Figure_1 ... 05_Figure_5
+    ├── 10_Supplementaries
+    └── _run_all_panels.sh   # Orchestrator
+environment.yml              # Main conda env (119/120 scripts)
+```
 
 ## Environment Setup
 
@@ -59,7 +95,26 @@ Input data (h5ad files, spatial data, external datasets) are available upon requ
 
 ## Citation
 
-*Manuscript in preparation.*
+```bibtex
+@article{chen2026ceacam,
+  title   = {CEACAM5/6+ Tumor Cells and IL-1β+ Macrophages Drive Resistance to Chemo-immunotherapy in Gastric Cancer},
+  author  = {Chen, Jian and Zhang, Liudeng and Luo, Yikai and Han, Xiaying and Kang, Muxing
+             and Chen, Jing and Liu, Wei and Xun, Zhenzhen and Chen, Guofeng and Chen, Ke
+             and Xu, Shenbin and Zhang, Chaoyang and Wu, Zhiwei and Wu, Wenxuan
+             and Hao, Zhixing and Han, Yaxuan and Lin, Qiaowei and Xu, Yewei
+             and Wang, Lie and Liang, Han},
+  journal = {bioRxiv},
+  year    = {2026},
+  doi     = {10.64898/2026.03.05.708917},
+  url     = {https://www.biorxiv.org/content/10.64898/2026.03.05.708917v1}
+}
+```
+
+## Affiliations
+
+- Zhejiang University School of Medicine — Second Affiliated Hospital (clinical, gastrointestinal surgery)
+- The University of Texas MD Anderson Cancer Center — Bioinformatics & Computational Biology
+- Baylor College of Medicine — Quantitative and Computational Biosciences
 
 ## License
 
