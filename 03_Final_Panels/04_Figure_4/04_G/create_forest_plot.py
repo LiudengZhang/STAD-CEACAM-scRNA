@@ -8,6 +8,7 @@ Includes x-axis label "Fold Change (R/NR)"
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
 from pathlib import Path
 import sys
 

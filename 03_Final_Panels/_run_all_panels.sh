@@ -14,7 +14,7 @@
 
 set -euo pipefail
 
-CONDA_CMD="conda run -n stad_ceacam python"
+CONDA_CMD="conda run -n ${STAD_CONDA_ENV:-stad_ceacam} python"
 BASE="$(cd "$(dirname "$0")" && pwd)"
 PASS=0
 FAIL=0
@@ -24,7 +24,8 @@ run_script() {
     local script="$1"
     if [ -f "$script" ]; then
         echo ">>> Running: $script"
-        if (cd "$(dirname "$script")" && $CONDA_CMD "$(basename "$script")" 2>&1); then
+        local env="${STAD_CONDA_ENV:-stad_ceacam}"
+        if (cd "$(dirname "$script")" && conda run -n "$env" python "$(basename "$script")" 2>&1); then
             PASS=$((PASS + 1))
         else
             FAIL=$((FAIL + 1))
@@ -74,7 +75,9 @@ run_fig2() {
     run_script "$BASE/02_Figure_2/02_C2/create_cnv_score_umap.py"
     run_script "$BASE/02_Figure_2/02_D/create_ceacam_correlation.py"
     run_script "$BASE/02_Figure_2/02_E/create_c2_proportion_boxplot.py"
-    run_script "$BASE/02_Figure_2/02_F/create_epithelial_milo_pre_rvsnr.py"
+    # Milo needs its own environment; see the Dockerfile.
+    STAD_CONDA_ENV="${STAD_MILO_ENV:-pertpy_milo}" \
+        run_script "$BASE/02_Figure_2/02_F/create_epithelial_milo_pre_rvsnr.py"
     run_script "$BASE/02_Figure_2/02_G/create_mp45_horizontal_boxplot.py"
     run_script "$BASE/02_Figure_2/02_H/create_mp45_gene_dotplot.py"
     run_script "$BASE/02_Figure_2/02_I/create_checkpoint_dotplot_flipped.py"
@@ -215,6 +218,30 @@ run_supp() {
 }
 
 
+# --- revision target ---
+# Added for CIR-26-0753-ET: the analyses and supplementary figures produced in
+# response to the reviewers. Scripts whose name starts with an underscore are
+# build tools rather than reproduction steps and are skipped.
+run_revision() {
+    for s in "$BASE"/../04_Revision_Analyses/*/scripts/*.py; do
+        [ -e "$s" ] || continue
+        case "$(basename "$s")" in _*) continue ;; esac
+        # CellTypist and pyDESeq2 require numpy>=2; the main environment is
+        # pinned to numpy 1.23.5, so they run in their own. See the Dockerfile.
+        case "$(basename "$s")" in
+            celltypist_annotation.py)
+                STAD_CONDA_ENV="${STAD_NUMPY2_ENV:-stad_numpy2}" run_script "$s" ;;
+            *)  run_script "$s" ;;
+        esac
+    done
+    for s in "$BASE"/Supplementary_New/*/*/create_*.py; do
+        [ -e "$s" ] || continue
+        run_script "$s"
+    done
+    run_script "$BASE/Supplementary_New/assemble_new_supplementaries.py"
+}
+
+
 # =====================================================================
 # MAIN
 # =====================================================================
@@ -226,7 +253,8 @@ if [ -n "${1:-}" ]; then
         4) run_fig4 ;;
         5) run_fig5 ;;
         supp|s|S) run_supp ;;
-        *) echo "Usage: $0 [1|2|3|4|5|supp]"; exit 1 ;;
+        revision|rev) run_revision ;;
+        *) echo "Usage: $0 [1|2|3|4|5|supp|revision]"; exit 1 ;;
     esac
 else
     run_fig1

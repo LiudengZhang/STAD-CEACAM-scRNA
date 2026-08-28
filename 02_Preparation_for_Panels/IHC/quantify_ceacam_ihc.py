@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# REVISED FOR CIR-26-0753-ET, reviewer 1 point R1.3c:
+# the test is two-sided and the annotation reports the exact P value.
+# The one-tailed version this replaces is the one used in the preprint,
+# https://www.biorxiv.org/content/10.64898/2026.03.05.708917
 """
 CEACAM5/6 IHC quantification using color deconvolution (Ruifrok & Johnston, 2001).
 
@@ -17,27 +21,36 @@ from PIL import Image
 from skimage.color import rgb2hed, rgb2gray
 from scipy import stats
 from pathlib import Path
-import sys
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "00_Config"))
-from paths import IHC_THUMBNAILS
 
 # ── Paths ──
+import sys
+# Depth is that of the code release, 02_Preparation_for_Panels/IHC/.
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "00_Config"))
+from paths import IHC_THUMBNAILS  # noqa: E402
+
 THUMB_DIR = IHC_THUMBNAILS
 OUTPUT_DIR = Path(__file__).parent
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
+# Scan filenames are what the slide scanner recorded, and the operator typed
+# the accession in by hand, so a few carry transcription slips. P02's CEACAM6
+# scan is '21-2855M', one digit short of accession 2021-28550; P04's and P22's
+# CEACAM5 scans carry a numeric block suffix where the CEACAM6 scan carries
+# 'M'. Checked against the paraffin specimen register: all nineteen scans in
+# each stain map one-to-one onto the nineteen accessions, so every pair below
+# is two stains of one block, not two blocks. The names are left as they are
+# on disk - renaming them would stop the files being found.
 # ── 8 pre-treatment samples ──
 # Patient → (CEACAM5 filename, CEACAM6 filename, Response group)
 SAMPLES = {
-    'P01': ('P01_CEACAM5.png',  'P01_CEACAM6.png',  'NR'),
-    'P02': ('P02_CEACAM5.png',  'P02_CEACAM6.png',  'NR'),
-    'P03': ('P03_CEACAM5.png',  'P03_CEACAM6.png',  'R'),
-    'P04': ('P04_CEACAM5.png',  'P04_CEACAM6.png',  'R'),
-    'P21': ('P21_CEACAM5.png',  'P21_CEACAM6.png',  'R'),
-    'P22': ('P22_CEACAM5.png',  'P22_CEACAM6.png',  'R'),
-    'P25': ('P25_CEACAM5.png',  'P25_CEACAM6.png',  'NR'),
-    'P26': ('P26_CEACAM5.png',  'P26_CEACAM6.png',  'NR'),
+    'P01': ('P01_CEACAM5.png',    'P01_CEACAM6.png',   'NR'),
+    'P02': ('P02_CEACAM5.png',   'P02_CEACAM6.png',       'NR'),
+    'P03': ('P03_CEACAM5.png',    'P03_CEACAM6.png',   'R'),
+    'P04': ('P04_CEACAM5.png',   'P04_CEACAM6.png',      'R'),
+    'P21': ('P21_CEACAM5.png',    'P21_CEACAM6.png',   'R'),
+    'P22': ('P22_CEACAM5.png',   'P22_CEACAM6.png',      'R'),
+    'P25': ('P25_CEACAM5.png',   'P25_CEACAM6.png',  'NR'),
+    'P26': ('P26_CEACAM5.png',    'P26_CEACAM6.png',   'NR'),
 }
 
 # DAB optical density threshold for positive staining.
@@ -149,8 +162,8 @@ def main():
     print(f"   mean = {nr_vals.mean():.2f}%")
     print(f"Fold (NR/R): {nr_vals.mean() / r_vals.mean():.2f}x")
 
-    stat, pval = stats.mannwhitneyu(nr_vals, r_vals, alternative='greater')
-    print(f"\nMann-Whitney U (one-tailed, NR > R): U={stat:.1f}, P={pval:.4f}")
+    stat, pval = stats.mannwhitneyu(nr_vals, r_vals, alternative='two-sided')
+    print(f"\nMann-Whitney U (two-sided): U={stat:.1f}, P={pval:.4f}")
 
     # ── Per-marker comparison ──
     print("\n" + "=" * 60)
@@ -160,7 +173,7 @@ def main():
         sub = df[df['marker'] == marker]
         r = sub[sub['group'] == 'R']['staining_pct'].values
         nr = sub[sub['group'] == 'NR']['staining_pct'].values
-        u, p = stats.mannwhitneyu(nr, r, alternative='greater')
+        u, p = stats.mannwhitneyu(nr, r, alternative='two-sided')
         print(f"\n{marker}:")
         print(f"  R:  {np.round(r, 2)} -> mean={r.mean():.2f}%")
         print(f"  NR: {np.round(nr, 2)} -> mean={nr.mean():.2f}%")

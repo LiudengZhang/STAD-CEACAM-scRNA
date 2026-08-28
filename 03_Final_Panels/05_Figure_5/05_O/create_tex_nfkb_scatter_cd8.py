@@ -116,7 +116,12 @@ def main():
         x_line = np.linspace(x[valid].min(), x[valid].max(), 100)
         ax.plot(x_line, np.polyval(z, x_line), 'k--', linewidth=0.8 * SCALE, alpha=0.6, zorder=2)
 
-    p_str = '***' if pval < 0.001 else '**' if pval < 0.01 else '*' if pval < 0.05 else 'ns'
+    import math
+    _e = math.floor(math.log10(pval)); _c = int(pval / 10**_e)
+    if _e >= -3:
+        p_str = f'P = {_c * 10**_e:.{-_e}f}'
+    else:
+        p_str = f'P = {_c}' + r'$\times 10^{' + str(_e) + r'}$'
 
     ax.set_xlabel('NF-\u03baB Score', fontsize=6 * SCALE)
     ax.set_ylabel('Tex (CD8+)\nScore', fontsize=6 * SCALE)

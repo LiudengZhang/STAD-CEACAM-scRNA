@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# REVISED FOR CIR-26-0753-ET, reviewer 1 point R1.3c:
+# the test is two-sided and the annotation reports the exact P value.
+# The one-tailed version this replaces is the one used in the preprint,
+# https://www.biorxiv.org/content/10.64898/2026.03.05.708917
 """
 Create CEACAM5 boxplot comparing Pre-treatment Responders vs Non-Responders
 Sample-level aggregation with Mann-Whitney U test (raw counts)
@@ -69,7 +73,7 @@ def main():
     responder_vals = sample_means[sample_means['stomach_pre_grouping'] == 'Responsed']['CEACAM5'].values
     non_responder_vals = sample_means[sample_means['stomach_pre_grouping'] == 'No-response']['CEACAM5'].values
 
-    stat, pval = stats.mannwhitneyu(non_responder_vals, responder_vals, alternative='greater')
+    stat, pval = stats.mannwhitneyu(non_responder_vals, responder_vals, alternative='two-sided')
     print(f"Responders (n={len(responder_vals)}): mean={np.mean(responder_vals):.3f}")
     print(f"Non-Responders (n={len(non_responder_vals)}): mean={np.mean(non_responder_vals):.3f}")
     print(f"Mann-Whitney p={pval:.4f}")
@@ -94,7 +98,7 @@ def main():
     y_max = max(np.max(responder_vals), np.max(non_responder_vals))
     y_bracket = y_max * 1.15
     ax.plot([1, 1, 2, 2], [y_bracket, y_bracket*1.05, y_bracket*1.05, y_bracket], 'k-', linewidth=0.5)
-    pval_text = '***' if pval < 0.001 else '**' if pval < 0.01 else '*' if pval < 0.05 else 'ns'
+    pval_text = f'P = {pval:.3f}' if pval >= 0.001 else 'P < 0.001'
     ax.text(1.5, y_bracket*1.08, pval_text, ha='center', va='bottom', fontsize=6 * SCALE)
 
     ax.set_title('CEACAM5', fontsize=7 * SCALE, fontweight='normal')

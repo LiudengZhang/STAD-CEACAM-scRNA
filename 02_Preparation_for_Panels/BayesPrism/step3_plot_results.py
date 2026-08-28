@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# REVISED FOR CIR-26-0753-ET, reviewer 1 point R1.3c:
+# the test is two-sided and the annotation reports the exact P value.
+# The one-tailed version this replaces is the one used in the preprint,
+# https://www.biorxiv.org/content/10.64898/2026.03.05.708917
 """
 Step 3: Plot epithelial-specific CEACAM5/6 from BayesPrism deconvolution.
 Violin + boxplot, R vs NR, TIGER cohort (PRJEB25780).
@@ -122,7 +126,7 @@ def main():
                       edgecolors='white', linewidths=0.3, zorder=3)
 
         # Stats
-        stat, pval = stats.mannwhitneyu(nr_log, r_log, alternative='greater')
+        stat, pval = stats.mannwhitneyu(nr_log, r_log, alternative='two-sided')
         y_max = max(np.max(r_log), np.max(nr_log))
         y_bracket = y_max * 1.1
         ax.plot([1, 1, 2, 2],

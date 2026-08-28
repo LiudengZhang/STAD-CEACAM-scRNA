@@ -12,6 +12,8 @@ from paths import EPITHELIAL_TUMOR_SCORED_H5AD
 import scanpy as sc
 import matplotlib.pyplot as plt
 import matplotlib
+matplotlib.rcParams['pdf.fonttype'] = 42
+matplotlib.rcParams['ps.fonttype'] = 42
 
 # =============================================================================
 # Configuration

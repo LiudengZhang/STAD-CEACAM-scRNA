@@ -1,0 +1,160 @@
+TWO-SIDED STATISTICS SWEEP - Reviewer 1 point R1.3c
+====================================================================================================
+
+[CEACAM]
+  CEACAM6 expression, pre-treatment epithelium   (Fig 2 (N1), Mann-Whitney U)
+     NR n=4 mean=1.11   R n=4 mean=0.3503
+     P one-tailed = 0.02857   P two-tailed = 0.05714   BH within family = 0.1034
+     smallest two-sided P attainable at n=4 vs 4 = 0.02857   <-- AT THE RESOLUTION LIMIT OF THE TEST
+     rank-biserial r = 0.875   diff of means = 0.7595 [95% CI 0.1796, 1.365]
+     -> Weakened: not significant two-sided, but CI excludes zero
+
+  CEACAM5 expression, pre-treatment epithelium   (Fig 2 (N2), Mann-Whitney U)
+     NR n=4 mean=1.141   R n=4 mean=0.3664
+     P one-tailed = 0.05714   P two-tailed = 0.1143   BH within family = 0.16
+     smallest two-sided P attainable at n=4 vs 4 = 0.02857
+     rank-biserial r = 0.750   diff of means = 0.7741 [95% CI 0.2479, 1.235]
+     -> Not significant either way
+
+  CEACAM6 expression, PRJEB25780 deconvolved epithelium   (Fig 2 (O1), Mann-Whitney U)
+     NR n=33 mean=4.661   R n=12 mean=2.976
+     P one-tailed = 0.02791   P two-tailed = 0.05583   BH within family = 0.1034
+     smallest two-sided P attainable at n=33 vs 12 = 6.954e-11
+     rank-biserial r = 0.379   diff of means = 1.684 [95% CI 0.1673, 3.156]
+     -> Weakened: not significant two-sided, but CI excludes zero
+
+  CEACAM5 expression, PRJEB25780 deconvolved epithelium   (Fig 2 (O2), Mann-Whitney U)
+     NR n=33 mean=5.139   R n=12 mean=3.283
+     P one-tailed = 0.02953   P two-tailed = 0.05906   BH within family = 0.1034
+     smallest two-sided P attainable at n=33 vs 12 = 6.954e-11
+     rank-biserial r = 0.374   diff of means = 1.856 [95% CI 0.101, 3.61]
+     -> Weakened: not significant two-sided, but CI excludes zero
+
+  IHC staining, CEACAM5 + CEACAM6 summed   (Fig 2 (Q), Mann-Whitney U)
+     NR n=4 mean=83.16   R n=4 mean=55.3
+     P one-tailed = 0.02857   P two-tailed = 0.05714   BH within family = 0.1034
+     smallest two-sided P attainable at n=4 vs 4 = 0.02857   <-- AT THE RESOLUTION LIMIT OF THE TEST
+     rank-biserial r = 0.875   diff of means = 27.86 [95% CI 10.91, 42.12]
+     -> Weakened: not significant two-sided, but CI excludes zero
+
+  IHC staining, CEACAM5 only   (Fig 2 (Q), Mann-Whitney U)
+     NR n=4 mean=35.04   R n=4 mean=14.71
+     P one-tailed = 0.1   P two-tailed = 0.2   BH within family = 0.2
+     smallest two-sided P attainable at n=4 vs 4 = 0.02857
+     rank-biserial r = 0.625   diff of means = 20.33 [95% CI 3.955, 34.19]
+     -> Not significant either way
+
+  IHC staining, CEACAM6 only   (Fig 2 (Q), Mann-Whitney U)
+     NR n=4 mean=48.12   R n=4 mean=40.59
+     P one-tailed = 0.1   P two-tailed = 0.2   BH within family = 0.2
+     smallest two-sided P attainable at n=4 vs 4 = 0.02857
+     rank-biserial r = 0.625   diff of means = 7.532 [95% CI -4.863, 19.24]
+     -> Not significant either way
+
+
+[Cytokine]
+  IL-6/JAK/STAT3 module score, post-treatment CD4+ T cells   (Fig 5 (IL6-CD4), Mann-Whitney U)
+     NR n=6 mean=0.175   R n=5 mean=0.1384
+     P one-tailed = 0.01515   P two-tailed = 0.0303   BH within family = 0.0303
+     smallest two-sided P attainable at n=6 vs 5 = 0.004329
+     rank-biserial r = 0.800   diff of means = 0.03664 [95% CI 0.01304, 0.05881]
+     -> Robust: significant two-sided
+
+
+[Metaprogram]
+  S-MP4 score, pre-treatment R vs all other groups   (Fig 2 (K), Exact permutation (3876 permutations))
+     Pre-R n=4 mean=0.3916   All others n=15 mean=0.5188
+     P one-tailed = 0.02451   P two-tailed = 0.08282   BH within family = 0.1656
+     smallest two-sided P attainable at n=4 vs 15 = 0.000516
+     difference in means = -0.127   diff of means = -0.1272 [95% CI -0.2156, -0.03301]
+     -> Weakened: not significant two-sided, but CI excludes zero
+
+  S-MP5 score, pre-treatment R vs all other groups   (Fig 2 (K), Exact permutation (3876 permutations))
+     Pre-R n=4 mean=0.2901   All others n=15 mean=0.3528
+     P one-tailed = 0.08411   P two-tailed = 0.1881   BH within family = 0.1881
+     smallest two-sided P attainable at n=4 vs 15 = 0.000516
+     difference in means = -0.063   diff of means = -0.06268 [95% CI -0.1189, -0.004833]
+     -> Not significant either way
+
+
+[PD-L1]
+  CD274 expression, post-treatment monocytes/macrophages   (Fig 5 (J), Mann-Whitney U)
+     NR n=6 mean=0.1645   R n=5 mean=0.07949
+     P one-tailed = 0.02597   P two-tailed = 0.05195   BH within family = 0.07291
+     smallest two-sided P attainable at n=6 vs 5 = 0.004329
+     rank-biserial r = 0.733   diff of means = 0.08503 [95% CI 0.03046, 0.1397]
+     -> Weakened: not significant two-sided, but CI excludes zero
+
+  CD274 expression, post-treatment epithelial cells   (Fig 5 (K), Mann-Whitney U)
+     NR n=6 mean=0.01181   R n=5 mean=0.006904
+     P one-tailed = 0.04113   P two-tailed = 0.08225   BH within family = 0.08225
+     smallest two-sided P attainable at n=6 vs 5 = 0.004329
+     rank-biserial r = 0.667   diff of means = 0.004907 [95% CI 0.001218, 0.009228]
+     -> Weakened: not significant two-sided, but CI excludes zero
+
+  CD274 expression, post-treatment fibroblasts   (Fig 5 (L), Mann-Whitney U)
+     NR n=6 mean=0.04366   R n=5 mean=0.0119
+     P one-tailed = 0.02734   P two-tailed = 0.05468   BH within family = 0.07291
+     smallest two-sided P attainable at n=6 vs 5 = 0.004329
+     rank-biserial r = 0.733   diff of means = 0.03176 [95% CI 0.01013, 0.05424]
+     -> Weakened: not significant two-sided, but CI excludes zero
+
+  CD274 expression, post-treatment dendritic cells   (Fig 5 (M), Mann-Whitney U)
+     NR n=5 mean=0.3383   R n=5 mean=0.1259
+     P one-tailed = 0.01587   P two-tailed = 0.03175   BH within family = 0.07291
+     smallest two-sided P attainable at n=5 vs 5 = 0.007937
+     rank-biserial r = 0.840   diff of means = 0.2124 [95% CI 0.07879, 0.3704]
+     -> Robust: significant two-sided
+
+
+[Regulon]
+  BACH1 regulon activity, post-treatment R vs all other groups   (Fig 5 (regulon-BACH1), Exact permutation (11628 permutations))
+     Post-R n=5 mean=0.1346   All others n=14 mean=0.2476
+     P one-tailed = 0.01634   P two-tailed = 0.03526   BH within family = 0.03844
+     smallest two-sided P attainable at n=5 vs 14 = 0.000172
+     difference in means = -0.113   diff of means = -0.1129 [95% CI -0.1906, -0.02956]
+     -> Robust: significant two-sided
+
+  NFKB1 regulon activity, post-treatment R vs all other groups   (Fig 5 (regulon-NFKB1), Exact permutation (11628 permutations))
+     Post-R n=5 mean=0.2322   All others n=14 mean=0.338
+     P one-tailed = 0.01677   P two-tailed = 0.03844   BH within family = 0.03844
+     smallest two-sided P attainable at n=5 vs 14 = 0.000172
+     difference in means = -0.106   diff of means = -0.1058 [95% CI -0.1795, -0.02758]
+     -> Robust: significant two-sided
+
+
+[Spatial]
+  Neighbourhood epithelial density, CEACAM-high vs CEACAM-low spots   (Fig 3 (H), Wilcoxon signed-rank (paired))
+     CEACAM-high n=10 mean=0.6058   CEACAM-low n=10 mean=0.4293
+     P one-tailed = 0.006836   P two-tailed = 0.01367   BH within family = 0.04102
+     smallest two-sided P attainable at n=10 vs 10 = 0.001953
+     matched-pairs rank-biserial r = 0.855   diff of means = 0.1765 [95% CI 0.06538, 0.2804]
+     -> Robust: significant two-sided
+
+  Distance to stroma, CEACAM-high vs CEACAM-low spots   (Fig 3 (I), Wilcoxon signed-rank (paired))
+     CEACAM-high n=10 mean=1101   CEACAM-low n=10 mean=729.9
+     P one-tailed = 0.04199   P two-tailed = 0.08398   BH within family = 0.08398
+     smallest two-sided P attainable at n=10 vs 10 = 0.001953
+     matched-pairs rank-biserial r = 0.636   diff of means = 370.8 [95% CI 27.52, 664.2]
+     -> Weakened: not significant two-sided, but CI excludes zero
+
+  Distance to immune-rich regions, CEACAM-high vs CEACAM-low spots   (Fig 3 (J), Wilcoxon signed-rank (paired))
+     CEACAM-high n=10 mean=572.2   CEACAM-low n=10 mean=393.1
+     P one-tailed = 0.03223   P two-tailed = 0.06445   BH within family = 0.08398
+     smallest two-sided P attainable at n=10 vs 10 = 0.001953
+     matched-pairs rank-biserial r = 0.673   diff of means = 179.1 [95% CI 18.77, 314.1]
+     -> Weakened: not significant two-sided, but CI excludes zero
+
+
+SUMMARY
+----------------------------------------------------------------------------------------------------
+  Comparisons rerun                              : 19
+  Significant one-tailed (as published)          : 15
+  Still significant two-sided                    : 5
+  Still significant after BH within family       : 4
+  Bootstrap 95% CI excludes zero                 : 18
+  At the resolution limit of the exact null      : 2
+
+    Weakened: not significant two-sided, but CI excludes zero: 10
+    Robust: significant two-sided: 5
+    Not significant either way: 4

@@ -4,54 +4,70 @@ channels:
   - bioconda
 dependencies:
   # Core scientific stack
-  - python=3.11
-  - setuptools
-  - numpy
-  - pandas
-  - scipy
-  - matplotlib
-  - seaborn
+  - python=3.11.14
+  - setuptools=70.3.0
+  - numpy=1.23.5
+  - pandas=2.3.3
+  - scipy=1.15.2
+  - matplotlib=3.10.8
+  - seaborn=0.13.2
 
   # Single-cell analysis
-  - scanpy
-  - anndata
-  - mudata
-  - loompy
+  - scanpy=1.10.4
+  - anndata=0.11.4
+  - mudata=0.3.3
+  - loompy=3.0.8
 
   # Trajectory & deconvolution
-  - cellrank
-  - pertpy
+  - cellrank=2.0.7
+  # pertpy is NOT here: it pulls a jax/chex combination that does not import
+  # alongside this stack. Figure 2F's Milo panel runs in pertpy_milo, which
+  # the Dockerfile builds and _run_all_panels.sh selects.
 
   # SCENIC pipeline (pySCENIC + dependencies)
-  - pyscenic
-  - arboreto
-  - ctxcore
+  - pyscenic=0.12.1
+  - arboreto=0.1.6
+  - ctxcore=0.2.0
 
   # GSEA
-  - gseapy
+  - gseapy=1.1.11
 
   # Survival analysis
-  - lifelines
+  - lifelines=0.30.1
 
   # Graph / network
-  - networkx
+  - networkx=3.4
 
   # Image analysis (IHC quantification)
-  - scikit-image
-  - pillow
+  - scikit-image=0.25.0
+  - pillow=11.3.0
 
   # SVG/PDF figure assembly
-  - lxml
-  - cairosvg
-  - cairocffi
+  - lxml=6.0.2
+  - cairosvg=2.8.2
+  - cairocffi=1.7.1
 
   # YAML config parsing
-  - pyyaml
+  - pyyaml=6.0.3
 
   # Plotting helpers
-  - adjusttext
+  - adjusttext=1.3.0
 
   # R dependencies (BayesPrism deconvolution)
   # Install separately: conda create -n r_bayesprism r-base r-data.table
   # Then install BayesPrism from GitHub:
   #   devtools::install_github("Danko-Lab/BayesPrism/BayesPrism")
+
+  # Added for the revision analyses
+  - statsmodels=0.14.6          # mixed-effects and mediation models
+  - scikit-learn=1.7.2
+  - openpyxl=3.1.5             # clinical tables are .xlsx
+  - tqdm=4.67.3
+  - rpy2=3.6.4           # MAST differential expression
+  - anndata2ri=1.3.2
+
+  # celltypist and pydeseq2 are NOT in this environment. pydeseq2 0.5.4
+  # requires numpy>=2.0.0, and the analysis stack above is pinned to numpy
+  # 1.23.5, which is the version every figure in the paper was produced with.
+  # Installing them here silently upgrades numpy and breaks scanpy and anndata
+  # for every script. They live in their own environment; see the Dockerfile.

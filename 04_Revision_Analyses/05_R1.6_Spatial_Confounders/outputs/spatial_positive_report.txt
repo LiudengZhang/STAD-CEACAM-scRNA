@@ -1,0 +1,118 @@
+SPATIAL EVIDENCE, AFFIRMATIVE ANALYSES - Reviewer 1 point R1.6
+==============================================================================================
+
+A. IS EPITHELIAL DENSITY A CONFOUNDER OR A MEDIATOR?
+----------------------------------------------------------------------------------------------
+   Mediation model: CEACAM ratio (X) -> epithelial density (M) -> distance (Y)
+
+   Distance to immune-rich regions
+      a (X->M) = +0.451    b (M->Y | X) = +0.551
+      total effect  = +0.271
+      indirect (via density) = +0.249 [95% CI +0.164, +0.383]
+      direct (not via density) = +0.023
+      proportion mediated = 91.7%
+
+   Distance to stroma
+      a (X->M) = +0.451    b (M->Y | X) = +0.729
+      total effect  = +0.331
+      indirect (via density) = +0.328 [95% CI +0.200, +0.424]
+      direct (not via density) = +0.003
+      proportion mediated = 99.1%
+
+   Adjusted for annotated spatial domain (tissue architecture proxy):
+      Distance to immune-rich regions    beta = +0.273 [+0.260, +0.286]  P = 0
+      Distance to stroma                 beta = +0.338 [+0.326, +0.349]  P = 0
+
+B. INDEPENDENT BULK COHORT: PRJEB25780 (TIGER), n = 45 anti-PD-1-treated
+----------------------------------------------------------------------------------------------
+   Deconvolved epithelial CEACAM5/6 versus cell-type fractions,
+   unadjusted and adjusted for ESTIMATE tumour purity.
+
+   cell type                      rho     P raw  beta (adj)     P adj
+   Monocytes Macrophages       -0.354    0.0170     -0.0054    0.0216  *
+   DC cells                    -0.314    0.0356     -0.0031    0.5839
+   CD4pos T cells               0.089    0.5615     -0.0020    0.1140
+   NK cells                    -0.046    0.7642      0.0005    0.4680
+   Plasma cells                 0.216    0.1540      0.0035    0.7273
+   CD8pos T cells               0.076    0.6184      0.0055    0.0072  *
+   B cells                     -0.084    0.5851      0.0165    0.0093  *
+   adaptive immune              0.350    0.0184      0.0240    0.0473  *
+
+   CEACAM5/6 in non-responders vs responders (n = 33 vs 12):
+      unadjusted two-sided Mann-Whitney P = 0.0558
+      purity-adjusted linear model: beta = +1.943, P = 0.0383
+
+   Harmonised with the TCGA design (ESTIMATE score as outcome,
+   BayesPrism epithelial fraction as the purity covariate):
+      ImmuneScore    rho = -0.237 (P = 0.118)   adjusted beta = +32.4, P = 0.784
+      StromalScore   rho = -0.260 (P = 0.0852)   adjusted beta = -27.7, P = 0.77
+
+   Note: the BayesPrism cell-type fractions above are compositional
+   (they sum to one), so a rise in the epithelial fraction mechanically
+   lowers every immune fraction. The ESTIMATE-based analysis in this
+   block is not subject to that constraint and is the one that matches
+   the TCGA analysis.
+
+C. INDEPENDENT SPATIAL COHORT: GSE246011 (4 sections, 4,196 spots)
+----------------------------------------------------------------------------------------------
+   Not used in the submitted manuscript. Distance to the nearest
+   PTPRC-high spot, modelled with a random intercept per section.
+
+   READ THIS BEFORE QUOTING THE COEFFICIENT. This is not a like-for-like
+   replication of the primary Visium analysis. Three definitions differ,
+   and each of them can move the sign:
+     - immune-rich here is the top PTPRC quartile, so a quarter of every
+       section is flagged immune by construction; the primary analysis
+       uses a deconvolved immune fraction above 0.15, a far sparser set
+     - distance here is to the single nearest immune spot (k = 1); the
+       primary analysis averages the nearest five
+     - exposure here is the raw per-spot CEACAM5 + CEACAM6 sum, with
+       epithelial content entered only as a covariate; the primary
+       analysis uses the CEACAM-high fraction within epithelium
+   With a quarter of the array marked immune, the outcome behaves partly
+   as a measure of local spot density, and dense epithelium - which is
+   where CEACAM is high - sits close to any spot. The negative sign is
+   therefore expected under this parameterisation and is not evidence
+   against the primary result. It is also not evidence for it.
+
+      unadjusted               CEACAM beta = -0.3599 [-0.3900, -0.3298]   P = 3.74e-121
+      + epithelial content     CEACAM beta = -0.2930 [-0.3342, -0.2518]   P = 3.61e-44
+
+D. IS TOTAL EPITHELIAL CONTENT AN ADMISSIBLE COVARIATE?
+----------------------------------------------------------------------------------------------
+   The deconvolution assigns every spot to epithelium, immune or stroma,
+   and the three proportions sum to one. Total epithelial content is
+   therefore 1 - immune - stroma: the algebraic complement of the
+   quantity that defines both outcomes.
+
+   deconvolution proportions per spot, sum                               1.0000   max deviation from 1 = 1.22e-15
+   corr(total epithelial content, immune + stromal content)             -1.0000   arithmetic complement, not an empirical association
+   corr(total epithelial content, immune content)                       -0.8908
+   corr(total epithelial content, stromal content)                      -0.4686
+   corr(total epithelial content, local epithelial density)              0.8644   the two adjustments are near-duplicates of one another
+   corr(CEACAM ratio, total epithelial content)                          0.5649   the exposure is a within-epithelium ratio, so this is biological rather than arithmetic
+   Distance to immune-rich regions: coefficient on total epithelial content alone    1.7724   P = 0
+   Distance to stroma: coefficient on total epithelial content alone     2.0852   P = 0
+
+   The complement correlation is -1 to machine precision, so conditioning
+   on epithelial content conditions on the outcome's own determinant. The
+   attenuation seen in that model is a property of the parameterisation,
+   not evidence against the association. Adjustment for annotated spatial
+   domain, which is not a compositional complement, is the admissible
+   architecture control and is reported in section A.
+
+CONCLUSION
+----------------------------------------------------------------------------------------------
+   Epithelial density carries 95% of the CEACAM-distance
+   association on average. Because CEACAM5/6 are homophilic adhesion
+   molecules whose function is to pack epithelium tightly, density is best
+   treated as a step on the causal path rather than as a nuisance variable;
+   adjusting it away is over-adjustment. We report both analyses and let
+   the reader judge.
+   The bulk cohort provides the orthogonal, purity-adjusted test the
+   Visium data cannot, at n = 45 rather than n = 10.
+   GSE246011 runs in the opposite direction, but under a different
+   definition of immune-rich, of distance and of the exposure, so it
+   estimates a different quantity. It is reported here for
+   completeness and is deliberately NOT cited in the manuscript as
+   independent replication; see the caveat in section C.

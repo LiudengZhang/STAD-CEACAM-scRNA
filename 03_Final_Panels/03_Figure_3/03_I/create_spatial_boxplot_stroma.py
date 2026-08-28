@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# REVISED FOR CIR-26-0753-ET, reviewer 1 point R1.3c:
+# the test is two-sided and the annotation reports the exact P value.
+# The one-tailed version this replaces is the one used in the preprint,
+# https://www.biorxiv.org/content/10.64898/2026.03.05.708917
 """
 Panel F: Distance to Stroma Boxplot (CEACAM-high vs CEACAM-low)
 Moved from old 03_E. Scaling violations fixed.
@@ -44,7 +48,7 @@ def create_paired_boxplot(sample_data, col, title, ylabel, output_path, y_max_li
     low_data = sample_data[sample_data['group'] == 'CEACAM-low'][col].values
     high_data = sample_data[sample_data['group'] == 'CEACAM-high'][col].values
 
-    stat, pval = stats.wilcoxon(high_data, low_data, alternative='greater')
+    stat, pval = stats.wilcoxon(high_data, low_data, alternative='two-sided')
 
     bp = ax.boxplot([low_data, high_data], positions=[1, 2], widths=0.5, patch_artist=True,
                     boxprops=dict(linewidth=1.0),
@@ -74,16 +78,7 @@ def create_paired_boxplot(sample_data, col, title, ylabel, output_path, y_max_li
     ax.plot([1, 1, 2, 2], [bracket_y, bracket_y + 0.02*y_range, bracket_y + 0.02*y_range, bracket_y],
             color='black', linewidth=1)
 
-    if pval <= 0.0001:
-        pval_text = '****'
-    elif pval <= 0.001:
-        pval_text = '***'
-    elif pval <= 0.01:
-        pval_text = '**'
-    elif pval <= 0.05:
-        pval_text = '*'
-    else:
-        pval_text = 'ns'
+    pval_text = f'P = {pval:.3f}' if pval >= 0.001 else 'P < 0.001'
     ax.text(1.5, bracket_y + 0.04*y_range, pval_text, ha='center', va='bottom', fontsize=9*SCALE)
 
     ax.set_title(title, fontsize=9*SCALE, fontweight='normal')
@@ -99,7 +94,7 @@ def create_paired_boxplot(sample_data, col, title, ylabel, output_path, y_max_li
         ax.set_ylim(0, y_max_limit)
 
     n_pairs = len(low_data)
-    ax.text(0.98, 0.02, f'n = {n_pairs} samples\nWilcoxon signed-rank (one-tailed)',
+    ax.text(0.98, 0.02, f'n = {n_pairs} samples\nWilcoxon signed-rank (two-sided)',
             transform=ax.transAxes, fontsize=7*SCALE, va='bottom', ha='right', color='#555555')
 
     plt.tight_layout()

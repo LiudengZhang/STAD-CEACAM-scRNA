@@ -1,0 +1,16 @@
+METAPROGRAM EXTERNAL VALIDATION - Reviewer 1 point R1.4
+============================================================================================
+
+Cohort: PRJEB25780 (TIGER), 45 anti-PD-1-treated tumours (33 NR, 12 R)
+Compartment: BayesPrism-deconvolved epithelium
+
+  program                       genes   mean NR    mean R       r         P     P adj
+  NMF MP1 (stomach)            38/50      0.098    -0.269   0.278    0.1619    0.1999
+  NMF MP2 (stomach)            36/50      0.056    -0.154  -0.045    0.8273    0.6266
+  NMF MP3 (stomach)            44/50      0.115    -0.317   0.298    0.1332    0.1752
+  NMF MP4 (stomach)            43/50      0.121    -0.333   0.369    0.0628    0.0715
+  NMF MP5 (stomach)            40/50      0.108    -0.296   0.293    0.1400    0.1446
+
+  MP4 is higher in non-responders in this independent
+  cohort (two-sided P = 0.0628, purity-adjusted P = 0.0715).
+  The corrected in-cohort result predicts 'higher in non-responders'.

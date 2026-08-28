@@ -23,6 +23,13 @@ OUTPUT_DIR = Path(__file__).parent
 def main():
     print("Generating liver + stomach per-sample CEACAM5/6 expression...")
     adata = sc.read_h5ad(EPITHELIAL_H5AD)
+    # This file's .X is not the output of the annotation pipeline: the
+    # scale(max_value=10) clip never fired, and a third of it is NaN, in whole
+    # cell rows concentrated on the deepest-sequenced cells. Read the
+    # log1p CP10K matrix in .raw, which reproduces the counts deposit to 1e-2.
+    if adata.raw is None:
+        raise SystemExit("Epithelial.h5ad has no .raw - refusing to fall back to .X")
+    adata = adata.raw.to_adata()[adata.obs_names]   # .raw.to_adata() carries obs
     print(f"  Total epithelial cells: {adata.n_obs}")
 
     rows = []
@@ -39,10 +46,10 @@ def main():
         mask = liver.obs['sample'] == sample
         sub = liver[mask]
         resp = sub.obs['response'].iloc[0]
-        vals5 = np.asarray(sub[:, 'CEACAM5'].X).flatten()
-        vals6 = np.asarray(sub[:, 'CEACAM6'].X).flatten()
-        c5 = np.nanmean(vals5)
-        c6 = np.nanmean(vals6)
+        vals5 = np.asarray(sub[:, 'CEACAM5'].X.todense()).flatten()
+        vals6 = np.asarray(sub[:, 'CEACAM6'].X.todense()).flatten()
+        c5 = vals5.mean()
+        c6 = vals6.mean()
         rows.append({'site': 'Liver', 'sample': sample, 'response': resp,
                       'CEACAM5': c5, 'CEACAM6': c6})
 
@@ -58,10 +65,10 @@ def main():
         mask = stomach.obs['sample'] == sample
         sub = stomach[mask]
         resp = sub.obs['response'].iloc[0]
-        vals5 = np.asarray(sub[:, 'CEACAM5'].X).flatten()
-        vals6 = np.asarray(sub[:, 'CEACAM6'].X).flatten()
-        c5 = np.nanmean(vals5)
-        c6 = np.nanmean(vals6)
+        vals5 = np.asarray(sub[:, 'CEACAM5'].X.todense()).flatten()
+        vals6 = np.asarray(sub[:, 'CEACAM6'].X.todense()).flatten()
+        c5 = vals5.mean()
+        c6 = vals6.mean()
         rows.append({'site': 'Stomach', 'sample': sample, 'response': resp,
                       'CEACAM5': c5, 'CEACAM6': c6})
 

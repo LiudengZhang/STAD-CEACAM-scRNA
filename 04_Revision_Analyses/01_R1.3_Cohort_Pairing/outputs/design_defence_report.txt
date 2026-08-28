@@ -1,0 +1,43 @@
+DESIGN DEFENCE - Reviewer 1 points R1.0 and R1.3b
+============================================================================================
+
+A. ARE THE PRE- AND POST-TREATMENT GROUPS COMPARABLE?
+--------------------------------------------------------------------------------------------
+   Pre-treatment n = 8, post-treatment n = 11 (response-classified gastric specimens)
+
+   covariate                                pre              post     SMD        P
+   Age (years)                    63.2 (SD 8.9)     63.5 (SD 7.2)   -0.04    0.901
+   Male sex                                 75%               82%   -0.17    1.000
+   cTNM stage                          4 levels          5 levels       -    0.584
+   Differentiation                     4 levels          2 levels       -    0.169
+   Sampling by surgery                       0%               36%   -1.07    0.103
+   Non-responder                            50%               55%   -0.09    1.000
+
+   Covariates with |SMD| > 0.5 (the usual imbalance threshold): 1 of 4
+      Sampling by surgery: SMD -1.07
+   No covariate differs significantly between the two groups, so the
+   cross-sectional comparison is not obviously confounded by the
+   clinical characteristics recorded for this cohort. This does not
+   substitute for within-patient sampling.
+
+B. WITHIN-COHORT CONTRAST FOR EMERGING RESISTANCE
+--------------------------------------------------------------------------------------------
+   P10-P2    RECIST PR-SD    -> PR then SD (emerging resistance)
+   P11-P2    RECIST PR-SD    -> PR then SD (emerging resistance)
+   P12-P2    RECIST PR       -> Sustained PR
+   P13-P2    RECIST PR       -> Sustained PR
+   P05-P2    RECIST PR       -> Sustained PR
+
+   sample   subgroup                                 il1b_fraction     nfkb1_regulon
+   P10-P2   PR then SD (emerging resistance)                0.0354            0.1043
+   P11-P2   PR then SD (emerging resistance)                0.0877               n/a
+   P12-P2   Sustained PR                                    0.1202               n/a
+   P13-P2   Sustained PR                                    0.1242               n/a
+   P05-P2   Sustained PR                                    0.0764            0.1045
+
+   il1b_fraction: emerging resistance mean 0.0616 (n=2)  vs sustained PR 0.1069 (n=3)
+   nfkb1_regulon: emerging resistance mean 0.1043 (n=1)  vs sustained PR 0.1045 (n=1)
+
+   n = 2 versus 3. No test is performed and none should be; this is
+   reported as a descriptive observation with all individual values
+   shown, as the only within-cohort window onto emerging resistance.

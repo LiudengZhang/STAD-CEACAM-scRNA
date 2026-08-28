@@ -1,0 +1,35 @@
+Analysis,Measurement,Comparison,n non-responders,n responders,Statistic,Value,95% CI low,95% CI high,"P, two-sided"
+Effect size,"CEACAM6 expression, pre-treatment epithelium",discovery cohort,4,4,Hedges g,1.331,0.458,4.809,0.0571
+Effect size,"CEACAM5 expression, pre-treatment epithelium",discovery cohort,4,4,Hedges g,1.636,0.649,8.06,0.1143
+Effect size,"CEACAM6 expression, PRJEB25780 deconvolved epithelium",independent of the discovery cohort,33,12,Hedges g,0.66,0.067,1.367,0.0558
+Effect size,"CEACAM5 expression, PRJEB25780 deconvolved epithelium",independent of the discovery cohort,33,12,Hedges g,0.626,0.055,1.338,0.0591
+Effect size,"IHC staining, CEACAM5 + CEACAM6 summed",same patients as the discovery cohort,4,4,Hedges g,1.784,0.73,8.119,0.0571
+Effect size,"IHC staining, CEACAM5 only",same patients as the discovery cohort,4,4,Hedges g,1.405,0.331,6.793,0.2
+Effect size,"IHC staining, CEACAM6 only",same patients as the discovery cohort,4,4,Hedges g,0.635,-0.446,4.284,0.2
+Combined across cohorts sharing no patients,CEACAM6,"pre-treatment epithelium (n = 4 vs 4, P = 0.057); PRJEB25780 deconvolved epithelium (n = 33 vs 12, P = 0.056)",,,"Stouffer, unweighted",,,,0.00699
+Combined across cohorts sharing no patients,CEACAM6,"pre-treatment epithelium (n = 4 vs 4, P = 0.057); PRJEB25780 deconvolved epithelium (n = 33 vs 12, P = 0.056)",,,"Stouffer, weighted by sqrt(n)",,,,0.01238
+Combined across cohorts sharing no patients,CEACAM6,"pre-treatment epithelium (n = 4 vs 4, P = 0.057); PRJEB25780 deconvolved epithelium (n = 33 vs 12, P = 0.056)",,,Fisher,,,,0.01297
+Combined across cohorts sharing no patients,CEACAM5,"pre-treatment epithelium (n = 4 vs 4, P = 0.114); PRJEB25780 deconvolved epithelium (n = 33 vs 12, P = 0.059)",,,"Stouffer, unweighted",,,,0.01423
+Combined across cohorts sharing no patients,CEACAM5,"pre-treatment epithelium (n = 4 vs 4, P = 0.114); PRJEB25780 deconvolved epithelium (n = 33 vs 12, P = 0.059)",,,"Stouffer, weighted by sqrt(n)",,,,0.01862
+Combined across cohorts sharing no patients,CEACAM5,"pre-treatment epithelium (n = 4 vs 4, P = 0.114); PRJEB25780 deconvolved epithelium (n = 33 vs 12, P = 0.059)",,,Fisher,,,,0.02492
+Leave-one-patient-out,CEACAM5,none (as published),4,4,Hedges g,1.636,,,0.1143
+Leave-one-patient-out,CEACAM5,P1,3,4,Hedges g,1.387,,,0.2286
+Leave-one-patient-out,CEACAM5,P2,3,4,Hedges g,3.591,,,0.0571
+Leave-one-patient-out,CEACAM5,P21,4,3,Hedges g,1.346,,,0.2286
+Leave-one-patient-out,CEACAM5,P22,4,3,Hedges g,1.585,,,0.1143
+Leave-one-patient-out,CEACAM5,P25,3,4,Hedges g,1.423,,,0.2286
+Leave-one-patient-out,CEACAM5,P26,3,4,Hedges g,1.459,,,0.2286
+Leave-one-patient-out,CEACAM5,P3,4,3,Hedges g,1.53,,,0.1143
+Leave-one-patient-out,CEACAM5,P4,4,3,Hedges g,1.43,,,0.2286
+Leave-one-patient-out,CEACAM6,none (as published),4,4,Hedges g,1.331,,,0.0571
+Leave-one-patient-out,CEACAM6,P1,3,4,Hedges g,1.329,,,0.1143
+Leave-one-patient-out,CEACAM6,P2,3,4,Hedges g,1.96,,,0.0571
+Leave-one-patient-out,CEACAM6,P21,4,3,Hedges g,1.097,,,0.1143
+Leave-one-patient-out,CEACAM6,P22,4,3,Hedges g,1.153,,,0.1143
+Leave-one-patient-out,CEACAM6,P25,3,4,Hedges g,1.134,,,0.1143
+Leave-one-patient-out,CEACAM6,P26,3,4,Hedges g,1.183,,,0.1143
+Leave-one-patient-out,CEACAM6,P3,4,3,Hedges g,1.595,,,0.0571
+Leave-one-patient-out,CEACAM6,P4,4,3,Hedges g,1.081,,,0.1143
+Transcript fraction against protein staining,CEACAM5,"same eight patients, both modalities",,,Spearman rho,0.857,0.342,1.0,0.0065
+Transcript fraction against protein staining,CEACAM6,"same eight patients, both modalities",,,Spearman rho,0.619,-0.215,1.0,0.1017
+Transcript fraction against protein staining,Summed,"same eight patients, both modalities",,,Spearman rho,0.881,0.241,1.0,0.0039

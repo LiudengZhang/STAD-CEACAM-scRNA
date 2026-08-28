@@ -13,22 +13,30 @@ from pathlib import Path
 import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "00_Config"))
-from paths import IHC_THUMBNAILS
+from paths import IHC_THUMBNAILS  # noqa: E402
 
 THUMB_DIR = IHC_THUMBNAILS
 OUTPUT_DIR = Path(__file__).parent
 
 THRESHOLDS = [0.02, 0.05, 0.07]
 
+# Scan filenames are what the slide scanner recorded, and the operator typed
+# the accession in by hand, so a few carry transcription slips. P02's CEACAM6
+# scan is '21-2855M', one digit short of accession 2021-28550; P04's and P22's
+# CEACAM5 scans carry a numeric block suffix where the CEACAM6 scan carries
+# 'M'. Checked against the paraffin specimen register: all nineteen scans in
+# each stain map one-to-one onto the nineteen accessions, so every pair below
+# is two stains of one block, not two blocks. The names are left as they are
+# on disk - renaming them would stop the files being found.
 SAMPLES = {
-    'P01 (NR)': ('P01_CEACAM5.png',  'P01_CEACAM6.png'),
-    'P02 (NR)': ('P02_CEACAM5.png',  'P02_CEACAM6.png'),
-    'P25 (NR)': ('P25_CEACAM5.png',  'P25_CEACAM6.png'),
-    'P26 (NR)': ('P26_CEACAM5.png',  'P26_CEACAM6.png'),
-    'P03 (R)':  ('P03_CEACAM5.png',  'P03_CEACAM6.png'),
-    'P04 (R)':  ('P04_CEACAM5.png',  'P04_CEACAM6.png'),
-    'P21 (R)':  ('P21_CEACAM5.png',  'P21_CEACAM6.png'),
-    'P22 (R)':  ('P22_CEACAM5.png',  'P22_CEACAM6.png'),
+    'P01 (NR)': ('P01_CEACAM5.png',    'P01_CEACAM6.png'),
+    'P02 (NR)': ('P02_CEACAM5.png',   'P02_CEACAM6.png'),
+    'P25 (NR)': ('P25_CEACAM5.png',   'P25_CEACAM6.png'),
+    'P26 (NR)': ('P26_CEACAM5.png',    'P26_CEACAM6.png'),
+    'P03 (R)':  ('P03_CEACAM5.png',    'P03_CEACAM6.png'),
+    'P04 (R)':  ('P04_CEACAM5.png',   'P04_CEACAM6.png'),
+    'P21 (R)':  ('P21_CEACAM5.png',    'P21_CEACAM6.png'),
+    'P22 (R)':  ('P22_CEACAM5.png',   'P22_CEACAM6.png'),
 }
 
 

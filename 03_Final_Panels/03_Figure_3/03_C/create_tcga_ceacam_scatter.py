@@ -177,8 +177,13 @@ def plot_scatter(ax, x, y, vital, title, xlabel, ylabel, fontscale):
         x_line = np.linspace(xv.min(), xv.max(), 100)
         ax.plot(x_line, slope * x_line + intercept, 'k--', linewidth=0.8*fontscale, alpha=0.6, zorder=5)
 
-    # Stats
-    p_str = '***' if p_val < 0.001 else '**' if p_val < 0.01 else '*' if p_val < 0.05 else 'ns'
+    # Stats — 1 sig digit (floor), scientific for very small P
+    import math
+    _e = math.floor(math.log10(p_val)); _c = int(p_val / 10**_e)
+    if _e >= -3:
+        p_str = f'P = {_c * 10**_e:.{-_e}f}'
+    else:
+        p_str = f'P = {_c}' + r'$\times 10^{' + str(_e) + r'}$'
 
     ax.set_title(f'{title}\nρ = {r_val:.2f}, {p_str}',
                  fontsize=6.5 * fontscale, fontweight='normal', linespacing=1.4)

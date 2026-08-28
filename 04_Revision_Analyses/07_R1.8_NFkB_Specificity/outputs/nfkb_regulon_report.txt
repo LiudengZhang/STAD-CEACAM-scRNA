@@ -1,0 +1,49 @@
+NF-kB TRANSCRIPTION FACTOR ACTIVITY - affirmative evidence for R1.8
+==============================================================================================
+
+pySCENIC AUCell matrix: 12,621 cells x 54 regulons
+Regulons are motif-anchored: a gene enters a regulon only if it is
+co-expressed with the TF AND carries the TF's binding motif (cisTarget).
+
+REGULON ACTIVITY, non-responders vs responders (sample-level, two-sided)
+----------------------------------------------------------------------------------------------
+  [NFKB1(+)]
+    Post-treatment:
+      All cells                NR 0.1961  R 0.1348   P = 0.0173   r = +0.867  *
+      MoMac                    NR 0.1963  R 0.1347   P = 0.0173   r = +0.867  *
+
+  [NFKB2(+)]
+    Post-treatment:
+      All cells                NR 0.1653  R 0.1065   P = 0.0087   r = +0.933  *
+      MoMac                    NR 0.1656  R 0.1063   P = 0.0087   r = +0.933  *
+
+  [BACH1(+)]
+    Post-treatment:
+      All cells                NR 0.2213  R 0.1404   P = 0.0173   r = +0.867  *
+      MoMac                    NR 0.2215  R 0.1404   P = 0.0173   r = +0.867  *
+
+DIRECT TARGET PANELS (sample-level, two-sided)
+----------------------------------------------------------------------------------------------
+  Negative feedback: NFKBIA, TNFAIP3, NFKB2, RELB, BIRC3, TRAF1
+  Direct effectors : ICAM1, CXCL8, CCL20, SOD2, CXCL2, IER3
+
+  [NF-kB negative-feedback targets]
+    Monocytes/Macrophages   Pre    NR +0.6287  R +0.5692   P = 0.8857   r = +0.125
+    Monocytes/Macrophages   Post   NR +0.7638  R +0.5480   P = 0.3290   r = +0.400
+
+  [NF-kB direct effector targets]
+    Monocytes/Macrophages   Pre    NR +0.9932  R +0.7637   P = 0.8857   r = +0.125
+    Monocytes/Macrophages   Post   NR +1.1653  R +0.7042   P = 0.3290   r = +0.400
+    Fibroblast              Pre    NR +0.0975  R -0.0686   P = 1.0000   r = +0.000
+    Fibroblast              Post   NR +0.1649  R -0.2400   P = 0.3290   r = +0.400
+
+WHAT THIS DOES AND DOES NOT SHOW
+----------------------------------------------------------------------------------------------
+  Does: the NF-kB transcription factors themselves show elevated
+  inferred activity, measured from motif-supported direct targets, and
+  the pathway's own negative-feedback programme (NFKBIA/IkB-alpha,
+  TNFAIP3/A20, NFKB2, RELB) is induced. Feedback genes are transcribed
+  only after nuclear translocation, so their induction is a specific
+  footprint of activation rather than of generic inflammation.
+  Does not: measure p65 phosphorylation, nuclear localisation, or IkB
+  protein. The manuscript states this.

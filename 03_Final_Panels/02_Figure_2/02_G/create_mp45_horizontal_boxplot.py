@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# REVISED FOR CIR-26-0753-ET, reviewer 1 point R1.3c:
+# the test is two-sided and the annotation reports the exact P value.
+# The one-tailed version this replaces is the one used in the preprint,
+# https://www.biorxiv.org/content/10.64898/2026.03.05.708917
 """
 Panel F: MP4 and MP5 Boxplots Side by Side (horizontal layout)
 - Pre-R vs Others (Post-R, Pre-NR, Post-NR) planned contrast
@@ -75,10 +79,10 @@ def calculate_mp_score(adata, genes):
     return np.nanmean(expr, axis=1)
 
 
-def exact_permutation_test(x, y, alternative='less'):
+def exact_permutation_test(x, y, alternative='two-sided'):
     """
     Exact permutation test: enumerate all C(n, n_x) groupings.
-    alternative='less': test if mean(x) < mean(y).
+    alternative='two-sided': test if mean(x) < mean(y).
     """
     all_vals = np.concatenate([x, y])
     n_total = len(all_vals)
@@ -193,7 +197,7 @@ def create_panel_F():
             sample_data[sample_data['group'] == g][mp_name].values
             for g in ['Post-R', 'Pre-NR', 'Post-NR']
         ])
-        perm_p = exact_permutation_test(pre_r_vals, others_vals, alternative='less')
+        perm_p = exact_permutation_test(pre_r_vals, others_vals, alternative='two-sided')
         print(f"  {mp_name}: Exact permutation p = {perm_p:.4f} (Pre-R < Others)")
 
         # KW homogeneity among other 3
@@ -208,7 +212,7 @@ def create_panel_F():
         bracket_y = y_max * 1.08
         ax.plot([0, 0, 2, 2], [bracket_y, bracket_y*1.03, bracket_y*1.03, bracket_y],
                 'k-', lw=0.5)
-        p_str = '***' if perm_p < 0.001 else '**' if perm_p < 0.01 else '*' if perm_p < 0.05 else 'ns'
+        p_str = f'P = {perm_p:.3f}' if perm_p >= 0.001 else 'P < 0.001'
         ax.text(1.0, bracket_y*1.04, p_str, ha='center', fontsize=6 * SCALE)
 
         # ns bracket among others

@@ -15,7 +15,11 @@ import sys
 
 # Central config
 sys.path.insert(0, str(Path(__file__).resolve().parents[4] / "00_Config"))
-from paths import FULL_DATASET_H5AD
+from paths import FULL_DATASET_H5AD, MANUSCRIPT
+
+# Sample ID mapping from Supplementary Table 1
+ST1_CSV = (MANUSCRIPT / '04_Tables'
+           / 'ST1_patient_sample_characteristics.csv')
 
 # Set2 + Set3 palette (12 major cell types, consistent across Fig 1B & 1C)
 CELL_TYPE_COLORS = {
@@ -68,12 +72,27 @@ adata_other.obs['major_cell_type_merged'] = adata_other.obs['major_cell_type'].r
 proportions = adata_other.obs.groupby(['sample', 'major_cell_type_merged'], observed=True).size().unstack(fill_value=0)
 proportions = proportions.div(proportions.sum(axis=1), axis=0)
 
+# Specimen identifier -> the study sample ID printed in the paper.
+# Supplementary Table 1 is the authority for these labels. The dataset
+# carries more than one candidate label for some specimens, so the
+# candidate that appears in ST1 is the one used; anything unmatched is
+# an error rather than a raw identifier on the axis.
+st1 = pd.read_csv(ST1_CSV)
+st1_labels = set(st1[st1['Anatomical site'] != 'Stomach']['Sample'].astype(str))
+pairs = (adata_other.obs[['sample', 'Sample ID']]
+         .drop_duplicates().astype(str))
+orig_to_sample = dict(pairs[pairs['Sample ID'].isin(st1_labels)].values)
+unmapped = sorted(set(pairs['sample']) - set(orig_to_sample))
+if unmapped:
+    raise SystemExit(
+        'no Supplementary Table 1 label for: ' + ', '.join(unmapped))
+
 # Sort samples alphabetically
 sample_order = sorted(proportions.index.tolist())
 proportions = proportions.reindex(sample_order)
 
-# Use sample IDs directly as x-axis labels (match ST1 'Sample' column)
-x_labels = sample_order
+# Map to ST1 Sample IDs for x-axis labels
+x_labels = [orig_to_sample.get(s, s) for s in sample_order]
 
 # Define cell type order (most abundant first)
 cell_type_order = proportions.mean().sort_values(ascending=False).index.tolist()

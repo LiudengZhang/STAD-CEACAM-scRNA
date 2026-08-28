@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# REVISED FOR CIR-26-0753-ET, reviewer 1 point R1.3c:
+# the test is two-sided and the annotation reports the exact P value.
+# The one-tailed version this replaces is the one used in the preprint,
+# https://www.biorxiv.org/content/10.64898/2026.03.05.708917
 """
 Panel 2L: CEACAM6 boxplot from PRJEB25780 (BayesPrism epithelial-deconvolved)
 Target-size approach: panel created at exact assembly slot dimensions.
@@ -66,8 +70,8 @@ def main():
     print(f"R (n={len(r_vals)}): mean={np.mean(r_vals):.3f}")
     print(f"NR (n={len(nr_vals)}): mean={np.mean(nr_vals):.3f}")
 
-    stat, pval = stats.mannwhitneyu(nr_vals, r_vals, alternative='greater')
-    print(f"Mann-Whitney U (NR > R): U={stat:.0f}, P={pval:.4f}")
+    stat, pval = stats.mannwhitneyu(nr_vals, r_vals, alternative='two-sided')
+    print(f"Mann-Whitney U (two-sided): U={stat:.0f}, P={pval:.4f}")
 
     # Plot
     fig, ax = plt.subplots(figsize=(PANEL_W_MM * MM_TO_INCH, PANEL_H_MM * MM_TO_INCH))
@@ -106,7 +110,7 @@ def main():
     ax.plot([1, 1, 2, 2],
             [y_bracket, y_bracket * 1.03, y_bracket * 1.03, y_bracket],
             'k-', linewidth=0.5)
-    p_text = '***' if pval < 0.001 else '**' if pval < 0.01 else '*' if pval < 0.05 else 'ns'
+    p_text = f'P = {pval:.3f}' if pval >= 0.001 else 'P < 0.001'
     ax.text(1.5, y_bracket * 1.05, p_text, ha='center', va='bottom', fontsize=4)
 
     # Labels

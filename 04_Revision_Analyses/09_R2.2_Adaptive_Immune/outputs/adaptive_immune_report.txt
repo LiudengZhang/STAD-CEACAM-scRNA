@@ -1,0 +1,74 @@
+ADAPTIVE IMMUNE RESOURCE - Reviewer 2 point R2.2
+================================================================================================
+
+1. MINOR CELL STATE COMPOSITION
+------------------------------------------------------------------------------------------------
+  [CD4+ T cells]  10 annotated states
+     Pre-treatment NR vs R: 0 of 10 states with P < 0.05 (none survive BH within lineage)
+        C0_CD4_Treg_FOXP3                NR  31.7%  R  40.0%  P = 0.200  BH = 0.686
+        C3_CD4_GZMB                      NR   8.0%  R  10.8%  P = 0.200  BH = 0.686
+        C9_CD4_Th17_IL17A                NR   6.5%  R   8.4%  P = 0.343  BH = 0.686
+     Post-treatment NR vs R: 0 of 10 states with P < 0.05 (none survive BH within lineage)
+        C8_CD4_Temra_KLRG1               NR   1.5%  R   1.0%  P = 0.177  BH = 0.931
+        C0_CD4_Treg_FOXP3                NR  29.9%  R  32.5%  P = 0.329  BH = 0.931
+        C2_CD4_Tcm_CCR7                  NR   7.3%  R  11.1%  P = 0.329  BH = 0.931
+
+  [CD8+ T cells]  8 annotated states
+     Pre-treatment NR vs R: 0 of 8 states with P < 0.05 (none survive BH within lineage)
+        C7_CD8_ISG_ISG15                 NR   4.5%  R   1.9%  P = 0.343  BH = 0.648
+        C1_CD8_Cytotoxic_DUSP1           NR  19.6%  R  23.7%  P = 0.486  BH = 0.648
+        C2_CD8_MAIT_KLRB1                NR  15.4%  R  18.8%  P = 0.486  BH = 0.648
+     Post-treatment NR vs R: 0 of 8 states with P < 0.05 (none survive BH within lineage)
+        C7_CD8_ISG_ISG15                 NR   1.9%  R   2.9%  P = 0.177  BH = 0.931
+        C4_CD8_Temra_KLRG1               NR   8.3%  R   3.1%  P = 0.247  BH = 0.931
+        C1_CD8_Cytotoxic_DUSP1           NR  30.4%  R  25.6%  P = 0.537  BH = 0.931
+
+  [NK cells]  4 annotated states
+     Pre-treatment NR vs R: 0 of 4 states with P < 0.05 (none survive BH within lineage)
+        C3_Prolif_MKI67                  NR   5.8%  R   4.2%  P = 0.229  BH = 0.800
+        C2_NKT_CD3D                      NR  24.1%  R  31.8%  P = 0.400  BH = 0.800
+        C1_NK_CD69                       NR  24.6%  R  25.0%  P = 0.857  BH = 1.000
+     Post-treatment NR vs R: 0 of 4 states with P < 0.05 (none survive BH within lineage)
+        C2_NKT_CD3D                      NR  21.5%  R  25.6%  P = 0.421  BH = 1.000
+        C3_Prolif_MKI67                  NR   2.8%  R   2.8%  P = 0.690  BH = 1.000
+        C1_NK_CD69                       NR  33.7%  R  30.4%  P = 0.841  BH = 1.000
+
+  [B cells]  6 annotated states
+     Pre-treatment NR vs R: 0 of 6 states with P < 0.05 (none survive BH within lineage)
+        C4_B_Naive_TCL1A                 NR  10.1%  R  19.1%  P = 0.200  BH = 0.800
+        C2_B_Memory_IGHA1                NR  61.2%  R  41.2%  P = 0.400  BH = 0.800
+        C3_B_Naive_NR4A1                 NR   2.6%  R   9.3%  P = 0.400  BH = 0.800
+     Post-treatment NR vs R: 0 of 6 states with P < 0.05 (none survive BH within lineage)
+        C5_B_Aged                        NR  11.8%  R   4.9%  P = 0.190  BH = 0.571
+        C3_B_Naive_NR4A1                 NR   5.7%  R  13.4%  P = 0.268  BH = 0.571
+        C4_B_Naive_TCL1A                 NR   9.8%  R  14.8%  P = 0.286  BH = 0.571
+
+2. HALLMARK PROGRAMMES (positive NES = enriched in non-responders)
+------------------------------------------------------------------------------------------------
+  [CD4+ T cells, pre-treatment]
+     top NR-enriched: G2-M Checkpoint (NES +1.89, q=0.00); Mitotic Spindle (NES +1.72, q=0.02); TGF-beta Signaling (NES +1.42, q=0.34)
+     top R-enriched: Hypoxia (NES -1.74, q=0.07); Adipogenesis (NES -1.68, q=0.09); TNF-alpha Signaling via NF-kB (NES -1.65, q=0.09)
+  [CD4+ T cells, post-treatment]
+     top NR-enriched: G2-M Checkpoint (NES +1.69, q=0.00); Mitotic Spindle (NES +1.61, q=0.01); E2F Targets (NES +1.60, q=0.01)
+     top R-enriched: Interferon Gamma Response (NES -2.20, q=0.00); Complement (NES -1.89, q=0.02); Inflammatory Response (NES -1.80, q=0.02)
+
+  [CD8+ T cells, pre-treatment]
+     top NR-enriched: Apical Surface (NES +1.41, q=0.54); Oxidative Phosphorylation (NES +1.18, q=1.00); Allograft Rejection (NES +0.99, q=1.00)
+     top R-enriched: TNF-alpha Signaling via NF-kB (NES -1.94, q=0.00); UV Response Up (NES -1.69, q=0.02); Inflammatory Response (NES -1.66, q=0.02)
+  [CD8+ T cells, post-treatment]
+     top NR-enriched: G2-M Checkpoint (NES +1.45, q=0.02); Spermatogenesis (NES +1.43, q=0.03); E2F Targets (NES +1.39, q=0.05)
+     top R-enriched: Complement (NES -1.96, q=0.01); Hypoxia (NES -1.71, q=0.15); UV Response Dn (NES -1.60, q=0.28)
+
+  [NK cells, pre-treatment]
+     top NR-enriched: TNF-alpha Signaling via NF-kB (NES +1.49, q=0.04); KRAS Signaling Dn (NES +1.33, q=0.79); IL-2/STAT5 Signaling (NES +1.27, q=0.98)
+     top R-enriched: Apoptosis (NES -1.43, q=0.45); Interferon Alpha Response (NES -1.26, q=1.00); Coagulation (NES -1.13, q=1.00)
+  [NK cells, post-treatment]
+     top NR-enriched: TNF-alpha Signaling via NF-kB (NES +1.58, q=0.00); mTORC1 Signaling (NES +1.42, q=0.28); Unfolded Protein Response (NES +1.39, q=0.32)
+     top R-enriched: E2F Targets (NES -1.42, q=0.86); G2-M Checkpoint (NES -1.40, q=0.50); Coagulation (NES -1.34, q=0.52)
+
+  [B cells, pre-treatment]
+     top NR-enriched: TNF-alpha Signaling via NF-kB (NES +1.38, q=0.94); G2-M Checkpoint (NES +1.35, q=0.80); UV Response Up (NES +1.32, q=0.68)
+     top R-enriched: Allograft Rejection (NES -1.65, q=0.02); Interferon Alpha Response (NES -1.43, q=0.17); Interferon Gamma Response (NES -1.23, q=0.34)
+  [B cells, post-treatment]
+     top NR-enriched: UV Response Up (NES +1.37, q=1.00); TNF-alpha Signaling via NF-kB (NES +1.36, q=0.60); Glycolysis (NES +1.28, q=0.77)
+     top R-enriched: heme Metabolism (NES +0.71, q=0.87); IL-6/JAK/STAT3 Signaling (NES +0.77, q=0.86); Apoptosis (NES +0.78, q=0.89)

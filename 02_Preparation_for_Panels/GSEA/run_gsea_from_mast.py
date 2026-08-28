@@ -28,7 +28,7 @@ NFKB_TERM = "TNF-alpha Signaling via NF-kB"
 def compute_ranking(deg_csv: Path) -> pd.Series:
     df = pd.read_csv(deg_csv)
     pvals_clipped = df['pvals'].clip(lower=1e-300)
-    # Negate logFC: MAST DEGs are R-vs-NR; flip to NR-vs-R convention
+    # Negate logFC: MAST DEGs are R-vs-NR; flip to NR-vs-R to match Round_4 convention
     df['rank_metric'] = -df['logfoldchanges'] * (-np.log10(pvals_clipped))
     rnk = df.set_index('gene')['rank_metric'].dropna()
     rnk = rnk[~rnk.index.duplicated(keep='first')].sort_values(ascending=False)

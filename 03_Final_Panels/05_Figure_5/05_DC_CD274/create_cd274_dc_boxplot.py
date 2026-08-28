@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# REVISED FOR CIR-26-0753-ET, reviewer 1 point R1.3c:
+# the test is two-sided and the annotation reports the exact P value.
+# The one-tailed version this replaces is the one used in the preprint,
+# https://www.biorxiv.org/content/10.64898/2026.03.05.708917
 """Panel M: PD-L1 (CD274) boxplot — DC cells, Post-R vs Post-NR."""
 import sys
 from pathlib import Path
@@ -79,12 +83,12 @@ def main():
     nr_data = sample_df[sample_df['response'] == 'NR']['cd274_expr'].values
     print(f"  R samples: n={len(r_data)}, NR samples: n={len(nr_data)}")
 
-    # Mann-Whitney (one-sided: NR > R)
+    # Mann-Whitney U (two-sided)
     if len(r_data) >= 2 and len(nr_data) >= 2:
-        _, pval = mannwhitneyu(nr_data, r_data, alternative='greater')
+        _, pval = mannwhitneyu(nr_data, r_data, alternative='two-sided')
     else:
         pval = np.nan
-    print(f"  P-value (one-sided NR>R): {pval:.4f}" if not np.isnan(pval) else "  P-value: N/A")
+    print(f"  P-value (two-sided): {pval:.4f}" if not np.isnan(pval) else "  P-value: N/A")
 
     # Plot
     fig, ax = plt.subplots(figsize=(3.5 * SCALE * CM, 5 * SCALE * CM))
@@ -118,7 +122,7 @@ def main():
     ax.plot([0, 0, 1, 1], [bh - 0.02 * y_range, bh, bh, bh - 0.02 * y_range],
             color='black', linewidth=0.8 * SCALE)
 
-    p_str = '***' if pval < 0.001 else '**' if pval < 0.01 else '*' if pval < 0.05 else 'ns'
+    p_str = f'P = {pval:.3f}' if pval >= 0.001 else 'P < 0.001'
     is_star = pval < 0.05
     ax.text(0.5, bh + 0.02 * y_range, p_str, ha='center',
             fontsize=(7 if is_star else 5) * SCALE,

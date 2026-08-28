@@ -1,0 +1,27 @@
+INDEPENDENT ANNOTATION BY CELLTYPIST - Reviewer 1 point R1.7
+============================================================================================
+
+Model: Immune_All_Low.pkl (the model already used for the external cohorts)
+Cells annotated: 68,289
+
+Percentage of each cluster assigned to macrophage- and monocyte-family labels:
+
+  cluster                             macrophage   monocyte                         top label
+  C0_Mac_Classic_TREM2                     73.5%       1.4%                       Macrophages
+  C1_Mono_Classic_CD14                      8.8%      86.7%               Classical monocytes
+  C2_MoMac_Intermediate_HLA-DRA            54.2%      25.5%                       Macrophages
+  C3_Mac_Inflam_IL1B                       75.6%      17.3%          Intermediate macrophages
+  C4_Mono_Alternative_CD16                  1.9%      96.1%           Non-classical monocytes
+  C5_Mac_Prolif_MKI67                      74.1%       2.3%                       Macrophages
+  C6_Mac_Metallothionein_MT1G              65.3%       8.0%                       Macrophages
+
+INTERPRETATION
+--------------------------------------------------------------------------------------------
+  Reference states in the same object: C0_Mac_Classic_TREM2 is 73.5% macrophage-labelled;
+  C1_Mono_Classic_CD14 is 86.7% monocyte-labelled.
+  C3_Mac_Inflam_IL1B is 75.6% macrophage and 17.3% monocyte.
+  An external reference therefore assigns the IL-1b+ cluster
+  predominantly to the macrophage family, which supports the
+  published annotation while remaining consistent with the
+  intermediate marker-score position: a monocyte-derived
+  macrophage.

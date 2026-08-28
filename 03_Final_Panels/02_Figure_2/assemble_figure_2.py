@@ -70,7 +70,7 @@ PANELS = {
     'N2': ('02_K',  'ceacam5_pre_boxplot.svg'),
     'O1': ('02_N',  'ceacam6_prjeb25780_boxplot.svg'),
     'O2': ('02_O',  'ceacam5_prjeb25780_boxplot.svg'),
-    'P':  ('02_L',  'ihc_representative_1x6.svg'),
+    'P':  ('02_L',  'ihc_representative_2x3.svg'),
     'Q':  ('02_M',  'ihc_combined_boxplot.svg'),
 }
 

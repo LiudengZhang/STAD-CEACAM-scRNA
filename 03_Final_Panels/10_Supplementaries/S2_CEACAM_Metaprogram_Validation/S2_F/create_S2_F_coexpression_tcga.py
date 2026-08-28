@@ -59,8 +59,13 @@ slope, intercept, _, _, _ = stats.linregress(ceacam5, ceacam6)
 x_line = np.linspace(ceacam5.min(), ceacam5.max(), 100)
 ax.plot(x_line, slope * x_line + intercept, 'k--', linewidth=LINEWIDTH * 1.5, alpha=0.7)
 
-sig = '***' if p < 0.001 else '**' if p < 0.01 else '*' if p < 0.05 else 'ns'
-ax.text(0.05, 0.95, f'ρ = {r:.2f} ({sig})\nn = {len(ceacam5)}',
+import math
+_e = math.floor(math.log10(p)); _c = int(p / 10**_e)
+if _e >= -3:
+    p_str = f'P = {_c * 10**_e:.{-_e}f}'
+else:
+    p_str = f'P = {_c}' + r'$\times 10^{' + str(_e) + r'}$'
+ax.text(0.05, 0.95, f'ρ = {r:.2f}, {p_str}\nn = {len(ceacam5)}',
         transform=ax.transAxes, fontsize=FONT_SIZE * 0.8,
         verticalalignment='top',
         bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))

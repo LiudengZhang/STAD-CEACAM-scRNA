@@ -1,0 +1,66 @@
+COHORT AUDIT - Reviewer 1 points R1.0, R1.3a, R1.3b
+==============================================================================
+
+Q1. HOW MANY SAMPLES WERE LONGITUDINALLY PAIRED?
+------------------------------------------------------------------------------
+Total patients in the atlas                     : 35
+Total specimens                                 : 70
+Patients with pre AND post at ANY site          : 1  ['P1']
+Patients with pre AND post in STOMACH           : 1
+
+  Paired specimens:
+      P1  P01-M1   Liver      Pre   nan
+      P1  P01-P1   Stomach    Pre   NR
+      P1  P01-P2   Stomach    Post  NR
+
+  => The response comparisons are between INDEPENDENT patient groups.
+     The design is timepoint-stratified and cross-sectional, not
+     longitudinally paired.
+
+
+Q2. WERE POST-TREATMENT NON-RESPONDERS PRIMARY NON-RESPONDERS, PATIENTS
+    WITH AN INITIAL PR WHO PROGRESSED, OR BOTH?
+------------------------------------------------------------------------------
+  Post-treatment NON-RESPONDERS (n = 6):
+    P01-P2   RECIST SD               best=SD       No documented change
+    P14-P2   RECIST SD-PD            best=SD       Worsened after best response
+    P23-P2   RECIST PD               best=PD       No documented change
+    P24-P2   RECIST PD               best=PD       No documented change
+    P34-P2   RECIST SD-PD            best=SD       Worsened after best response
+    P06-P2   RECIST SD               best=SD       No documented change
+
+  Post-treatment RESPONDERS (n = 5):
+    P10-P2   RECIST PR-SD            best=PR       Worsened after best response
+    P11-P2   RECIST PR-SD            best=PR       Worsened after best response
+    P12-P2   RECIST PR               best=PR       No documented change
+    P13-P2   RECIST PR               best=PR       No documented change
+    P05-P2   RECIST PR               best=PR       No documented change
+
+  Post-treatment NR whose BEST response was CR/PR : 0
+  Post-treatment R who worsened after best response: 2
+
+
+Q3. IS THE R/NR LABEL CONSISTENT WITH THE RECORDED RECIST RESPONSE?
+------------------------------------------------------------------------------
+RECIST 1.1 defines a responder as CR or PR. Any sample labelled R whose best
+response is SD/PD, or labelled NR whose best response is CR/PR, is flagged.
+
+  Samples whose label contradicts the recorded RECIST response : 1
+    P26-P1   Pre   labelled NR  but RECIST = PR (best PR)
+  Samples with no evaluable RECIST response                    : 1
+    P02-P1   Pre   labelled NR  but RECIST = follow-up loss
+
+  *** UNRESOLVED. These rows must be checked against the primary clinical
+      records before the revision is submitted. Do not silently relabel. ***
+
+
+Q4. COHORT COMPOSITION
+------------------------------------------------------------------------------
+Treatment phase  R/NR Grouping
+Post             NR               6
+                 R                5
+Pre              NR               4
+                 R                4
+
+All treatment was given in the NEOADJUVANT setting; post-treatment specimens
+were taken at surgery or repeat gastroscopy after 1-6 cycles.

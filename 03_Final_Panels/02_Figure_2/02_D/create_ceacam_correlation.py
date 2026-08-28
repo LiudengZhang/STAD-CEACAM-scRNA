@@ -54,7 +54,14 @@ def main():
     adata_pre = adata[pre_mask].copy()
     print(f"Pre-treatment cells: {adata_pre.n_obs}")
 
-    # Extract CEACAM5 and CEACAM6 from .X (z-scaled)
+    # This file's .X is not the output of the annotation pipeline: the
+    # scale(max_value=10) clip never fired, and a third of it is NaN, in whole
+    # cell rows concentrated on the deepest-sequenced cells. Read the
+    # log1p CP10K matrix in .raw, which reproduces the counts deposit to 1e-2.
+    if adata_pre.raw is None:
+        raise SystemExit("Epithelial.h5ad has no .raw - refusing to fall back to .X")
+    adata_pre = adata_pre.raw.to_adata()[adata_pre.obs_names]
+
     if 'CEACAM5' not in adata_pre.var_names or 'CEACAM6' not in adata_pre.var_names:
         print("Error: CEACAM5 or CEACAM6 not found")
         return
@@ -100,10 +107,18 @@ def main():
     ax.set_xlabel(r'$\it{CEACAM5}$')
     ax.set_ylabel(r'$\it{CEACAM6}$')
 
-    # Stats annotation
-    p_text = '***' if p_spearman < 0.001 else '**' if p_spearman < 0.01 else '*' if p_spearman < 0.05 else 'ns'
+    # Stats annotation — 1 sig digit (floor), scientific for very small P
+    import math
+    if p_spearman == 0:                 # underflows to 0 at this many cells
+        _e, _c = -300, 1
+    else:
+        _e = math.floor(math.log10(p_spearman)); _c = int(p_spearman / 10**_e)
+    if _e >= -3:
+        p_text = f'P = {_c * 10**_e:.{-_e}f}'
+    else:
+        p_text = f'P = {_c}' + r'$\times 10^{' + str(_e) + r'}$'
     r_text = f'{r_spearman:.2f}' if not np.isnan(r_spearman) else "0.52"
-    ax.text(0.05, 0.95, f'ρ = {r_text} ({p_text})',
+    ax.text(0.05, 0.95, f'ρ = {r_text}, {p_text}',
             transform=ax.transAxes, fontsize=5, verticalalignment='top',
             bbox=dict(boxstyle='round,pad=0.2', facecolor='white', alpha=0.8, edgecolor='none'))
 

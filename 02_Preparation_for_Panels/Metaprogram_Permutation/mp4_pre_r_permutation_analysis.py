@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# REVISED FOR CIR-26-0753-ET, reviewer 1 point R1.3c:
+# the test is two-sided and the annotation reports the exact P value.
+# The one-tailed version this replaces is the one used in the preprint,
+# https://www.biorxiv.org/content/10.64898/2026.03.05.708917
 """
 MP4 Pre-R vs Others: Exact Permutation Test + Effect Size Analysis
 Hypothesis: Pre-treatment responders have uniquely low S-MP4 scores
@@ -84,10 +88,10 @@ def assign_group(row):
 # =========================================================================
 # Exact permutation test
 # =========================================================================
-def exact_permutation_test(x, y, alternative='less'):
+def exact_permutation_test(x, y, alternative='two-sided'):
     """
     Exact permutation test comparing group x vs group y.
-    alternative='less': test if mean(x) < mean(y)
+    alternative='two-sided': test if mean(x) < mean(y)
     Returns exact p-value by enumerating all C(n, n_x) permutations.
     """
     all_vals = np.concatenate([x, y])
@@ -183,7 +187,7 @@ def main():
         pre_r_vals = group_data['Pre-R']
         others_vals = np.concatenate([group_data[g] for g in ['Post-R', 'Pre-NR', 'Post-NR']])
         perm_p, n_perms, obs_diff = exact_permutation_test(
-            pre_r_vals, others_vals, alternative='less')
+            pre_r_vals, others_vals, alternative='two-sided')
         mp_results['permutation_p'] = float(perm_p)
         mp_results['permutation_n_perms'] = int(n_perms)
         mp_results['permutation_observed_diff'] = float(obs_diff)
@@ -199,7 +203,7 @@ def main():
               f"p={kw_other_p:.4f}")
 
         # 4. Mann-Whitney (Pre-R < Others) for comparison
-        mw_stat, mw_p = mannwhitneyu(pre_r_vals, others_vals, alternative='less')
+        mw_stat, mw_p = mannwhitneyu(pre_r_vals, others_vals, alternative='two-sided')
         mp_results['mannwhitney_U'] = float(mw_stat)
         mp_results['mannwhitney_p'] = float(mw_p)
         print(f"  [4] Mann-Whitney U (Pre-R < Others): U={mw_stat}, p={mw_p:.4f}")

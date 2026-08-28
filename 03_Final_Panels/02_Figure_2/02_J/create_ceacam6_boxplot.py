@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# REVISED FOR CIR-26-0753-ET, reviewer 1 point R1.3c:
+# the test is two-sided and the annotation reports the exact P value.
+# The one-tailed version this replaces is the one used in the preprint,
+# https://www.biorxiv.org/content/10.64898/2026.03.05.708917
 """
 Create Panel 2B: CEACAM6 boxplot comparing Responders vs Non-Responders
 Sample-level aggregation (merged Pre+Post) with Mann-Whitney U test
@@ -101,8 +105,8 @@ def main():
     print(f"Non-Responders (n={len(non_responder_vals)}): mean={np.mean(non_responder_vals):.3f}")
 
     # Mann-Whitney U test
-    stat, pval = stats.mannwhitneyu(non_responder_vals, responder_vals, alternative='greater')
-    print(f"\nOne-tailed Mann-Whitney U test (NR > R): U={stat:.2f}, p={pval:.4f}")
+    stat, pval = stats.mannwhitneyu(non_responder_vals, responder_vals, alternative='two-sided')
+    print(f"\nTwo-sided Mann-Whitney U test: U={stat:.2f}, p={pval:.4f}")
 
     # Create figure with exact dimensions
     fig_width = PANEL_WIDTH_CM * CM_TO_INCH
@@ -144,7 +148,7 @@ def main():
     y_bracket = y_max * 1.15
     ax.plot([1, 1, 2, 2], [y_bracket, y_bracket*1.05, y_bracket*1.05, y_bracket],
             'k-', linewidth=0.5)
-    pval_text = '***' if pval < 0.001 else '**' if pval < 0.01 else '*' if pval < 0.05 else 'ns'
+    pval_text = f'P = {pval:.3f}' if pval >= 0.001 else 'P < 0.001'
     ax.text(1.5, y_bracket*1.08, pval_text, ha='center', va='bottom', fontsize=6 * SCALE)
 
     # Labels - 4× scaled fonts

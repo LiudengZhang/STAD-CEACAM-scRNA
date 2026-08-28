@@ -46,9 +46,10 @@ HALLMARK_NFKB = [
 ]
 
 STATE_GENES = [
-    'IL17A','IL17F','RORC','CCR6','IL23R','IL22','AHR','BATF','IRF4','STAT3',
-    'CCL20','CXCR6','KLRB1','IL21','IL1R1','RORA','CTSH','PTPN13','TMEM176A','TMEM176B',
-    'CAPG','LGMN','FKBP5','ICOS',
+    'IL17A','IL17F','RORC','CCR6','IL23R','IL22','IL26','IL21',
+    'BATF','IRF4','STAT3','AHR','RORA','IL1R1','IL6R','TGFBR2',
+    'CCL20','CSF2','IFNG','TNF','IL2','CTLA4','ICOS','CD44',
+    'IL4I1','LGALS3','CXCR3','KLRB1',
 ]
 
 
@@ -117,7 +118,12 @@ def main():
         x_line = np.linspace(x[valid].min(), x[valid].max(), 100)
         ax.plot(x_line, np.polyval(z, x_line), 'k--', linewidth=0.8 * SCALE, alpha=0.6, zorder=2)
 
-    p_str = '***' if pval < 0.001 else '**' if pval < 0.01 else '*' if pval < 0.05 else 'ns'
+    import math
+    _e = math.floor(math.log10(pval)); _c = int(pval / 10**_e)
+    if _e >= -3:
+        p_str = f'P = {_c * 10**_e:.{-_e}f}'
+    else:
+        p_str = f'P = {_c}' + r'$\times 10^{' + str(_e) + r'}$'
 
     ax.set_xlabel('NF-\u03baB Score', fontsize=6 * SCALE)
     ax.set_ylabel('Th17 Score', fontsize=6 * SCALE)

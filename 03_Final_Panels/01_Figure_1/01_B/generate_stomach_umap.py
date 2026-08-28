@@ -36,6 +36,8 @@ sc.set_figure_params(dpi=150, frameon=False, figsize=(12, 10), facecolor='white'
 plt.rcParams.update({'svg.fonttype': 'none', 'pdf.fonttype': 42, 'ps.fonttype': 42, 'font.family': 'sans-serif', 'font.sans-serif': ['Arial', 'Liberation Sans', 'Helvetica', 'DejaVu Sans']})
 
 # Paths
+# The upstream Round_4 integration produced this object; the deposited
+# copy is FULL_DATASET_H5AD, which is what the line below reads.
 DATA_FILE = FULL_DATASET_H5AD
 OUTPUT_DIR = Path(__file__).parent
 

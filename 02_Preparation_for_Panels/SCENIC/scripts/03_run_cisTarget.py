@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Paths below refer to the upstream Round_4 processing pipeline, which is
+# not part of this release. This script is included as a record of how the
+# input was produced; it is not called by _run_all_panels.sh.
 """
 Step 3: cisTarget Motif Enrichment Analysis - Full MoMac (12 Post-Stomach Samples)
 ==================================================================================
@@ -30,22 +33,23 @@ def main():
     print("=" * 80)
     print()
 
-    # Central config
-    sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
-    from paths import SCENIC_RESULTS_DIR, SCENIC_DB_DIR
+    # Define paths
+    base_dir = Path('/path/to/Project_4_05232025/Round_4')
+    project_dir = base_dir / '02_Playground/02_Cell-Cell_Interaction/01_Analysis/09_SCENIC/17_Full_MoMac_SCENIC'
+    db_dir = base_dir / '02_Playground/02_Cell-Cell_Interaction/01_Analysis/09_SCENIC/00_Database'
 
     # Input files
-    loom_file = SCENIC_RESULTS_DIR / 'MoMac_12sample_scenic.loom'
-    adjacencies_file = SCENIC_RESULTS_DIR / 'adjacencies.tsv'
+    loom_file = project_dir / 'Results/MoMac_12sample_scenic.loom'
+    adjacencies_file = project_dir / 'Results/adjacencies.tsv'
 
-    # Database files (download from https://resources.aertslab.org/cistarget/)
-    db_10kb = SCENIC_DB_DIR / 'hg38_10kbp_up_10kbp_down_full_tx_v10_clust.genes_vs_motifs.rankings.feather'
-    motif_annotations = SCENIC_DB_DIR / 'motifs-v10nr_clust-nr.hgnc-m0.001-o0.0.tbl'
+    # Database files
+    db_10kb = db_dir / 'hg38_10kbp_up_10kbp_down_full_tx_v10_clust.genes_vs_motifs.rankings.feather'
+    motif_annotations = db_dir / 'motifs-v10nr_clust-nr.hgnc-m0.001-o0.0.tbl'
 
     # Output files
-    output_regulons = SCENIC_RESULTS_DIR / 'regulons.csv'
-    output_motifs = SCENIC_RESULTS_DIR / 'motif_enrichment.csv'
-    output_regulons_pkl = SCENIC_RESULTS_DIR / 'regulons.pkl'
+    output_regulons = project_dir / 'Results/regulons.csv'
+    output_motifs = project_dir / 'Results/motif_enrichment.csv'
+    output_regulons_pkl = project_dir / 'Results/regulons.pkl'
 
     # Check input files
     if not loom_file.exists():

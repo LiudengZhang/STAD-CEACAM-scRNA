@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# REVISED FOR CIR-26-0753-ET, reviewer 1 point R1.3c:
+# the test is two-sided and the annotation reports the exact P value.
+# The one-tailed version this replaces is the one used in the preprint,
+# https://www.biorxiv.org/content/10.64898/2026.03.05.708917
 """Create individual BACH1 and NFKB1 regulon activity 4-group boxplots.
 1-vs-3 comparison: Post-R vs Others (exact permutation test).
 KW homogeneity test among the other 3 groups.
@@ -61,7 +65,7 @@ plt.rcParams.update({
 })
 
 
-def exact_permutation_test(x, y, alternative='greater'):
+def exact_permutation_test(x, y, alternative='two-sided'):
     """Exact permutation test: enumerate all C(n, n_x) groupings."""
     all_vals = np.concatenate([x, y])
     n_total = len(all_vals)
@@ -177,7 +181,7 @@ for tf_name in ['BACH1', 'NFKB1']:
         sample_scores[sample_scores['group'] == g]['score'].values
         for g in ['Pre-NR', 'Pre-R', 'Post-NR']
     ])
-    perm_p = exact_permutation_test(post_r_vals, others_vals, alternative='less')
+    perm_p = exact_permutation_test(post_r_vals, others_vals, alternative='two-sided')
     print(f"  {tf_name}: Exact permutation p = {perm_p:.4f} (Post-R < Others)")
 
     # KW homogeneity among other 3
@@ -197,16 +201,16 @@ for tf_name in ['BACH1', 'NFKB1']:
     ns_y = y_max * 1.08
     ax.plot([0, 0, 2, 2], [ns_y, ns_y * 1.03, ns_y * 1.03, ns_y],
             'k-', lw=0.8 * SCALE, alpha=0.6)
-    kw_str = ('***' if kw_p < 0.001 else '**' if kw_p < 0.01
-              else '*' if kw_p < 0.05 else 'ns')
+    # Exact P rather than a star: R1.3c asks for exact values, and the test
+    # above is already two-sided.
+    kw_str = f'P = {kw_p:.3f}' if kw_p >= 0.001 else 'P < 0.001'
     ax.text(1.0, ns_y * 1.04, kw_str, ha='center', fontsize=5 * SCALE, color='#666666')
 
     # Bracket 2 (upper): Post-R vs Others — spans all 4 (positions 0 to 3.5)
     bracket_y = y_max * 1.22
     ax.plot([0, 0, 3.5, 3.5], [bracket_y, bracket_y * 1.03, bracket_y * 1.03, bracket_y],
             'k-', lw=0.8 * SCALE)
-    p_str = ('***' if perm_p < 0.001 else '**' if perm_p < 0.01
-             else '*' if perm_p < 0.05 else 'ns')
+    p_str = f'P = {perm_p:.3f}' if perm_p >= 0.001 else 'P < 0.001'
     ax.text(1.75, bracket_y * 1.04, p_str, ha='center', fontsize=6 * SCALE)
 
     ax.set_ylabel('Regulon activity score', fontsize=5 * SCALE)

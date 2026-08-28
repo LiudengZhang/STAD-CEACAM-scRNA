@@ -1,0 +1,42 @@
+# Paths below refer to the upstream Round_4 processing pipeline, which is
+# not part of this release. This script is included as a record of how the
+# input was produced; it is not called by _run_all_panels.sh.
+data:
+  # Must match FULL_DATASET_H5AD in 00_Config/paths.py
+  reference_h5ad: /path/to/Project_4_05232025/Round_5/01_Raw_Inputs/01_H5AD/full_dataset.h5ad
+  # Use final 14-type annotation scheme
+  cell_type_column: major_cell_type
+  # Use minor_cell_state for sender identification
+  sender_column: minor_cell_state
+
+filters:
+  # Post-treatment non-responder samples only (stomach)
+  stomach_post_grouping: No-response
+
+sender: C3_Mac_Inflam_IL1B
+
+receivers:
+  - Monocytes/Macrophages
+  - B cells
+  - CD4+ T cells
+  - CD8+ T cells
+  - DC cells
+  - Endothelial cells
+  - Epithelial cells
+  - Fibroblast
+  - Mast cells
+  - Neutrophils
+  - NK cells
+  - Pericyte
+  - Plasma cells
+
+nichenet:
+  top_n_ligands: 30
+  min_expression_fraction: 0.10
+  n_target_genes: 250
+
+databases:
+  # Must match NICHENET_DB_DIR in 00_Config/paths.py
+  ligand_target_matrix: /path/to/Project_4_05232025/Round_5/02_Preparation_for_Panels/_archived_NicheNet_v2/00_Databases/ligand_target_matrix.rds
+  lr_network: /path/to/Project_4_05232025/Round_5/02_Preparation_for_Panels/_archived_NicheNet_v2/00_Databases/lr_network.rds
+  weighted_networks: /path/to/Project_4_05232025/Round_5/02_Preparation_for_Panels/_archived_NicheNet_v2/00_Databases/weighted_networks.rds

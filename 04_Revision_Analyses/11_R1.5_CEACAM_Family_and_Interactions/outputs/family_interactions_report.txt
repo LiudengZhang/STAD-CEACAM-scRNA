@@ -1,0 +1,62 @@
+CEACAM FAMILY EXPRESSION AND INTERACTION TARGETS - Reviewer 1 point R1.5
+==============================================================================================
+
+A. THE CEACAM FAMILY IN PRE-TREATMENT GASTRIC TUMOUR EPITHELIUM
+----------------------------------------------------------------------------------------------
+   Cells: 60,937   family members in the gene space: 25
+
+   gene            % cells detected   mean expression
+   CEACAM5             33.27           0.7957
+   CEACAM6             32.61           0.7682
+   CEACAM1             10.09           0.1324
+   CEACAM7              3.17           0.0559
+   CEACAM19             1.21           0.0155
+   CEACAM16-AS1         0.79           0.0088
+   CEACAM18             0.42           0.0050
+   CEACAM3              0.27           0.0037
+   CEACAM21             0.19           0.0028
+   CEACAM4              0.11           0.0018
+   CEACAM20             0.10           0.0015
+   CEACAM16             0.06           0.0008
+   CEACAMP5             0.02           0.0003
+   CEACAM22P            0.02           0.0002
+   CEACAM8              0.01           0.0001
+   CEACAMP2             0.00           0.0001
+   CEACAMP3             0.00           0.0000
+   CEACAMP6             0.00           0.0000
+   CEACAMP11            0.00           0.0000
+   CEACAMP1             0.00           0.0000
+   CEACAMP10            0.00           0.0000
+   CEACAMP4             0.00           0.0000
+   CEACAMP7             0.00           0.0000
+   CEACAMP8             0.00           0.0000
+   CEACAMP9             0.00           0.0000
+
+   The two most widely detected members are CEACAM5, CEACAM6.
+
+B. CO-EXPRESSION OF CEACAM5 AND CEACAM6
+----------------------------------------------------------------------------------------------
+   Spearman rho                                            0.438   (n = 60,937)   P = 0
+   Spearman rho                                            0.926   (n = 20)   P = 4.64e-09
+   % of CEACAM-positive cells that are double positive    44.621   (n = 27,758)
+   % of CEACAM5+ cells that are also CEACAM6+             61.093   (n = 20,274)
+   % of CEACAM6+ cells that are also CEACAM5+             62.335   (n = 19,870)
+
+C. INTERACTION TARGETS, CellPhoneDB v5 STATISTICAL ANALYSIS
+----------------------------------------------------------------------------------------------
+   Cells analysed: 7,200 in 12 groups, capped at 600 cells per group
+   1000 permutations, seed 0
+   groups below the minimum and therefore dropped: Plasma cell (n = 11)
+
+   Annotated partners of each marker in the database:
+      CEACAM5   CD1D, CD8A, CEACAM1, CEACAM6
+      CEACAM6   CEACAM1, CEACAM5, CEACAM6, CEACAM8
+
+   Significant partner-receiver pairs (P < 0.05) engaged by the
+   CEACAM5-only sender: 8; by the CEACAM6-only sender: 3; shared: 3
+   Jaccard overlap: 0.375
+
+      CEACAM6    on Epithelial_CEACAM5_6_double
+      CEACAM6    on Epithelial_CEACAM6_only
+      CEACAM6    on Pericyte
+

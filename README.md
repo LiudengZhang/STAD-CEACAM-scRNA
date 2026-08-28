@@ -32,8 +32,11 @@
 03_Final_Panels/             # Figure assembly scripts — one folder per main figure
     ├── 01_Figure_1 ... 05_Figure_5
     ├── 10_Supplementaries
+    ├── Supplementary_New/   # Supplementary Figures S7–S11 (revision)
     └── _run_all_panels.sh   # Orchestrator
-environment.yml              # Main conda env (119/120 scripts)
+04_Revision_Analyses/        # Analyses added in revision, one folder per reviewer point
+05_Manuscript/04_Tables/     # Supplementary Tables ST1–ST9, read by the revision scripts
+environment.yml              # Main conda env (stad_ceacam)
 ```
 
 ## Environment Setup
@@ -53,6 +56,20 @@ The Milo differential abundance analysis uses a dedicated environment with `pert
 conda create -n pertpy_milo -c conda-forge python=3.11 -y
 conda run -n pertpy_milo pip install pertpy scanpy matplotlib seaborn filelock
 conda install -n pertpy_milo -c conda-forge -c bioconda rpy2 r-base bioconductor-edger bioconductor-limma r-statmod -y
+```
+
+### CellTypist and pyDESeq2 environment
+
+`pydeseq2` requires `numpy>=2`, and the main environment is pinned to numpy
+1.23.5 — the version every figure in the paper was produced with. Installing it
+alongside would silently upgrade numpy and break `scanpy` and `anndata`, so it
+gets its own environment. `_run_all_panels.sh` selects it for
+`celltypist_annotation.py`.
+
+```bash
+conda create -n stad_numpy2 -c conda-forge python=3.11.14 -y
+conda run -n stad_numpy2 python -m pip install numpy==2.4.6 scanpy==1.11.5 \
+  anndata==0.12.19 celltypist==1.7.1 pydeseq2==0.5.4
 ```
 
 ### BayesPrism (R, for the deconvolution step)
@@ -81,17 +98,27 @@ bash 03_Final_Panels/_run_all_panels.sh supp   # supplementaries only
 
 ## External Databases
 
-The SCENIC pipeline requires cisTarget motif databases (~95 MB, not bundled). Download into `02_Preparation_for_Panels/SCENIC/database/`:
+The SCENIC pipeline requires cisTarget motif databases (~95 MB, not bundled). Download into `02_Preparation_for_Panels/SCENIC/databases/`:
 
 ```bash
 # cisTarget motifs database (Aerts lab)
 wget https://resources.aertslab.org/cistarget/motif2tf/motifs-v10nr_clust-nr.hgnc-m0.001-o0.0.tbl \
-  -O 02_Preparation_for_Panels/SCENIC/database/motifs-v10nr_clust-nr.hgnc-m0.001-o0.0.tbl
+  -O 02_Preparation_for_Panels/SCENIC/databases/motifs-v10nr_clust-nr.hgnc-m0.001-o0.0.tbl
 ```
 
 ## Data Availability
 
-Input data (h5ad files, spatial data, external datasets) are available upon request or from the repositories described in the manuscript.
+Processed single-cell objects and the H&E/IHC images are deposited at Zenodo,
+[DOI:10.5281/zenodo.18737073](https://doi.org/10.5281/zenodo.18737073), which
+always resolves to the current version of the record. The same record carries the
+prepared intermediates the panels read (`02_Preparation_for_Panels/`). Set
+`STAD_RAW_INPUTS` and `STAD_PREPARED_INPUTS` to point at your copy.
+
+Public datasets are obtained from their own sources: GSE251950 (spatial),
+GSE183904 and GSE239676 (single-cell validation), PRJEB25780 (bulk, TIGER) and
+TCGA-STAD from the NCI GDC. Supplementary Tables ST1–ST9 accompany the paper and
+are also included here, because three revision scripts read the cohort and
+signature definitions out of them.
 
 ## Citation
 

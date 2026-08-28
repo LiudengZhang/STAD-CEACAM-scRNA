@@ -1,0 +1,59 @@
+METAPROGRAM DIRECTION AND PRE/POST CONTRASTS - Reviewer 1 point R1.4
+==========================================================================================
+
+PART 1 - THE DIRECTION OF THE PUBLISHED MP4 RESULT
+------------------------------------------------------------------------------------------
+  S-MP4 group means:
+     Pre-R    n=4  mean=0.3916  median=0.3630
+     Pre-NR   n=4  mean=0.4949  median=0.5085
+     Post-R   n=5  mean=0.5373  median=0.5145
+     Post-NR  n=6  mean=0.5193  median=0.4626
+     Pre-R vs all others: difference = -0.1272 (lower in Pre-R), two-sided Exact permutation (3876 permutations) P = 0.0828
+
+  S-MP5 group means:
+     Pre-R    n=4  mean=0.2901  median=0.2836
+     Pre-NR   n=4  mean=0.3552  median=0.3575
+     Post-R   n=5  mean=0.3336  median=0.3141
+     Post-NR  n=6  mean=0.3672  median=0.3512
+     Pre-R vs all others: difference = -0.0627 (lower in Pre-R), two-sided Exact permutation (3876 permutations) P = 0.1881
+
+  The published test contrasts PRE-TREATMENT RESPONDERS against every
+  other group. MP4 is LOWER in pre-treatment responders, i.e. HIGHER in
+  non-responders. The manuscript sentence names non-responders and is
+  therefore inverted. The reviewer's reading of the figure is correct.
+
+  Corrected wording:
+     "MP4 was significantly depleted in pre-treatment responders relative
+      to all other groups (two-sided exact permutation P = 0.083), that is,
+      enriched in non-responders, consistent with the CEACAM5/6 result."
+
+
+PART 2 - THE REQUESTED GROUP CONTRASTS (all two-sided)
+------------------------------------------------------------------------------------------
+  [S-MP4]
+     Pre-treatment NR vs R (the CEACAM comparison)
+        Pre-NR mean=0.4949 (n=4)   Pre-R mean=0.3916 (n=4)
+        P = 0.4857   rank-biserial r = +0.375   higher in Pre-NR
+     Post-treatment NR vs R
+        Post-NR mean=0.5193 (n=6)   Post-R mean=0.5373 (n=5)
+        P = 0.6623   rank-biserial r = -0.200   higher in Post-R
+     Post- vs pre-treatment, responders (requested)
+        Post-R mean=0.5373 (n=5)   Pre-R mean=0.3916 (n=4)
+        P = 0.0635   rank-biserial r = +0.800   higher in Post-R
+     Post- vs pre-treatment, non-responders (requested)
+        Post-NR mean=0.5193 (n=6)   Pre-NR mean=0.4949 (n=4)
+        P = 1.0000   rank-biserial r = +0.000   higher in Post-NR
+
+  [S-MP5]
+     Pre-treatment NR vs R (the CEACAM comparison)
+        Pre-NR mean=0.3552 (n=4)   Pre-R mean=0.2901 (n=4)
+        P = 0.6857   rank-biserial r = +0.250   higher in Pre-NR
+     Post-treatment NR vs R
+        Post-NR mean=0.3672 (n=6)   Post-R mean=0.3336 (n=5)
+        P = 0.5368   rank-biserial r = +0.267   higher in Post-NR
+     Post- vs pre-treatment, responders (requested)
+        Post-R mean=0.3336 (n=5)   Pre-R mean=0.2901 (n=4)
+        P = 0.2857   rank-biserial r = +0.500   higher in Post-R
+     Post- vs pre-treatment, non-responders (requested)
+        Post-NR mean=0.3672 (n=6)   Pre-NR mean=0.3552 (n=4)
+        P = 0.7619   rank-biserial r = +0.167   higher in Post-NR

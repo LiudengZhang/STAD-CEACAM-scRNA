@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# REVISED FOR CIR-26-0753-ET, reviewer 1 point R1.3c:
+# the test is two-sided and the annotation reports the exact P value.
+# The one-tailed version this replaces is the one used in the preprint,
+# https://www.biorxiv.org/content/10.64898/2026.03.05.708917
 """Panel O: IL-6/JAK/STAT3 Signaling Score — CD4+ T cells, Post-R vs Post-NR."""
 import warnings, numpy as np, pandas as pd, scanpy as sc
 import matplotlib; matplotlib.use('Agg')
@@ -86,10 +90,10 @@ def main():
         ax.scatter([k] * len(data) + jitter, data, c=color, s=20 * SCALE,
                   edgecolors='white', linewidths=0.3 * SCALE, alpha=0.85, zorder=3)
 
-    _, pval = stats.mannwhitneyu(nr_data, r_data, alternative='greater')
-    print(f"  P-value (one-sided NR>R): {pval:.4f}")
+    _, pval = stats.mannwhitneyu(nr_data, r_data, alternative='two-sided')
+    print(f"  P-value (two-sided): {pval:.4f}")
 
-    p_str = '***' if pval < 0.001 else '**' if pval < 0.01 else '*' if pval < 0.05 else 'ns'
+    p_str = f'P = {pval:.3f}' if pval >= 0.001 else 'P < 0.001'
     is_star = pval < 0.05
     y_max = max(np.max(r_data), np.max(nr_data))
     y_range = y_max - min(np.min(r_data), np.min(nr_data))

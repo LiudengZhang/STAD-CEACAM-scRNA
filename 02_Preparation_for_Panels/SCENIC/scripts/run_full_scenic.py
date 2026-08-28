@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Paths below refer to the upstream Round_4 processing pipeline, which is
+# not part of this release. This script is included as a record of how the
+# input was produced; it is not called by _run_all_panels.sh.
 """
 Full MoMac SCENIC Pipeline - All 68,289 cells
 Run all steps: prepare -> GRN -> cisTarget -> AUCell
@@ -20,16 +23,14 @@ from pyscenic.utils import modules_from_adjacencies
 from pyscenic.prune import prune2df, df2regulons
 from pyscenic.aucell import aucell
 
-# Central config
-sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
-from paths import MOMAC_H5AD, SCENIC_RESULTS_DIR, SCENIC_DB_DIR
-
 # Paths
-DATA_PATH = MOMAC_H5AD
-RESULTS_DIR = SCENIC_RESULTS_DIR
+BASE_DIR = Path('/path/to/Project_4_05232025/Round_4')
+DATA_PATH = BASE_DIR / '04_Final_Panels/00_Set_Ups/00_Data/01_Major_Cell_Types/MoMac_final_annotated.h5ad'
+PROJECT_DIR = BASE_DIR / '02_Playground/02_Cell-Cell_Interaction/01_Analysis/09_SCENIC/17_Full_MoMac_SCENIC'
+RESULTS_DIR = PROJECT_DIR / 'Results'
 
-# Database paths (download from https://resources.aertslab.org/cistarget/)
-DB_DIR = SCENIC_DB_DIR
+# Database paths
+DB_DIR = Path('/path/to/Project_4_05232025/Round_4/02_Playground/02_Cell-Cell_Interaction/01_Analysis/09_SCENIC/00_Database')
 RANKING_DBS = list(DB_DIR.glob('*.feather'))
 MOTIF_ANNOTATIONS = DB_DIR / 'motifs-v10nr_clust-nr.hgnc-m0.001-o0.0.tbl'
 TF_LIST = DB_DIR / 'allTFs_hg38.txt'

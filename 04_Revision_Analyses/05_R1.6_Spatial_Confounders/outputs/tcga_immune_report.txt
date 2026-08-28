@@ -1,0 +1,30 @@
+TCGA-STAD IMMUNE INFILTRATION versus EPITHELIAL CEACAM5/6
+Reviewer 1 point R1.6, n = 407
+============================================================================================
+
+Bulk matrix after symbol mapping: 59,427 genes x 407 tumours
+ESTIMATE scores computed for 407 tumours (StromalScore, ImmuneScore, ESTIMATEScore)
+
+Tumours with both deconvolved epithelium and ESTIMATE: 407
+Of these, with an ABSOLUTE purity call: 395
+Purity covariate: TCGA PanCanAtlas ABSOLUTE (DNA-based), NOT the
+ESTIMATE-derived purity, which would be circular against ImmuneScore.
+
+ASSOCIATION WITH INFILTRATION (ESTIMATE), purity-adjusted
+--------------------------------------------------------------------------------------------
+  exposure  outcome            n      rho      P raw   beta adj      P adj
+  CEACAM    ImmuneScore      395   -0.355   3.48e-13     -80.50   4.66e-12  *
+  CEACAM    StromalScore     395   -0.333   1.06e-11     -75.62   4.29e-11  *
+  CEACAM5   ImmuneScore      395   -0.322    5.7e-11     -69.91   5.51e-10  *
+  CEACAM5   StromalScore     395   -0.316   1.31e-10     -68.68   5.56e-10  *
+  CEACAM6   ImmuneScore      395   -0.350   7.41e-13     -82.77   5.66e-13  *
+  CEACAM6   StromalScore     395   -0.308   3.91e-10     -72.62   1.64e-10  *
+
+INTERPRETATION
+--------------------------------------------------------------------------------------------
+  At n = 395, tumours with higher deconvolved epithelial
+  CEACAM5/6 show lower ESTIMATE immune score after adjustment
+  for tumour purity (beta = -80.5, P = 4.66e-12).
+  This is a whole-tumour measure. It is compatible with the spatial
+  finding only if exclusion is local rather than global; the two
+  analyses answer different questions and are reported as such.

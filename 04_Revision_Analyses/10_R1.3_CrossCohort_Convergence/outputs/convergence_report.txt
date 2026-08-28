@@ -1,0 +1,52 @@
+CROSS-COHORT CONVERGENCE OF THE PRE-TREATMENT CEACAM5/6 RESULT
+Reviewer 1, point R1.3
+==============================================================================================
+
+A. WHICH COHORTS MAY BE COMBINED
+----------------------------------------------------------------------------------------------
+   scRNA discovery      4 NR vs 4 R, pre-treatment gastric epithelium
+   PRJEB25780 (TIGER)   33 NR vs 12 R, deconvolved bulk epithelium
+   These share no patients, so their P values combine.
+
+   The immunohistochemistry is NOT combined with them. It was performed
+   on the same eight patients as the scRNA cohort, so it is an
+   orthogonal measurement of the same tumours rather than independent
+   evidence. Section D tests it as such.
+
+B. COMBINED ACROSS THE TWO INDEPENDENT COHORTS
+----------------------------------------------------------------------------------------------
+   CEACAM6
+      Stouffer, unweighted             two-sided P = 0.0070
+      Stouffer, weighted by sqrt(n)    two-sided P = 0.0124
+      Fisher                           two-sided P = 0.0130
+
+   CEACAM5
+      Stouffer, unweighted             two-sided P = 0.0142
+      Stouffer, weighted by sqrt(n)    two-sided P = 0.0186
+      Fisher                           two-sided P = 0.0249
+
+C. LEAVE-ONE-PATIENT-OUT, FOUR VERSUS FOUR
+----------------------------------------------------------------------------------------------
+   CEACAM5   as published P = 0.1143, g = +1.64
+      dropping one patient: P from 0.0571 to 0.2286, g from +1.35 to +3.59
+      direction preserved in 8 of 8 refits
+
+   CEACAM6   as published P = 0.0571, g = +1.33
+      dropping one patient: P from 0.0571 to 0.1143, g from +1.08 to +1.96
+      direction preserved in 8 of 8 refits
+
+D. TRANSCRIPT AGAINST PROTEIN, SAME EIGHT PATIENTS
+----------------------------------------------------------------------------------------------
+   CEACAM5    rho = +0.857 [+0.342, +1.000]   P = 0.0065
+   CEACAM6    rho = +0.619 [-0.215, +1.000]   P = 0.1017
+   Summed     rho = +0.881 [+0.241, +1.000]   P = 0.0039
+
+   Provenance. The stained blocks are identified by hospital pathology
+   accession and the sequenced biopsies by internal sequencing ID. The
+   two are linked in the treating team's specimen worksheet, which
+   carries patient identifiers and is therefore not deposited: for all
+   eight patients the accession of the stained block is the accession
+   of the pre-treatment gastroscopic biopsy that was sequenced. The two
+   modalities therefore measure one specimen per patient, which is why
+   the immunohistochemistry is excluded from the combination in
+   section B and tested for concordance here instead.

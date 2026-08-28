@@ -3,7 +3,7 @@
 S2_B: Tumor Score UMAP on epithelial cells
 4x scaling method for crisp text rendering
 
-Tumor score (malignant_score - non_malignant_score, Seurat AddModuleScore).
+Tumor score from Round_4 (malignant_score - non_malignant_score, Seurat AddModuleScore).
 Transferred via cell barcode matching (100% overlap confirmed).
 """
 
@@ -41,12 +41,12 @@ def main():
         'ps.fonttype': 42,
     })
 
-    print("Loading epithelial data...")
+    print("Loading Round_5 epithelial data...")
     adata = sc.read_h5ad(EPITHELIAL_H5AD)
     print(f"Loaded {adata.n_obs} cells")
 
-    # Transfer tumor_score from tumor-scored file
-    print("Loading tumor scores...")
+    # Transfer tumor_score from Round_4 tumor-scored file
+    print("Loading tumor scores from Round_4...")
     adata_ts = sc.read_h5ad(EPITHELIAL_TUMOR_SCORED_H5AD, backed='r')
     tumor_scores = adata_ts.obs['tumor_score']
     adata.obs['tumor_score'] = tumor_scores.reindex(adata.obs.index)

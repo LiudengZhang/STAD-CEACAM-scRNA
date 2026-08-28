@@ -28,8 +28,9 @@ FIG_HEIGHT = PRINT_HEIGHT_MM * MM_TO_INCH * SCALE
 OUTPUT_DIR = Path(__file__).parent
 OUTPUT_FILE = OUTPUT_DIR / "panel_S2_E.png"
 
-# Data paths (from paths.py: TIGER_BAYESPRISM_EPI, TIGER_META)
+# Data paths
 TIGER_EPI_EXPR = TIGER_BAYESPRISM_EPI
+# TIGER_META comes from `from paths import *` above.
 
 RESPONSE_COLORS = {'R': '#2166AC', 'NR': '#B2182B'}
 
@@ -83,8 +84,13 @@ slope, intercept, _, _, _ = stats.linregress(df['CEACAM5'], df['CEACAM6'])
 x_line = np.linspace(df['CEACAM5'].min(), df['CEACAM5'].max(), 100)
 ax.plot(x_line, slope * x_line + intercept, 'k--', linewidth=LINEWIDTH * 1.5, alpha=0.7)
 
-sig = '***' if p < 0.001 else '**' if p < 0.01 else '*' if p < 0.05 else 'ns'
-ax.text(0.05, 0.95, f'ρ = {r:.2f} ({sig})\nn = {len(df)}',
+import math
+_e = math.floor(math.log10(p)); _c = int(p / 10**_e)
+if _e >= -3:
+    p_str = f'P = {_c * 10**_e:.{-_e}f}'
+else:
+    p_str = f'P = {_c}' + r'$\times 10^{' + str(_e) + r'}$'
+ax.text(0.05, 0.95, f'ρ = {r:.2f}, {p_str}\nn = {len(df)}',
         transform=ax.transAxes, fontsize=FONT_SIZE * 0.8,
         verticalalignment='top',
         bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))

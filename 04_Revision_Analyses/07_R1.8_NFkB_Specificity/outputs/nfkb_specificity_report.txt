@@ -1,0 +1,127 @@
+NF-kB SPECIFICITY AND THE EPITHELIAL COMPARTMENT - Reviewer 1 point R1.8
+================================================================================================
+
+Hallmark term used: TNF-alpha Signaling via NF-kB
+
+[PRE-TREATMENT, non-responders vs responders]
+------------------------------------------------------------------------------------------------
+  cell type                  NES     nom P     FDR q  rank of 50
+  DC_cells                 2.018    0.0000    0.0000       1 / 35
+  Pericyte                 1.650    0.0034    0.0819       1 / 40
+  NK_cells                 1.492    0.0087    0.0397       1 / 29
+  B_cells                  1.382    0.0175    0.9370       1 / 26
+  Mast_cells               1.312    0.0308    0.0545       1 / 31
+  Endothelial_cells        1.162    0.2694    0.5359      14 / 44
+  Epithelial               0.812    0.7804    0.9872      25 / 40
+  Fibroblast               0.806    0.8314    1.0000      25 / 45
+  Plasma_cells             0.472    0.9497    0.9788       7 / 29
+  Neutrophils             -0.689    0.9718    0.9530      24 / 44
+  MoMac                   -1.120    0.2527    0.5267      34 / 48
+  TCD4_cells              -1.647    0.0087    0.0891      43 / 45
+  TCD8_cells              -1.944    0.0000    0.0000      41 / 41
+
+  Positive NES in 9/13 cell types; FDR q < 0.25 in 4; FDR q < 0.05 in 2.
+
+[POST-TREATMENT, non-responders vs responders]
+------------------------------------------------------------------------------------------------
+  cell type                  NES     nom P     FDR q  rank of 50
+  MoMac                    1.774    0.0000    0.0418       1 / 48
+  NK_cells                 1.581    0.0016    0.0030       1 / 29
+  B_cells                  1.363    0.1211    0.5969       2 / 22
+  Mast_cells               1.305    0.0075    0.0147       1 / 26
+  Endothelial_cells        1.287    0.1438    0.3831      12 / 44
+  Pericyte                 1.227    0.1944    0.5322      11 / 40
+  Neutrophils              1.188    0.1530    0.4994      10 / 43
+  Epithelial               1.033    0.4080    0.7452      16 / 40
+  DC_cells                 0.859    0.7174    0.9111      16 / 35
+  Plasma_cells             0.735    0.8271    0.9127       9 / 21
+  Fibroblast              -0.768    0.8497    1.0000      18 / 45
+  TCD8_cells              -1.000    1.0000    0.5948      29 / 41
+  TCD4_cells              -1.497    0.0000    0.1743      40 / 45
+
+  Positive NES in 10/13 cell types; FDR q < 0.25 in 3; FDR q < 0.05 in 3.
+
+CONCORDANCE WITH THE INDEPENDENT DE METHOD USED FOR FIGURE 5H
+------------------------------------------------------------------------------------------------
+  Figure 5H is drawn from a Welch t-test analysis; the tables above are
+  from the independent MAST hurdle model. Both are expressed as
+  non-responder versus responder.
+  cell type               MAST NES  t-test NES   agree
+  MoMac                      1.774       1.894     yes
+  NK_cells                   1.581       1.340     yes
+  B_cells                    1.363       1.006     yes
+  Mast_cells                 1.305       1.496     yes
+  Endothelial_cells          1.287       1.338     yes
+  Pericyte                   1.227       0.962     yes
+  Neutrophils                1.188       1.554     yes
+  Epithelial                 1.033       1.654     yes
+  DC_cells                   0.859       1.498     yes
+  Plasma_cells               0.735       1.722     yes
+  Fibroblast                -0.768       1.450      NO
+  TCD8_cells                -1.000       1.458      NO
+  TCD4_cells                -1.497       1.567      NO
+  Direction agrees in 10/13 cell types; Spearman rho = -0.214.
+
+  NOTE FOR THE CODE RELEASE: nfkb_rankings_13types_mast.csv is
+  byte-identical to nfkb_rankings_13types_ttest_reproduce.csv, i.e. the
+  file named '_mast' contains the t-test values. The MAST values are in
+  nfkb_rankings_13types_mast_BACKUP_mast_method.csv. Figure 5H reads the
+  misnamed file, which is consistent with the Methods (Figure 5H/I is
+  described as a Welch t-test analysis) but the filename must be
+  corrected before the code is deposited.
+
+SPECIFICITY: WHAT OUTRANKS TNFa/NF-kB
+------------------------------------------------------------------------------------------------
+  MoMac                  top-ranked Hallmark set
+  NK_cells               top-ranked Hallmark set
+  Mast_cells             top-ranked Hallmark set
+  B_cells                rank 2, outranked by: UV Response Up
+  Plasma_cells           rank 9, outranked by: Myc Targets V1; mTORC1 Signaling; TGF-beta Signaling; heme Metabolism; E2F Targets
+  Neutrophils            rank 10, outranked by: PI3K/AKT/mTOR  Signaling; Hypoxia; UV Response Up; IL-2/STAT5 Signaling; Androgen Response
+  Pericyte               rank 11, outranked by: Apical Junction; Xenobiotic Metabolism; Angiogenesis; Adipogenesis; Epithelial Mesenchymal Transition
+  Endothelial_cells      rank 12, outranked by: Hypoxia; p53 Pathway; Interferon Alpha Response; Cholesterol Homeostasis; Epithelial Mesenchymal Transition
+  DC_cells               rank 16, outranked by: Unfolded Protein Response; Hypoxia; mTORC1 Signaling; Myogenesis; Androgen Response
+  Epithelial             rank 16, outranked by: Bile Acid Metabolism; Coagulation; Pancreas Beta Cells; Fatty Acid Metabolism; Complement
+  Fibroblast             rank 18, outranked by: Angiogenesis; Notch Signaling; Xenobiotic Metabolism; Fatty Acid Metabolism; Androgen Response
+  TCD8_cells             rank 29, outranked by: G2-M Checkpoint; Spermatogenesis; E2F Targets; Glycolysis; Mitotic Spindle
+  TCD4_cells             rank 40, outranked by: G2-M Checkpoint; Mitotic Spindle; E2F Targets; Spermatogenesis; Glycolysis
+
+  Revised wording: instead of 'every population exhibited elevated NF-kB
+  pathway activity', the manuscript now reports the number of cell types
+  with a positive NES and the FDR in each, and describes the finding as a
+  coordinated inflammatory transcriptional programme in which TNFa/NF-kB
+  is among the most consistently enriched components. Transcriptomic
+  enrichment is not equated with biochemical pathway activation; no
+  nuclear p65, phospho-p65 or IkB data exist for this cohort.
+
+EPITHELIAL VERSUS MYELOID INFLAMMATORY CYTOKINE EXPRESSION
+------------------------------------------------------------------------------------------------
+  compartment             phase  gene       mean NR    mean R         P
+  Epithelial              Pre    IL1A        0.0274    0.0068    0.6857
+  Epithelial              Pre    IL1B        0.2092    0.1623    0.8857
+  Epithelial              Pre    IL6         0.0239    0.0083    0.4857
+  Epithelial              Pre    TNF         0.0558    0.0259    0.6857
+  Epithelial              Pre    CXCL8       0.8385    0.6237    0.8857
+  Epithelial              Post   IL1A        0.0278    0.0034    0.1775
+  Epithelial              Post   IL1B        0.4080    0.0844    0.0823
+  Epithelial              Post   IL6         0.0658    0.0039    0.0996
+  Epithelial              Post   TNF         0.0616    0.0300    0.1255
+  Epithelial              Post   CXCL8       0.8448    0.3317    0.0823
+  Monocytes/Macrophages   Pre    IL1A        0.4630    0.2073    0.6857
+  Monocytes/Macrophages   Pre    IL1B        2.3009    2.0908    1.0000
+  Monocytes/Macrophages   Pre    IL6         0.4244    0.2664    0.8857
+  Monocytes/Macrophages   Pre    TNF         0.6800    0.5067    1.0000
+  Monocytes/Macrophages   Pre    CXCL8       2.5749    2.1110    0.8857
+  Monocytes/Macrophages   Post   IL1A        0.4323    0.1118    0.1775
+  Monocytes/Macrophages   Post   IL1B        2.4645    1.5691    0.3290
+  Monocytes/Macrophages   Post   IL6         0.4776    0.2017    0.3290
+  Monocytes/Macrophages   Post   TNF         0.8327    0.6625    0.4286
+  Monocytes/Macrophages   Post   CXCL8       2.7248    1.9927    0.3290
+
+  Post-treatment non-responder epithelial expression as a fraction of
+  monocyte/macrophage expression of the same gene:
+     IL1A       6.4%
+     IL1B      16.6%
+     IL6       13.8%
+     TNF        7.4%
+     CXCL8     31.0%

@@ -12,6 +12,7 @@ from paths import FULL_DATASET_H5AD
 import numpy as np
 import scanpy as sc
 import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
 
 # =============================================================================
 # Configuration — 4x scaling

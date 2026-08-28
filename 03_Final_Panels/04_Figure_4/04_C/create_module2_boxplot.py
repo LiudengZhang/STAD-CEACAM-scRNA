@@ -23,7 +23,7 @@ FIGURE_SIZE = (3.0 * SCALE / 2.54, 3.2 * SCALE / 2.54)  # 4x print size
 DPI = 300
 FONT_SIZE = 5 * SCALE  # 5pt at print
 
-# Standard colors
+# Standard colors from CLAUDE.md
 COLOR_R = '#0072B2'    # Blue for Responder
 COLOR_NR = '#D55E00'   # Vermillion for Non-responder
 PALETTE = [COLOR_R, COLOR_NR]  # R first (left), NR second (right)

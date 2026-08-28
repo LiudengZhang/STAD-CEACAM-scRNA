@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Paths below refer to the upstream Round_4 processing pipeline, which is
+# not part of this release. This script is included as a record of how the
+# input was produced; it is not called by _run_all_panels.sh.
 """
 TF Trajectory Analysis - Dual Origin to IL1B+ Mac
 ==================================================
@@ -29,14 +32,13 @@ def main():
     print("=" * 80)
     print()
 
-    # Central config
-    import sys
-    sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
-    from paths import SCENIC_RESULTS_DIR
+    # Paths
+    base_dir = Path('/path/to/Project_4_05232025/Round_4')
+    project_dir = base_dir / '02_Playground/02_Cell-Cell_Interaction/01_Analysis/09_SCENIC/17_Full_MoMac_SCENIC'
 
-    input_file = SCENIC_RESULTS_DIR / 'MoMac_12sample_post_stomach.h5ad'
-    aucell_file = SCENIC_RESULTS_DIR / 'aucell_matrix.csv'
-    output_dir = SCENIC_RESULTS_DIR / 'TF_Trajectory_Analysis'
+    input_file = project_dir / 'Results/MoMac_12sample_post_stomach.h5ad'
+    aucell_file = project_dir / 'Results/aucell_matrix.csv'
+    output_dir = project_dir / 'Results/TF_Trajectory_Analysis'
     output_dir.mkdir(parents=True, exist_ok=True)
     fig_dir = output_dir / 'figures'
     fig_dir.mkdir(exist_ok=True)

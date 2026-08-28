@@ -12,7 +12,11 @@ import logging
 from pathlib import Path
 from datetime import datetime
 
-# Import library components (co-located)
+# Add library path
+library_path = Path(__file__).resolve().parents[4] / '00_Script_Library'
+sys.path.insert(0, str(library_path))
+
+# Import library components
 from deg_pathway_analysis_library import (
     DEGConfig,
     DataLoader,
@@ -92,7 +96,7 @@ class TregMASTAnalyzer:
             self.logger.error(f"{primary_method} dependencies not available!")
             self.logger.error(f"Description: {strategy.get_description()}")
             self.logger.error(f"Please ensure the correct conda environment is activated")
-            self.logger.error(f"For MAST: conda activate r_bayesprism")
+            self.logger.error(f"For MAST: conda activate r_demo")
             return False
 
         self.logger.info(f"✓ {primary_method} method available")

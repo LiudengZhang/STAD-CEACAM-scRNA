@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Paths below refer to the upstream Round_4 processing pipeline, which is
+# not part of this release. This script is included as a record of how the
+# input was produced; it is not called by _run_all_panels.sh.
 """
 Step 4: AUCell Regulon Activity Scoring - Full MoMac (12 Post-Stomach Samples)
 =============================================================================
@@ -29,18 +32,18 @@ def main():
     print("=" * 80)
     print()
 
-    # Central config
-    sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
-    from paths import SCENIC_RESULTS_DIR
+    # Define paths
+    base_dir = Path('/path/to/Project_4_05232025/Round_4')
+    project_dir = base_dir / '02_Playground/02_Cell-Cell_Interaction/01_Analysis/09_SCENIC/17_Full_MoMac_SCENIC'
 
     # Input files
-    loom_file = SCENIC_RESULTS_DIR / 'MoMac_12sample_scenic.loom'
-    regulons_file = SCENIC_RESULTS_DIR / 'regulons.pkl'
+    loom_file = project_dir / 'Results/MoMac_12sample_scenic.loom'
+    regulons_file = project_dir / 'Results/regulons.pkl'
 
     # Output files
-    output_matrix = SCENIC_RESULTS_DIR / 'aucell_matrix.csv'
-    output_h5ad = SCENIC_RESULTS_DIR / 'aucell_matrix.h5ad'
-    output_binary = SCENIC_RESULTS_DIR / 'aucell_binary.csv'
+    output_matrix = project_dir / 'Results/aucell_matrix.csv'
+    output_h5ad = project_dir / 'Results/aucell_matrix.h5ad'
+    output_binary = project_dir / 'Results/aucell_binary.csv'
 
     # Check input files
     if not loom_file.exists():

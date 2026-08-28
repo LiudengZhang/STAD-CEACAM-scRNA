@@ -1,11 +1,13 @@
-# Example configuration — update paths before use
+# Paths below refer to the upstream Round_4 processing pipeline, which is
+# not part of this release. This script is included as a record of how the
+# input was produced; it is not called by _run_all_panels.sh.
 # ============================================================================
 # B_cells MAST Analysis Configuration - Post-Treatment
 # ============================================================================
 
 data:
-  adata_path: "<path_to_h5ad>/B_cells.h5ad"
-  output_dir: "<output_directory>"
+  adata_path: "/path/to/Project_4_05232025/Round_4/98_Round_4.2_Standardized_Pipeline/01_For_Annotation/02_Results/level_1/B_cells/01_Data/B_cells_standardized_annotated.h5ad"
+  output_dir: "/path/to/Project_4_05232025/Round_4/98_Round_4.2_Standardized_Pipeline/04_MAST_and_DEG/01_Level_1_Major_Cell_Types/B_cells/03_Results"
   cell_type_name: "B_cells"
   single_cell_type_mode: true
 

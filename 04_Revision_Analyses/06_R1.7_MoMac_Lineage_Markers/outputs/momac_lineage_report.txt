@@ -1,0 +1,35 @@
+MONOCYTE VERSUS MACROPHAGE LINEAGE - Reviewer 1 point R1.7
+============================================================================================
+
+Monocyte panel  (9 genes): FCN1, VCAN, S100A8, S100A9, S100A12, SELL, FCGR3A, LYZ, CSF3R
+Macrophage panel (12 genes): CD68, CD163, MRC1, C1QA, C1QB, C1QC, APOE, APOC1, TREM2, MERTK, MSR1, SELENOP
+Not present in the object and therefore omitted: CD14, SEPP1
+
+Mean scores per monocyte/macrophage state (lineage index = macrophage - monocyte):
+--------------------------------------------------------------------------------------------
+  state                               n cells     mono      mac    index
+  C1_Mono_Classic_CD14                 16,147    2.071   -0.598   -2.668
+  C4_Mono_Alternative_CD16              3,115    0.866   -0.529   -1.395
+  C3_Mac_Inflam_IL1B                    9,893    0.908   -0.144   -1.052   <-- IL-1B cluster
+  C2_MoMac_Intermediate_HLA-DRA        12,147    0.547    0.180   -0.368
+  C6_Mac_Metallothionein_MT1G             978    0.338    0.775    0.436
+  C5_Mac_Prolif_MKI67                   1,508   -0.041    0.951    0.993
+  C0_Mac_Classic_TREM2                 24,501    0.045    1.364    1.319
+
+Position of the IL-1B cluster on the monocyte-to-macrophage axis
+--------------------------------------------------------------------------------------------
+  0.00 = C1_Mono_Classic_CD14 (monocyte pole)
+  1.00 = C0_Mac_Classic_TREM2 (macrophage pole)
+  C3_Mac_Inflam_IL1B sits at 0.41
+
+  C3_Mac_Inflam_IL1B vs C1_Mono_Classic_CD14 (monocyte pole)
+     mean index -1.052 vs -2.668   r = +0.801   P = 0
+  C3_Mac_Inflam_IL1B vs C0_Mac_Classic_TREM2 (macrophage pole)
+     mean index -1.052 vs +1.319   r = -0.930   P = 0
+
+INTERPRETATION
+--------------------------------------------------------------------------------------------
+  The cluster sits between the two poles, consistent with a recently
+  recruited monocyte-derived macrophage. The reviewer's alternative
+  is not excluded, and the annotation is changed to 'IL-1b+
+  inflammatory monocyte-macrophage' to reflect that.

@@ -13,6 +13,9 @@ import scanpy as sc
 import matplotlib.pyplot as plt
 import matplotlib
 
+matplotlib.rcParams['pdf.fonttype'] = 42
+matplotlib.rcParams['ps.fonttype'] = 42
+
 SCALE = 4
 DPI = 300
 PANEL_WIDTH_CM = 8 * SCALE

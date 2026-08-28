@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
+# REVISED FOR CIR-26-0753-ET, reviewer 1 point R1.3c:
+# the test is two-sided and the annotation reports the exact P value.
+# The one-tailed version this replaces is the one used in the preprint,
+# https://www.biorxiv.org/content/10.64898/2026.03.05.708917
 """
 Panel 2M: Combined CEACAM5+6 IHC staining boxplot (R vs NR)
-One-tailed Mann-Whitney U test (NR > R), n=4 R, n=4 NR (all pre-treatment)
+Two-sided Mann-Whitney U test, n=4 R, n=4 NR (all pre-treatment)
 Data from color deconvolution (Ruifrok & Johnston 2001) via skimage rgb2hed.
 DAB OD threshold = 0.02. Source: 02_Preparation_for_Panels/IHC/quantify_ceacam_ihc.py
 """
@@ -15,7 +19,6 @@ import sys
 
 # Central config
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
-from paths import IHC_COLOR_DECONV_CSV
 
 # 4x scaling (scale canvas + fonts only, NOT linewidths/markers)
 SCALE = 4
@@ -35,7 +38,9 @@ MEDIAN_R = '#005689'
 MEDIAN_NR = '#A34700'
 
 # Read IHC data from color deconvolution results
-df = pd.read_csv(IHC_COLOR_DECONV_CSV)
+from paths import IHC_COLOR_DECONV_CSV  # noqa: E402
+IHC_CSV = IHC_COLOR_DECONV_CSV
+df = pd.read_csv(IHC_CSV)
 
 # Pivot: combined CEACAM5 + CEACAM6 per patient
 pivot = df.pivot_table(index=['patient', 'group'], columns='marker',
@@ -60,12 +65,12 @@ def main():
         figsize=(PANEL_WIDTH_CM * CM_TO_INCH, PANEL_HEIGHT_CM * CM_TO_INCH)
     )
 
-    # One-tailed Mann-Whitney U (NR > R)
-    stat, pval = stats.mannwhitneyu(NR_VALS, R_VALS, alternative='greater')
+    # Two-sided Mann-Whitney U
+    stat, pval = stats.mannwhitneyu(NR_VALS, R_VALS, alternative='two-sided')
     print(f"R  (n={len(R_VALS)}): {R_VALS} -> mean={R_VALS.mean():.2f}%")
     print(f"NR (n={len(NR_VALS)}): {NR_VALS} -> mean={NR_VALS.mean():.2f}%")
     print(f"Fold: {NR_VALS.mean() / R_VALS.mean():.2f}x")
-    print(f"Mann-Whitney U (one-tailed, NR > R): U={stat:.1f}, P={pval:.4f}")
+    print(f"Mann-Whitney U (two-sided): U={stat:.1f}, P={pval:.4f}")
 
     # Boxplot
     bp = ax.boxplot(
@@ -106,7 +111,7 @@ def main():
             [y_bracket, y_bracket * 1.05, y_bracket * 1.05, y_bracket],
             'k-', linewidth=0.5)
 
-    p_text = '***' if pval < 0.001 else '**' if pval < 0.01 else '*' if pval < 0.05 else 'ns'
+    p_text = f'P = {pval:.3f}' if pval >= 0.001 else 'P < 0.001'
 
     ax.text(1.5, y_bracket * 1.08, p_text, ha='center', va='bottom',
             fontsize=6 * SCALE)

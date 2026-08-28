@@ -1,0 +1,54 @@
+IS THE INFLAMMATORY PROGRAMME ALREADY PRESENT BEFORE TREATMENT?
+Reviewer 2 point R2.1
+============================================================================================
+
+1. ABUNDANCE OF THE IL-1b+ INFLAMMATORY STATE (% of monocytes/macrophages)
+--------------------------------------------------------------------------------------------
+   Pre-R     n=4  mean = 16.22%  median = 17.08%
+   Pre-NR    n=4  mean = 21.16%  median = 18.78%
+   Post-R    n=5  mean =  8.88%  median =  8.77%
+   Post-NR   n=6  mean = 25.17%  median = 21.92%
+
+   pre-treatment NR vs R      P = 0.8857   r = +0.125
+   post-treatment NR vs R     P = 0.3290   r = +0.400
+   post vs pre within NR      P = 0.7619   r = +0.167
+   post vs pre within R       P = 0.0635   r = -0.800
+
+2. IL-1b+ STATE SIGNATURE SCORE ACROSS ALL MONOCYTES/MACROPHAGES
+--------------------------------------------------------------------------------------------
+   Signature: top 50 markers of C3_Mac_Inflam_IL1B within this object
+   Pre-R     n=4  mean score = +0.0346
+   Pre-NR    n=4  mean score = +0.2033
+   Post-R    n=5  mean score = -0.2294
+   Post-NR   n=6  mean score = +0.2898
+
+   pre-treatment NR vs R      P = 0.8857   r = +0.125
+   post-treatment NR vs R     P = 0.1255   r = +0.600
+
+3. TNFa/NF-kB HALLMARK ENRICHMENT, PRE VERSUS POST (positive = enriched in non-responders)
+--------------------------------------------------------------------------------------------
+   cell type                pre NES  post NES    change
+   MoMac                     -1.120     1.774    +2.895
+   NK_cells                   1.492     1.581    +0.089
+   B_cells                    1.382     1.363    -0.019
+   Mast_cells                 1.312     1.305    -0.007
+   Endothelial_cells          1.162     1.287    +0.125
+   Pericyte                   1.650     1.227    -0.423
+   Neutrophils               -0.689     1.188    +1.878
+   Epithelial                 0.812     1.033    +0.221
+   DC_cells                   2.018     0.859    -1.159
+   Plasma_cells               0.472     0.735    +0.264
+   Fibroblast                 0.806    -0.768    -1.574
+   TCD8_cells                -1.944    -1.000    +0.944
+   TCD4_cells                -1.647    -1.497    +0.150
+
+   Monocytes/macrophages move from NES -1.120 before treatment to +1.774 after.
+
+CONCLUSION
+--------------------------------------------------------------------------------------------
+   The IL-1b+ state does not separate responders from non-responders
+   before treatment (P = 0.886); the separation appears after
+   treatment (P = 0.329). Combined with the myeloid NF-kB
+   enrichment reversing sign between the two timepoints, the programme
+   is best described as emerging on treatment rather than as a
+   pre-existing feature of the non-responder microenvironment.

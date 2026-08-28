@@ -2,7 +2,7 @@
 """
 S2_G: 5-Metaprogram Gene Signature Heatmap (flipped — genes on x, MPs on y)
 Seaborn heatmap style matching Figure 4A.
-Data source: NMF intermediate files.
+Data source: Round 5 NMF intermediate files.
 """
 
 import sys

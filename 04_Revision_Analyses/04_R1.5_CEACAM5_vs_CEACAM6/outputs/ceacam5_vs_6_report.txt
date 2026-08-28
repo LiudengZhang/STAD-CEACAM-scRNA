@@ -1,0 +1,33 @@
+CEACAM5 VERSUS CEACAM6 - Reviewer 1 point R1.5
+==========================================================================================
+
+A. DO CEACAM5-ONLY AND CEACAM6-ONLY POPULATIONS EXIST?
+------------------------------------------------------------------------------------------
+   Pre-treatment gastric epithelial cells analysed: 37,630
+   Samples: 8 (4 NR, 4 R)
+
+   CEACAM5+ only       12.3% of all epithelial cells
+   CEACAM6+ only       13.0% of all epithelial cells
+   Double positive     21.7% of all epithelial cells
+   Double negative     52.9% of all epithelial cells
+
+   Per-sample fraction, non-responders vs responders (two-sided MW):
+     CEACAM5+ only          NR 15.12%  vs  R  9.74%   P = 0.3429   r = +0.500
+     CEACAM6+ only          NR 13.60%  vs  R  9.12%   P = 0.3429   r = +0.500
+     Double positive        NR 31.02%  vs  R  8.90%   P = 0.0571   r = +0.875
+     Double negative        NR 40.27%  vs  R 72.24%   P = 0.0571   r = -0.875
+     Either marker (union)  NR 59.73%  vs  R 27.76%   P = 0.0571   r = +0.875
+
+B/C. IMMUNOHISTOCHEMISTRY, EACH MARKER SEPARATELY (n = 4 vs 4)
+------------------------------------------------------------------------------------------
+     CEACAM5                NR   35.04  vs  R   14.71   P = 0.2000   r = +0.625
+     CEACAM6                NR   48.12  vs  R   40.59   P = 0.2000   r = +0.625
+     Summed (published)     NR   83.16  vs  R   55.30   P = 0.0571   r = +0.875
+     Mean of the two        NR   41.58  vs  R   27.65   P = 0.0571   r = +0.875
+     z-score composite      NR    0.50  vs  R   -0.50   P = 0.2000   r = +0.625
+
+   At n = 4 per group the smallest two-sided P a Mann-Whitney test can
+   return is 2/70 = 0.029, so none of these comparisons can distinguish
+   a marker-specific effect from the summed one. The summed panel is
+   therefore replaced by the two markers shown separately, and the
+   summed value is reported only as a descriptive composite.
