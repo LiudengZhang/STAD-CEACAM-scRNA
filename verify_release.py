@@ -1,3 +1,7 @@
+# The filesystem roots below were specific to the machines this pipeline
+# was run on. They are replaced by /path/to/machine and /path/to/home
+# placeholders for deposition; repoint them at your own storage before
+# running this script.
 """
 Static self-check for this code release.
 
@@ -50,6 +54,14 @@ UPSTREAM_MARK = "upstream Round_4 processing pipeline"
 # would be a false statement in a deposited file. Kept in step with
 # update_release.py:LOCAL_HOME_MARK.
 LOCAL_HOME_MARK = "paths under the author's home directory"
+# The third reason, added 2026-09-04 with the upstream pipelines. Those ran on
+# two named filers and on a cluster login node, and update_release.py's
+# MACHINE_ROOT_NOTE says so. It is separate from the other two marks for the
+# same reason they are separate from each other: each has to be true of the file
+# it is prepended to, and neither "documents the Round_4 pipeline" nor "paths
+# under the author's home directory" describes /path/to/machine or /path/to/machine. Kept in
+# step with update_release.py:MACHINE_ROOT_MARK.
+MACHINE_ROOT_MARK = "specific to the machines this pipeline"
 ONE_TAILED = re.compile(r"alternative\s*=\s*['\"](greater|less)['\"]")
 
 
@@ -116,7 +128,8 @@ def main():
                                        ".json")]
     for f in list(files) + sorted(others):
         text = f.read_text(encoding="utf-8", errors="replace")
-        explained = UPSTREAM_MARK in text or LOCAL_HOME_MARK in text
+        explained = (UPSTREAM_MARK in text or LOCAL_HOME_MARK in text
+                     or MACHINE_ROOT_MARK in text)
         for i, line in enumerate(text.splitlines(), 1):
             if ABSOLUTE.search(line):
                 problems.append(f"absolute path: {f.relative_to(ROOT)}:{i}")

@@ -233,3 +233,23 @@ CPDB_DB_ZIP = RAW_INPUTS / "02_External" / "CellPhoneDB" / "cellphonedb.zip"
 # 02_Preparation_for_Panels/Metaprogram_Permutation/mp4_pre_r_permutation_analysis.py
 # and read by the two-sided sweep and the MP direction analysis.
 MP_PERMUTATION_DIR = PREPARATION / "Metaprogram_Permutation"
+
+# The NicheNet prior models. Declared in the Round_7 working tree's paths.py on
+# 2026-09-03, when they were migrated out of _archived_NicheNet_v2/ - but this
+# file is rebuilt from ROUND_5's paths.py, which has never carried the name, so
+# the release deposited config.yaml pointing at 00_Databases/ with no path
+# constant that resolves it. Download the priors from
+# https://zenodo.org/records/7074291 (nichenetr v1 human) and place them here.
+NICHENET_DB_DIR = NICHENET_DIR / "00_Databases"
+NICHENET_LIGAND_TARGET_MATRIX = NICHENET_DB_DIR / "ligand_target_matrix.rds"
+NICHENET_LR_NETWORK = NICHENET_DB_DIR / "lr_network.rds"
+NICHENET_WEIGHTED_NETWORKS = NICHENET_DB_DIR / "weighted_networks.rds"
+
+# Where the GraphST spatial pipeline and the TCGA BayesPrism pipeline write.
+# Both directories shipped as a lone .gitkeep until the upstream pipelines were
+# deposited beside them; SPATIAL_CEACAM_DIR is already defined above, and
+# BayesPrism_TCGA had no name at all.
+BAYESPRISM_TCGA_DIR = PREPARATION / "BayesPrism_TCGA"
+
+# The NMF pipeline's own root, for the same reason.
+NMF_DIR = PREPARATION / "NMF"

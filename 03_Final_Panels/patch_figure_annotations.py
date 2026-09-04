@@ -76,7 +76,22 @@ LETTER_INSET = 3.0      # mm
 
 PANEL_SWAPS = {
     "Figure 2": [
-        ("D", (79.8, 5.5, 118.3, 30.5), (80.50, 9.49),
+        # The right edge was 118.3 mm (335.34 pt) and that blanked panel F.
+        #
+        # The panel F Milo raster is placed at x0 = 333.2 pt, so it overlapped
+        # this slot by 2.12 pt - about three quarters of a millimetre, entirely
+        # in the white gutter between the two panels. PDF_REDACT_IMAGE_REMOVE
+        # deletes an image whose *bounding box* touches the rectangle, not the
+        # part that overlaps it, so that sliver took the whole neighbourhood
+        # graph and its colour bar with it. The submitted figure carries 38
+        # images; the patched one carried 12.
+        #
+        # 117.2 mm = 332.03 pt gives the raster 1.2 pt of clearance. Nothing is
+        # lost by it: the old panel D's own ink ends at 315.42 pt, and the strip
+        # from 330 pt to the old edge contains no drawing at all. Measured, not
+        # guessed - and check_slot_images() below now refuses to run if this
+        # ever stops being true.
+        ("D", (79.8, 5.5, 117.2, 30.5), (80.50, 9.49),
          Path(__file__).parent / "Main_Figures" / "02_Figure_2" / "02_D"
          / "ceacam_metacell_correlation.pdf"),
     ],
@@ -243,6 +258,40 @@ def patch_labels(page, name):
     return [w for *_, w in done]
 
 
+def check_slot_images(page, name, letter, slot):
+    """
+    Refuse to redact a slot that would take an image belonging to another panel.
+
+    This is the check that was missing when the Figure 2D swap blanked panel F.
+    apply_redactions() with PDF_REDACT_IMAGE_REMOVE removes an image whose
+    bounding box intersects the rectangle - all of it, however small the
+    overlap. A slot bounded by the white gutters between panels still touches
+    the bounding box of a neighbour's raster, because a bounding box includes
+    the figure's own margins.
+
+    So: any image the slot touches must lie wholly inside it. One that does not
+    belongs to another panel, and removing it would delete published content.
+    Stop rather than do that.
+    """
+    for img in page.get_images(full=True):
+        for rect in page.get_image_rects(img[0]):
+            if not rect.intersects(slot):
+                continue
+            if rect in slot:
+                continue
+            ox = min(slot.x1, rect.x1) - max(slot.x0, rect.x0)
+            oy = min(slot.y1, rect.y1) - max(slot.y0, rect.y0)
+            sys.exit(
+                f"{name} panel {letter}: the redaction slot "
+                f"({slot.x0:.1f}, {slot.y0:.1f}, {slot.x1:.1f}, {slot.y1:.1f}) "
+                f"touches an image at "
+                f"({rect.x0:.1f}, {rect.y0:.1f}, {rect.x1:.1f}, {rect.y1:.1f}) "
+                f"that extends outside it, overlapping by {ox:.2f} x {oy:.2f} "
+                "pt. PDF_REDACT_IMAGE_REMOVE would delete that image in full, "
+                "not just the overlap. Narrow the slot until it clears the "
+                "image, or move the image. Refusing to redact.")
+
+
 def replace_panels(page, name):
     """
     Redraw whole panels whose numbers changed, in place, inside their own slot.
@@ -263,6 +312,7 @@ def replace_panels(page, name):
         # is bounded by the white gutters measured in the submitted file, so
         # nothing outside it intersects.
         slot = fitz.Rect(x0 * MM, y0 * MM, x1 * MM, y1 * MM)
+        check_slot_images(page, name, letter, slot)
         page.add_redact_annot(slot)
         page.apply_redactions(images=fitz.PDF_REDACT_IMAGE_REMOVE,
                               graphics=fitz.PDF_REDACT_LINE_ART_REMOVE_IF_TOUCHED)

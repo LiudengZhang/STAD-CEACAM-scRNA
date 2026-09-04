@@ -19,6 +19,7 @@ carries the corrected labels.
 """
 
 import argparse
+import hashlib
 import re
 import sys
 from pathlib import Path
@@ -56,6 +57,64 @@ LABEL_CHECKS = {
 
 STAR = re.compile(r"(?<![A-Za-z0-9])\*+(?![A-Za-z0-9])")
 PVAL = re.compile(r"P\s*[=<]\s*0?\.\d+")
+
+# Added 2026-09-04, after the Figure 2D panel swap silently deleted the Milo
+# neighbourhood graph in panel F. The redaction removes any image whose bounding
+# box touches its slot, and the two boxes overlapped by 2.12 pt in the white
+# gutter between the panels. The figure shipped with a blank panel and nothing
+# noticed: this file checked P values and label strings, and neither moved.
+#
+# Images are matched by the md5 of their own bytes, not by where they sit on the
+# page. That matters because Figure 1's panel A is replaced and the page grows,
+# so every placement shifts; matching on position would report all eight of its
+# images as lost. Matching on content reports zero, correctly, and needs no
+# allow-list - which is the point, since an allow-list is another thing to get
+# wrong.
+#
+# Only substantive images are compared. The threshold is measured, not chosen:
+# across the six submitted figures the largest text-label raster is 542.5 pt^2
+# and the smallest panel raster is 1026.5 pt^2, so anything in between separates
+# them. Small rasters are legitimately removed when an annotation is redrawn as
+# text, and counting those would make the check cry wolf on every run.
+SUBSTANTIVE_PT2 = 800.0
+SUBMITTED = Path(__file__).parent.parent / "00_GROUND_TRUTH" / "figures"
+
+
+def substantive_images(path):
+    """{md5 of image bytes} for every image drawn larger than the threshold."""
+    doc = fitz.open(path)
+    page = doc[0]
+    out = set()
+    for img in page.get_images(full=True):
+        rects = page.get_image_rects(img[0])
+        if not rects:
+            continue
+        if max(r.width * r.height for r in rects) < SUBSTANTIVE_PT2:
+            continue
+        out.add(hashlib.md5(doc.extract_image(img[0])["image"]).hexdigest())
+    doc.close()
+    return out
+
+
+def check_no_content_lost(root):
+    """Every substantive image in the submitted figure must survive patching."""
+    print(f"\n{'figure':<12}{'submitted':>11}{'patched':>9}{'lost':>6}   verdict")
+    print("-" * 66)
+    bad = []
+    for i in range(1, 7):
+        src = SUBMITTED / f"Figure {i}.pdf"
+        dst = root / f"Figure_{i}.pdf"
+        if not src.exists() or not dst.exists():
+            print(f"{'Figure_' + str(i):<12}{'-':>11}{'-':>9}{'-':>6}   file not found")
+            bad.append(f"Figure_{i}")
+            continue
+        want, got = substantive_images(src), substantive_images(dst)
+        lost = want - got
+        verdict = "intact" if not lost else f"{len(lost)} image(s) deleted by patching"
+        print(f"{'Figure_' + str(i):<12}{len(want):>11}{len(got):>9}{len(lost):>6}   {verdict}")
+        if lost:
+            bad.append(f"Figure_{i}")
+    return bad
 
 
 def scan(path):
@@ -117,6 +176,8 @@ def main():
         if problems:
             bad.append(name)
 
+    bad += [n for n in check_no_content_lost(root) if n not in bad]
+
     print()
     for name in bad:
         if name in AFFECTED:
@@ -124,8 +185,9 @@ def main():
     if bad:
         print("\nRegenerate with: python patch_figure_annotations.py")
         return 1
-    print("Every converted panel prints its exact two-sided P value, and "
-          "Figure 4 carries the corrected labels.")
+    print("Every converted panel prints its exact two-sided P value, "
+          "Figure 4 carries the corrected labels, and no substantive image "
+          "was lost to a redaction.")
     return 0
 
 

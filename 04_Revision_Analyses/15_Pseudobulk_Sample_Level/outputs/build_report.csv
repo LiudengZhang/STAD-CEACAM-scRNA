@@ -1,0 +1,27 @@
+cell,phase,status,source,counts_source,n_cells,n_samples_all,n_samples_kept,n_samples_dropped,n_R,n_NR,median_cells_per_sample,min_cells_per_sample,max_cells_per_sample,n_genes_nonzero,testable
+B_cells,pre,ok,B_cells.h5ad,layers['counts'],3757,8,6,2,3,3,143.5,47,2701,22237,True
+B_cells,post,ok,B_cells.h5ad,layers['counts'],3465,11,9,2,4,5,167.0,28,2171,22084,True
+DC_cells,pre,ok,DC_cells.h5ad,layers['counts'],683,8,7,1,4,3,81.0,42,165,20413,True
+DC_cells,post,ok,DC_cells.h5ad,layers['counts'],885,11,11,0,5,6,51.0,10,269,21560,True
+Endothelial_cells,pre,ok,Endothelial.h5ad,layers['counts'],2818,8,8,0,4,4,256.5,153,758,24965,True
+Endothelial_cells,post,ok,Endothelial.h5ad,layers['counts'],4142,11,11,0,5,6,320.0,18,903,26630,True
+Epithelial,pre,ok,Epithelial.h5ad,layers['counts'],37630,8,8,0,4,4,3729.5,942,13195,37894,True
+Epithelial,post,ok,Epithelial.h5ad,layers['counts'],29545,11,11,0,5,6,1437.0,173,9799,37687,True
+Fibroblast,pre,ok,Fibroblast.h5ad,layers['counts'],1788,8,8,0,4,4,218.0,25,439,24018,True
+Fibroblast,post,ok,Fibroblast.h5ad,layers['counts'],2777,11,11,0,5,6,240.0,26,554,25923,True
+Mast_cells,pre,ok,mast_cell_integrated.h5ad,droplet matrices,1179,8,8,0,4,4,123.5,28,387,18924,True
+Mast_cells,post,ok,mast_cell_integrated.h5ad,droplet matrices,1639,11,9,2,5,4,195.0,35,504,20384,True
+MoMac,pre,ok,MoMac.h5ad,layers['counts'],4886,8,8,0,4,4,467.0,114,1406,27386,True
+MoMac,post,ok,MoMac.h5ad,layers['counts'],11140,11,11,0,5,6,790.0,171,5157,30271,True
+Neutrophils,pre,ok,Neutrophils_sound.h5ad,layers['counts'],1253,7,7,0,3,4,35.0,14,511,16767,True
+Neutrophils,post,ok,Neutrophils_sound.h5ad,layers['counts'],5264,11,10,1,5,5,119.0,19,2936,18160,True
+NK_cells,pre,ok,NK_cells.h5ad,layers['counts'],1745,8,8,0,4,4,176.0,18,532,19753,True
+NK_cells,post,ok,NK_cells.h5ad,layers['counts'],2087,11,11,0,5,6,135.0,14,587,20331,True
+Pericyte,pre,ok,Pericyte.h5ad,layers['counts'],1201,8,8,0,4,4,124.5,13,440,21187,True
+Pericyte,post,ok,Pericyte.h5ad,layers['counts'],1841,11,10,1,4,6,97.0,30,575,23631,True
+Plasma_cells,pre,ok,plasma_cell_integrated.h5ad,droplet matrices,5887,8,8,0,4,4,498.0,16,2788,25748,True
+Plasma_cells,post,ok,plasma_cell_integrated.h5ad,droplet matrices,3348,11,11,0,5,6,332.0,38,653,24684,True
+TCD4_cells,pre,ok,TCD4.h5ad,layers['counts'],4688,8,8,0,4,4,429.5,50,1972,24575,True
+TCD4_cells,post,ok,TCD4.h5ad,layers['counts'],6009,11,11,0,5,6,337.0,54,1479,25673,True
+TCD8_cells,pre,ok,TCD8.h5ad,layers['counts'],3380,8,8,0,4,4,315.0,44,1322,22686,True
+TCD8_cells,post,ok,TCD8.h5ad,layers['counts'],3408,11,11,0,5,6,308.0,96,510,22568,True

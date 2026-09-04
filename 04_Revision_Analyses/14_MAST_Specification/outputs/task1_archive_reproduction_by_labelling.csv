@@ -1,0 +1,3 @@
+cell,phase,labelling,dropped_column,n_genes,max_abs_dlogFC_vs_archive,median_abs_dlogFC_vs_archive,max_abs_dlog10P_vs_archive,reproduces_archive
+Endothelial_cells,pre,py_order,"conditionResponsed, sample_idS07",6501,2.1792699079703466,0.05494180283461543,121.24547442866184,False
+Endothelial_cells,pre,r_order,"conditionResponsed, sample_idS05",6501,2.220446049250313e-16,4.163336342344337e-17,3.8058445284150366e-13,True
