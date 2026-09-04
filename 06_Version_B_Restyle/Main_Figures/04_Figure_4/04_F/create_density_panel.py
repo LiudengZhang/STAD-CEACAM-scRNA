@@ -4,7 +4,7 @@ Figure 4 panel F, RESTYLED (Version B) - MoMac UMAP cell density in the four
 treatment/response groups (Pre R, Pre NR, Post R, Post NR).
 
 Version A is
-`03_Revised_Panels/Main_Figures/04_Figure_4/04_F/create_density_panel.py`
+`03_Final_Panels/04_Figure_4/04_F/create_density_panel.py`
 and is frozen. This is a copy of it with only the changes PANEL_SPEC.md allows:
 the type comes from `00_Config/panel_style_cns.py`, the canvas is the
 millimetre box the panel prints in, non-type point sizes are rescaled by MARK,

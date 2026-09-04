@@ -4,7 +4,7 @@ Figure 5 panel C, RESTYLED (Version B) - TNF, IL1B, IL6 and IL1A expression
 UMAPs for MoMac cells.
 
 Version A is
-`03_Revised_Panels/Main_Figures/05_Figure_5/05_D/create_gene_umaps.py`
+`03_Final_Panels/05_Figure_5/05_D/create_gene_umaps.py`
 and is frozen. This is a copy of it with only the changes PANEL_SPEC.md allows:
 the type comes from `00_Config/panel_style_cns.py`, the canvas is the
 millimetre box the panel prints in, non-type point sizes are rescaled by AREA,

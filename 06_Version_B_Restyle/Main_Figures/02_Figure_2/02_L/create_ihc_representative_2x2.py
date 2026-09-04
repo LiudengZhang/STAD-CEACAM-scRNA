@@ -7,7 +7,7 @@ NR: H&E, CEACAM5, CEACAM6  |  R: H&E, CEACAM5, CEACAM6
 Auto-crops to largest tissue fragment via connected component analysis.
 
 Version A is
-`03_Revised_Panels/Main_Figures/02_Figure_2/02_L/create_ihc_representative_2x2.py`
+`03_Final_Panels/02_Figure_2/02_L/create_ihc_representative_2x2.py`
 and is frozen. This is a copy of it with only the changes PANEL_SPEC.md
 allows: the type comes from `00_Config/panel_style_cns.py`, the canvas is the
 millimetre box the panel prints in, non-type point sizes are rescaled by MARK,

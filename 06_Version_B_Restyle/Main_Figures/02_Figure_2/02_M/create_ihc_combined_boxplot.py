@@ -11,7 +11,7 @@ Data from color deconvolution (Ruifrok & Johnston 2001) via skimage rgb2hed.
 DAB OD threshold = 0.02. Source: 02_Preparation_for_Panels/IHC/quantify_ceacam_ihc.py
 
 Version A is
-`03_Revised_Panels/Main_Figures/02_Figure_2/02_M/create_ihc_combined_boxplot.py`
+`03_Final_Panels/02_Figure_2/02_M/create_ihc_combined_boxplot.py`
 and is frozen. This is a copy of it with only the changes PANEL_SPEC.md
 allows: the type comes from `00_Config/panel_style_cns.py`, the canvas is the
 millimetre box the panel prints in, non-type point sizes are rescaled by MARK,

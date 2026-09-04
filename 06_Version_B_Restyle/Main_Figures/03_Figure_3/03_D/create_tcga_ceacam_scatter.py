@@ -9,7 +9,7 @@ is a *different file with the same name* drawing printed panel B; the two are
 kept in their own directories and must not be merged.
 
 Version A is
-`03_Revised_Panels/Main_Figures/03_Figure_3/03_D/create_tcga_ceacam_scatter.py`
+`03_Final_Panels/03_Figure_3/03_D/create_tcga_ceacam_scatter.py`
 and is frozen. This is a copy of it with only the changes PANEL_SPEC.md allows:
 the type comes from `00_Config/panel_style_cns.py`, the canvas is the
 millimetre box the panel prints in, non-type point sizes are rescaled by MARK,

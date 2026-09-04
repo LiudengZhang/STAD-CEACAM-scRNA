@@ -4,7 +4,7 @@ Figure 2, printed panel A, RESTYLED (Version B) - square UMAP of epithelial
 cells coloured by minor cell state, with on-plot centroid labels.
 
 Version A is
-`03_Revised_Panels/Main_Figures/02_Figure_2/02_A/create_epithelial_umap.py`
+`03_Final_Panels/02_Figure_2/02_A/create_epithelial_umap.py`
 and is frozen. This is a copy of it with only the changes PANEL_SPEC.md
 allows: the type comes from `00_Config/panel_style_cns.py`, the canvas is the
 millimetre box the panel prints in, non-type point sizes are rescaled by MARK,
@@ -71,7 +71,7 @@ LABELS - why they are pinned, and where the numbers come from
     not chosen; they are *measured*, by
     `measure_version_a_labels.py`, which runs Version A's own script under
     `compare_panel_content.capture(writes="block")` - so nothing in
-    `03_Revised_Panels/` is written - and reads the nine final label positions
+    `03_Final_Panels/` is written - and reads the nine final label positions
     and the six leader-line paths straight out of the figure Version A builds,
     in data coordinates. The raw measurement is kept beside this file in
     `label_pins_version_a.json`. The literals below were generated from it, not

@@ -15,7 +15,7 @@ the assembler resolves these by directory, and renaming one to disambiguate
 would break that.
 
 Version A is
-`03_Revised_Panels/Main_Figures/03_Figure_3/03_I/create_spatial_boxplot_stroma.py`
+`03_Final_Panels/03_Figure_3/03_I/create_spatial_boxplot_stroma.py`
 and is frozen. This is a copy of it with only the changes PANEL_SPEC.md allows:
 the type comes from `00_Config/panel_style_cns.py`, the canvas is the
 millimetre box the panel prints in, non-type point sizes are rescaled by MARK,

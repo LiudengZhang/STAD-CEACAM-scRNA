@@ -10,7 +10,7 @@ The claims are taken from the authoritative sources, not from reading prose:
                 is checked by names the table and the column it reads
   letter        04_Manuscript_R1/05_Response_to_Reviewers/
                 apply_consistency_fixes.py, and the shipped v3_clean.docx
-  panels        03_Revised_Panels/PROVENANCE.csv rows attributed to NF-kB
+  panels        03_Final_Panels/PROVENANCE.csv rows attributed to NF-kB
                 analyses: Figure 5A, 5H, 5I, 5N, S9E, S10C
 
 `value_in_source` is read back out of the named table by this script, so the
@@ -27,9 +27,9 @@ NF = ROOT / "02_New_Analyses/07_R1.8_NFkB_Specificity/outputs/nfkb_per_celltype.
 PP = ROOT / "02_New_Analyses/08_R2.1_PreTx_Inflammatory/outputs/nfkb_pre_vs_post.csv"
 MOMAC_A = (ROOT.parent / "Round_5" / "02_Preparation_for_Panels" / "GSEA"
            / "MoMac_mast_prerank_gsea.csv")
-G5 = (ROOT / "03_Revised_Panels/Main_Figures/05_Figure_5/05_GSEA_Summary/"
+G5 = (ROOT / "03_Final_Panels/05_Figure_5/05_GSEA_Summary/"
       "gsea_data/gsea_combined_5types.csv")
-GM = (ROOT / "03_Revised_Panels/Main_Figures/05_Figure_5/05_GSEA_Summary/"
+GM = (ROOT / "03_Final_Panels/05_Figure_5/05_GSEA_Summary/"
       "gsea_data/gsea_momac.csv")
 AD = ROOT / "02_New_Analyses/09_R2.2_Adaptive_Immune/outputs/adaptive_hallmark_top.csv"
 
@@ -380,7 +380,7 @@ add(claim_id="F05", where_printed="figure panel, Figure 5I (PROVENANCE build dir
     verbatim_text="GSEA running enrichment for epithelial cells and fibroblasts",
     cell_type="Epithelial, Fibroblast", contrast="post",
     DE_set_it_is_counted_over="neither - " + P70,
-    source_table_path="03_Revised_Panels/Main_Figures/05_Figure_5/05_G/"
+    source_table_path="03_Final_Panels/05_Figure_5/05_G/"
                       "gsea_{Epithelial,Fibroblast}/gseapy.gene_set.prerank.report.csv",
     source_column="ES / NES", quoted_value="curves, no printed number",
     value_in_source="prerank reports on disk",

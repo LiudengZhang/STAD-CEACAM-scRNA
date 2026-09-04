@@ -4,7 +4,7 @@ Figure 5 panel H, RESTYLED (Version B) - NF-kB NES radar across thirteen cell
 types, pre versus post treatment.
 
 Version A is
-`03_Revised_Panels/Main_Figures/05_Figure_5/05_F/create_panel_f_radar.py`
+`03_Final_Panels/05_Figure_5/05_F/create_panel_f_radar.py`
 and is frozen. This is a copy of it with only the changes PANEL_SPEC.md allows:
 the type comes from `00_Config/panel_style_cns.py`, the canvas is the
 millimetre box the panel prints in, non-type point sizes are rescaled by MARK,

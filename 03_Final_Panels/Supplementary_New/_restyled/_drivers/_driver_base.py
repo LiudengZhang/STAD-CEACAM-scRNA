@@ -42,10 +42,32 @@ RESTYLED = Path(__file__).resolve().parents[1]      # Supplementary_New/_restyle
 NEW_ANALYSES = ROOT / "02_New_Analyses"
 
 sys.path.insert(0, str(ROOT / "00_Config"))
-sys.path.insert(0, str(ROOT / "10_Reproduction"))
 
 import panel_style_cns as style                      # noqa: E402
-import compare_panel_content as cpc                  # noqa: E402
+
+
+def _compare_panel_content():
+    """The content-comparison harness, imported where it is used.
+
+    It lives in 10_Reproduction/, which this deposit does not carry:
+    RELEASE_GAPS.csv rules that tree "exclude: development record".
+    Only check() uses it, and run() calls check() only for --check,
+    so importing it at module scope broke all fourteen drivers in a
+    clean checkout and bought nothing. Deferred here instead. The
+    drivers import and draw; --check says why it cannot run.
+    """
+    sys.path.insert(0, str(ROOT / "10_Reproduction"))
+    try:
+        import compare_panel_content
+    except ImportError as exc:
+        raise SystemExit(
+            "--check needs 10_Reproduction/compare_panel_content.py, "
+            "which is not part of this code deposit. Run the driver "
+            "without --check to draw the panels; the content gate "
+            "runs in the author's working tree, where that module "
+            "is."
+        ) from exc
+    return compare_panel_content
 
 
 def analysis(rel):
@@ -105,6 +127,7 @@ def check(label, original, restyled, nd=9):
     figure. Neither is allowed to write to disk; `cpc.capture` enforces that.
     Returns 0 when the content matches.
     """
+    cpc = _compare_panel_content()
     plt.close("all")
     with cpc.capture() as cap_old:
         original()

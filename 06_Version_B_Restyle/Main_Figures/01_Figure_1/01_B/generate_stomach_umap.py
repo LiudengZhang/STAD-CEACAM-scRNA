@@ -4,7 +4,7 @@ Figure 1 panel B, RESTYLED (Version B) - UMAP of the stomach samples coloured
 by major cell type.
 
 Version A is
-`03_Revised_Panels/Main_Figures/01_Figure_1/01_B/generate_stomach_umap.py`
+`03_Final_Panels/01_Figure_1/01_B/generate_stomach_umap.py`
 and is frozen. This is a copy of it with only the changes PANEL_SPEC.md allows.
 Every value read, every filter, every merge of cell-type names, every colour
 and every label string is Version A's. The drawing code is the same code.

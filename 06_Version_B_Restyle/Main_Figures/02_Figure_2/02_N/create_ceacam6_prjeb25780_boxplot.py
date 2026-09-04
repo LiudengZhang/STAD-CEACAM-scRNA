@@ -7,7 +7,7 @@ Figure 2, printed panel L (CEACAM6 half), RESTYLED (Version B) - PRJEB25780
 BayesPrism epithelial-deconvolved expression, R versus NR.
 
 Version A is
-`03_Revised_Panels/Main_Figures/02_Figure_2/02_N/create_ceacam6_prjeb25780_boxplot.py`
+`03_Final_Panels/02_Figure_2/02_N/create_ceacam6_prjeb25780_boxplot.py`
 and is frozen. This is a copy of it with only the changes PANEL_SPEC.md
 allows: the type comes from `00_Config/panel_style_cns.py`, the canvas is the
 millimetre box the panel prints in, non-type point sizes are rescaled by MARK,

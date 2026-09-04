@@ -237,7 +237,7 @@ check("IL-1B cluster position on the lineage axis", pos, 0.41)
 # The panels agree, as of 2026-09-03. Panels S9E and S10C were drawn from the
 # live run until that date, which left them disagreeing with this text in six
 # quantities; the author then ruled that they be redrawn from the same adopted
-# table, and they were. 03_Revised_Panels/Supplementary_New/S9_Mechanism_
+# table, and they were. 03_Final_Panels/Supplementary_New/S9_Mechanism_
 # Specificity/REDRAW_2026-09-03.md and the S10 equivalent record what moved, and
 # PROVENANCE.csv rows S9,E and S10,C carry the re-adjudication.
 #
@@ -535,8 +535,8 @@ for marker, expected in (("Summed", 0.88), ("CEACAM5", 0.86), ("CEACAM6", 0.62))
 # epithelial cells". Both came from the damaged .X of Epithelial.h5ad: 49,696 is
 # the number of rows of that matrix that are not NaN, out of 106,653. The Results
 # now give all three levels of aggregation, read from .raw.
-LEVELS = (Path(__file__).resolve().parents[1] / "03_Revised_Panels"
-          / "Main_Figures" / "02_Figure_2" / "02_D"
+LEVELS = (Path(__file__).resolve().parents[1] / "03_Final_Panels"
+          / "02_Figure_2" / "02_D"
           / "ceacam_correlation_levels.csv")
 checks += 1
 if not LEVELS.exists():

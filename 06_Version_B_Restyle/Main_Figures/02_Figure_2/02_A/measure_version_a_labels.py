@@ -24,7 +24,7 @@ HOW VERSION A IS RUN WITHOUT WRITING TO VERSION A
       * every other write (`open` in a writing mode, `to_csv`, `write_text`,
         `np.save`, ...) raises.
     Version A's script is imported and executed as-is. Not one byte of
-    `03_Revised_Panels/` is opened for writing. `_audit/verify_frozen.py`
+    `03_Final_Panels/` is opened for writing. `_audit/verify_frozen.py`
     is the proof of that, run before and after.
 
 WHAT IS MEASURED
@@ -52,19 +52,45 @@ import numpy as np
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[3]
-VERSION_A = (ROOT / "03_Revised_Panels" / "Main_Figures" / "02_Figure_2" /
+VERSION_A = (ROOT / "03_Final_Panels" / "02_Figure_2" /
              "02_A" / "create_epithelial_umap.py")
 
-sys.path.insert(0, str(ROOT / "10_Reproduction"))
 import matplotlib                                              # noqa: E402
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt                                # noqa: E402
-from compare_panel_content import capture                      # noqa: E402
+
+
+def _capture():
+    """The write-blocking harness this script runs Version A under.
+
+    It comes from 10_Reproduction/compare_panel_content.py, which
+    this deposit does not carry: RELEASE_GAPS.csv rules that tree
+    "exclude: development record". Unlike the restyle drivers, this
+    script has no path that does not need it - measuring Version A
+    under a blocked-write capture IS the method - so a clean
+    checkout cannot run it. The import is deferred so the file still
+    imports and says why, rather than failing on line 62 of a module
+    nobody asked to run. Its output, label_pins_version_a.json, is
+    deposited beside it and is what Version B panel A reads.
+    """
+    sys.path.insert(0, str(ROOT / "10_Reproduction"))
+    try:
+        from compare_panel_content import capture
+    except ImportError as exc:
+        raise SystemExit(
+            "this script needs "
+            "10_Reproduction/compare_panel_content.py, which is not "
+            "part of this code deposit. The measurement it makes is "
+            "already deposited as label_pins_version_a.json beside "
+            "this file."
+        ) from exc
+    return capture
 
 
 def run_version_a():
     """Return the figure Version A builds, having written nothing."""
     import runpy
+    capture = _capture()
     plt.close("all")
     argv, path0 = sys.argv[:], sys.path[:]
     sys.argv = [str(VERSION_A)]

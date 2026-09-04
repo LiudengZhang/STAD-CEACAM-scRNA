@@ -68,8 +68,8 @@ from shared.svg_assembler import VectorAssembler      # noqa: E402
 from lxml import etree                                # noqa: E402
 
 OUT = MAIN / "_restyled"
-PROVENANCE = ROOT / "03_Revised_Panels" / "PROVENANCE.csv"
-RECTS = ROOT / "03_Revised_Panels" / "panel_rects.csv"
+PROVENANCE = ROOT / "03_Final_Panels" / "PROVENANCE.csv"
+RECTS = ROOT / "03_Final_Panels" / "panel_rects.csv"
 
 PAGE_W = style.PAGE_W_MM        # 190.5 mm, cnsplots' full-width figure
 GUTTER = 4.0                    # between panels in a row

@@ -4,7 +4,7 @@ Figure 4 panel B, RESTYLED (Version B) - the five module networks, one per row,
 nodes laid out on a circle and edges weighted by Jaccard similarity.
 
 Version A is
-`03_Revised_Panels/Main_Figures/04_Figure_4/04_B/create_merged_networks.py`
+`03_Final_Panels/04_Figure_4/04_B/create_merged_networks.py`
 and is frozen. This is a copy of it with only the changes PANEL_SPEC.md allows:
 the type comes from `00_Config/panel_style_cns.py`, the canvas is the
 millimetre box the panel prints in, non-type point sizes are rescaled by MARK,

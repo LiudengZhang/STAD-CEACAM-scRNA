@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Figure 1A - study overview, RESTYLED (Version B).
 
-Version A is `03_Revised_Panels/Main_Figures/_panel_1A/build_figure.py` and is
+Version A is `03_Final_Panels/_panel_1A/build_figure.py` and is
 frozen. This is a copy of it with THREE changes and no others. Every
 coordinate, every box, every icon, every colour and every string is Version A's.
 

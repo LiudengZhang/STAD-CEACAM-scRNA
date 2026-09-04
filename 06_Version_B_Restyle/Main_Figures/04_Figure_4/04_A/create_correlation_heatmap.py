@@ -4,7 +4,7 @@ Figure 4 panel A, RESTYLED (Version B) - Spearman correlation matrix of the 56
 minor cell states, ordered and boxed by the five interaction modules.
 
 Version A is
-`03_Revised_Panels/Main_Figures/04_Figure_4/04_A/create_correlation_heatmap.py`
+`03_Final_Panels/04_Figure_4/04_A/create_correlation_heatmap.py`
 and is frozen. This is a copy of it with only the changes PANEL_SPEC.md allows:
 the type comes from `00_Config/panel_style_cns.py`, the canvas is the
 millimetre box the panel prints in, non-type point sizes are rescaled by MARK,

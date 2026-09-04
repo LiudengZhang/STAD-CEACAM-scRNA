@@ -4,7 +4,7 @@ Figure 5 panel M, RESTYLED (Version B) - NF-kB score against the Th17 score in
 CD4+ T cells, one point per sample.
 
 Version A is
-`03_Revised_Panels/Main_Figures/05_Figure_5/05_Q/create_th17_nfkb_scatter_cd4.py`
+`03_Final_Panels/05_Figure_5/05_Q/create_th17_nfkb_scatter_cd4.py`
 and is frozen. This is a copy of it with only the changes PANEL_SPEC.md allows:
 the type comes from `00_Config/panel_style_cns.py`, the canvas is the
 millimetre box the panel prints in, non-type point sizes are rescaled by MARK

@@ -84,7 +84,7 @@ the sound-input recompute, and **Fig. S10E is to be changed**. So the question b
 not *whether* to adopt. It is: given adoption, which sentence survives, which must be
 restated and to what, and which must go. Where a sentence survives unchanged that is
 recorded as a finding, not as a blank row. (For the record: the on-disk file that raised
-the S10E question, `03_Revised_Panels/SUPPLEMENTARY_AUDIT.md`, still reads
+the S10E question, `03_Final_Panels/SUPPLEMENTARY_AUDIT.md`, still reads
 "Needs the author's ruling. Do not repoint it unasked." It has not been updated with the
 ruling; that is a bookkeeping gap, not a contradiction.)
 
@@ -158,7 +158,7 @@ are given where it matters.
 
 `FINDINGS.md` §8 records Fig. S10D/E as "the one remaining unaudited GSEA claim in the
 paper", and `stability.csv` scores M12 `untestable` on all five axes. **That is now out
-of date.** `03_Revised_Panels/SUPPLEMENTARY_AUDIT.md` fault 1 measured it:
+of date.** `03_Final_Panels/SUPPLEMENTARY_AUDIT.md` fault 1 measured it:
 
 - repointing `adaptive_immune_resource.py:146` from the prepared Round_5 tables to the
   sound recompute leaves **2 of 40 top-5 Hallmark slots** standing across the eight
@@ -351,7 +351,7 @@ Unchanged from `FINDINGS.md` §10, and it bounds every row above.
     work/dump_docx.py                  paragraph dumper (read-only)
 
 Read-only throughout: `04_Manuscript_R1/` (both .docx files, `edits.py`,
-`verify_numbers.py`, the response letter), `03_Revised_Panels/` (`PROVENANCE.csv`,
+`verify_numbers.py`, the response letter), `03_Final_Panels/` (`PROVENANCE.csv`,
 `SUPPLEMENTARY_AUDIT.md`), `02_New_Analyses/07_`, `08_`, `09_`, `12_`, `13_`, `14_`,
 `15_`, `16_`, `00_Data_Audit/`, `00_GROUND_TRUTH/` and `Round_5/`. No GSEA, DEG or panel
 pipeline was run. No patient name, medical record number or specimen identifier appears

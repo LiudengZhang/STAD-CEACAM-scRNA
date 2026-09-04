@@ -10,7 +10,7 @@ script makes; PROVENANCE.csv does not list it as a panel source, but Version A
 produces it and nothing is dropped, so it is restyled with the rest.
 
 Version A is
-`03_Revised_Panels/Main_Figures/05_Figure_5/05_GSEA_Summary/create_gsea_4panels.py`
+`03_Final_Panels/05_Figure_5/05_GSEA_Summary/create_gsea_4panels.py`
 and is frozen. This is a copy of it with only the changes PANEL_SPEC.md allows:
 the type comes from `00_Config/panel_style_cns.py`, the canvases are the
 millimetre boxes the panels print in, non-type point sizes are rescaled by MARK
@@ -75,8 +75,8 @@ BASE_DIR = Path(__file__).resolve().parent
 # copy of a number that the manuscript quotes, which is exactly the kind
 # of drift PROVENANCE.csv exists to prevent. Version A's line was
 # `DATA_DIR = BASE_DIR / 'gsea_data'`; the directory it named is this one.
-DATA_DIR = (Path(__file__).resolve().parents[4] / '03_Revised_Panels'
-            / 'Main_Figures' / '05_Figure_5' / '05_GSEA_Summary' / 'gsea_data')
+DATA_DIR = (Path(__file__).resolve().parents[4] / '03_Final_Panels'
+            / '05_Figure_5' / '05_GSEA_Summary' / 'gsea_data')
 PANEL_DIR = BASE_DIR
 
 SCALE = 4                       # Version A's canvas multiplier, for MARK only

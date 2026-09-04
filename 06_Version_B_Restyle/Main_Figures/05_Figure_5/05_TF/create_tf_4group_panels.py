@@ -11,7 +11,7 @@ ONE SCRIPT, TWO PRINTED PANELS. `bach1_tf_4group` is printed panel D and
 loop below, in that order.
 
 Version A is
-`03_Revised_Panels/Main_Figures/05_Figure_5/05_TF/create_tf_4group_panels.py`
+`03_Final_Panels/05_Figure_5/05_TF/create_tf_4group_panels.py`
 and is frozen. This is a copy of it with only the changes PANEL_SPEC.md allows:
 the type comes from `00_Config/panel_style_cns.py`, the canvas is the
 millimetre box the panels print in, non-type point sizes are rescaled by MARK

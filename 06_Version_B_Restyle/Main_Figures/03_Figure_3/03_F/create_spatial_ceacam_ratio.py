@@ -8,7 +8,7 @@ confirms it holds printed panel **F** - but the letter was still looked up
 there rather than read off the directory name (CLAUDE.md rule 2).
 
 Version A is
-`03_Revised_Panels/Main_Figures/03_Figure_3/03_F/create_spatial_ceacam_ratio.py`
+`03_Final_Panels/03_Figure_3/03_F/create_spatial_ceacam_ratio.py`
 and is frozen. This is a copy of it with only the changes PANEL_SPEC.md allows:
 the type comes from `00_Config/panel_style_cns.py`, the canvas is the
 millimetre box the panel prints in, non-type point sizes are rescaled by MARK,

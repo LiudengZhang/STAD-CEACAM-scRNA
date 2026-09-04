@@ -10,7 +10,7 @@ does record it as printed panel **E** - but the same directory also holds
 applies.
 
 Version A is
-`03_Revised_Panels/Main_Figures/04_Figure_4/04_E/create_momac_marker_dotplot.py`
+`03_Final_Panels/04_Figure_4/04_E/create_momac_marker_dotplot.py`
 and is frozen. This is a copy of it with only the changes PANEL_SPEC.md allows:
 the type comes from `00_Config/panel_style_cns.py`, the canvas is the
 millimetre box the panel prints in, margins are millimetres, and the save is

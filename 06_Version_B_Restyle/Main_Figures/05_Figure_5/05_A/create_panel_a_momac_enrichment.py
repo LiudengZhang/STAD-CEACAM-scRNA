@@ -4,7 +4,7 @@ Figure 5 panel A, RESTYLED (Version B) - MoMac GSEA horizontal barplot, top 9
 Hallmark gene sets by |NES|.
 
 Version A is
-`03_Revised_Panels/Main_Figures/05_Figure_5/05_A/create_panel_a_momac_enrichment.py`
+`03_Final_Panels/05_Figure_5/05_A/create_panel_a_momac_enrichment.py`
 and is frozen. This is a copy of it with only the changes PANEL_SPEC.md allows:
 the type comes from `00_Config/panel_style_cns.py`, the canvas is the
 millimetre box the panel prints in, non-type point sizes are rescaled by MARK,

@@ -7,7 +7,7 @@ Figure 5 panel J (one of four), RESTYLED (Version B) - CD274 Post-R vs Post-NR
 in Monocytes/Macrophages.
 
 Version A is
-`03_Revised_Panels/Main_Figures/05_Figure_5/05_I/create_cd274_momac_boxplot.py`
+`03_Final_Panels/05_Figure_5/05_I/create_cd274_momac_boxplot.py`
 and is frozen. This is a copy of it with only the changes PANEL_SPEC.md allows:
 the type comes from `00_Config/panel_style_cns.py`, the canvas is the
 millimetre box the panel prints in, non-type point sizes are rescaled by MARK

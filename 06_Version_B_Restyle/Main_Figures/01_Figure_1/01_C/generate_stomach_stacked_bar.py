@@ -7,7 +7,7 @@ Figure 1 panel C, RESTYLED (Version B) - cell type composition per stomach
 sample.
 
 Version A is
-`03_Revised_Panels/Main_Figures/01_Figure_1/01_C/generate_stomach_stacked_bar.py`
+`03_Final_Panels/01_Figure_1/01_C/generate_stomach_stacked_bar.py`
 and is frozen. This is a copy of it with only the changes PANEL_SPEC.md allows:
 the type comes from `00_Config/panel_style_cns.py`, the canvas is the
 millimetre box the panel prints in, non-type point sizes are rescaled by MARK,

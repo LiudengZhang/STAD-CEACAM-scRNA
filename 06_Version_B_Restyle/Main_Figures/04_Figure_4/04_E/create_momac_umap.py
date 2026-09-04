@@ -10,7 +10,7 @@ directory 04_D. CLAUDE.md rule 2 - never infer a panel letter from a directory
 name.
 
 Version A is
-`03_Revised_Panels/Main_Figures/04_Figure_4/04_E/create_momac_umap.py`
+`03_Final_Panels/04_Figure_4/04_E/create_momac_umap.py`
 and is frozen. This is a copy of it with only the changes PANEL_SPEC.md allows:
 the type comes from `00_Config/panel_style_cns.py`, the canvas is the
 millimetre box the panel prints in, non-type point sizes are rescaled by MARK,

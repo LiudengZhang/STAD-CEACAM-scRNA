@@ -4,7 +4,7 @@ Figure 4 panel H, RESTYLED (Version B) - external validation of the Mac_IL1B
 (Mac_3) proportion, tumour versus normal, in two public gastric cohorts.
 
 Version A is
-`03_Revised_Panels/Main_Figures/04_Figure_4/04_H/create_external_validation_boxplots.py`
+`03_Final_Panels/04_Figure_4/04_H/create_external_validation_boxplots.py`
 and is frozen. This is a copy of it with only the changes PANEL_SPEC.md allows:
 the type comes from `00_Config/panel_style_cns.py`, the canvas is the
 millimetre box the panel prints in, non-type point sizes are rescaled by MARK,

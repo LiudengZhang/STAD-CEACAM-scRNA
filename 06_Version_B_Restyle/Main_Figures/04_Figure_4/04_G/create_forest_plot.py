@@ -4,7 +4,7 @@ Figure 4 panel G, RESTYLED (Version B) - forest plot of the MoMac cell-state
 fold changes (responder / non-responder) with bootstrap confidence intervals.
 
 Version A is
-`03_Revised_Panels/Main_Figures/04_Figure_4/04_G/create_forest_plot.py`
+`03_Final_Panels/04_Figure_4/04_G/create_forest_plot.py`
 and is frozen. This is a copy of it with only the changes PANEL_SPEC.md allows:
 the type comes from `00_Config/panel_style_cns.py`, the canvas is the
 millimetre box the panel prints in, non-type point sizes are rescaled by MARK,

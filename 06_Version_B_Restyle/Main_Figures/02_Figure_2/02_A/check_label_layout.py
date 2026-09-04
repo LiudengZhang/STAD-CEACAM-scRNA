@@ -81,7 +81,7 @@ from scipy import ndimage
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[3]
-SVG_A = (ROOT / "03_Revised_Panels/Main_Figures/02_Figure_2/02_A/"
+SVG_A = (ROOT / "03_Final_Panels/02_Figure_2/02_A/"
          "epithelial_umap_minor_states.svg")
 SVG_B = HERE / "epithelial_umap_minor_states.svg"
 CONTROL_SVG = HERE / "_superseded" / "epithelial_umap_minor_states.adjusttext.svg"

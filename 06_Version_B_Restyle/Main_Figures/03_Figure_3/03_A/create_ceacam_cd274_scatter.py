@@ -4,7 +4,7 @@ Figure 3 panel A, RESTYLED (Version B) - CEACAM5/6 vs CD274 correlation (1x2),
 primary cohort only (scRNA, ALL 32 stomach samples, 4-group colouring).
 
 Version A is
-`03_Revised_Panels/Main_Figures/03_Figure_3/03_A/create_ceacam_cd274_scatter.py`
+`03_Final_Panels/03_Figure_3/03_A/create_ceacam_cd274_scatter.py`
 and is frozen. This is a copy of it with only the changes PANEL_SPEC.md allows:
 the type comes from `00_Config/panel_style_cns.py`, the canvas is the
 millimetre box the panel prints in, non-type point sizes are rescaled by MARK,

@@ -7,7 +7,7 @@ Figure 5 panel J (one of four), RESTYLED (Version B) - PD-L1 (CD274) boxplot,
 DC cells, Post-R vs Post-NR.
 
 Version A is
-`03_Revised_Panels/Main_Figures/05_Figure_5/05_DC_CD274/create_cd274_dc_boxplot.py`
+`03_Final_Panels/05_Figure_5/05_DC_CD274/create_cd274_dc_boxplot.py`
 and is frozen. This is a copy of it with only the changes PANEL_SPEC.md allows:
 the type comes from `00_Config/panel_style_cns.py`, the canvas is the
 millimetre box the panel prints in, non-type point sizes are rescaled by MARK

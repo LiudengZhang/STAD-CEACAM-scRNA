@@ -2,7 +2,7 @@
 WP3 / Reviewer 1 point R1.3c - convert the affected panel scripts.
 
 Copies every panel script that used a one-tailed test into
-03_Revised_Panels/Main_Figures/, switches the test to two-sided, and replaces
+03_Final_Panels/, switches the test to two-sided, and replaces
 star-based significance annotation with the exact P value, as the reviewer
 asked ("report exact P values rather than only significance thresholds").
 

@@ -4,7 +4,7 @@ Figure 5 panel F, RESTYLED (Version B) - dotplot of TNF, IL6, IL1B and IL1A
 across the thirteen major cell types.
 
 Version A is
-`03_Revised_Panels/Main_Figures/05_Figure_5/05_H/create_cytokine_dotplot.py`
+`03_Final_Panels/05_Figure_5/05_H/create_cytokine_dotplot.py`
 and is frozen. This is a copy of it with only the changes PANEL_SPEC.md allows.
 
 The gene list, the cell-type order, the `major_cell_type` filter (Hepatocyte

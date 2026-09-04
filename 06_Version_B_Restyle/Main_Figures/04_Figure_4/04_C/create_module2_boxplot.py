@@ -4,7 +4,7 @@ Figure 4 panel C, RESTYLED (Version B) - IM-MoMac module proportion in
 post-treatment stomach samples, responders versus non-responders.
 
 Version A is
-`03_Revised_Panels/Main_Figures/04_Figure_4/04_C/create_module2_boxplot.py`
+`03_Final_Panels/04_Figure_4/04_C/create_module2_boxplot.py`
 and is frozen. This is a copy of it with only the changes PANEL_SPEC.md allows:
 the type comes from `00_Config/panel_style_cns.py`, the canvas is the
 millimetre box the panel prints in, non-type point sizes are rescaled by MARK,

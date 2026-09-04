@@ -15,7 +15,7 @@ Sources, all read not written:
         stability.csv, counted_claims_by_seed.csv, ordinal_denominator.csv
         para70_summary.csv                   Fig. 5N / Results para 71
   02_New_Analyses/14_MAST_Specification/outputs/nfkb_by_specification.csv  (reserve)
-  03_Revised_Panels/SUPPLEMENTARY_AUDIT.md   fault 1, the S10E measurement
+  03_Final_Panels/SUPPLEMENTARY_AUDIT.md   fault 1, the S10E measurement
   04_Manuscript_R1/verify_numbers.py         the guard column
   04_Manuscript_R1/01_Main_Text/Manuscript_R1_clean.docx
   04_Manuscript_R1/05_Response_to_Reviewers/Response_to_Reviewers_CIR260753ET_v3_clean.docx
@@ -31,7 +31,7 @@ S13 = ("13_R1.8_Neutrophil_Rebuilt_Recompute/outputs/nfkb_per_celltype_sound13.c
 CC = ("13_R1.8_Neutrophil_Rebuilt_Recompute/outputs/counted_claims.csv")
 SIG = "17_NFkB_Claim_Ledger/outputs/signal.csv"
 P70 = "17_NFkB_Claim_Ledger/outputs/para70_summary.csv"
-AUDIT = "03_Revised_Panels/SUPPLEMENTARY_AUDIT.md fault 1"
+AUDIT = "03_Final_Panels/SUPPLEMENTARY_AUDIT.md fault 1"
 
 F = ["claim_id", "ledger_id", "source", "location", "verbatim", "printed_value",
      "sound_input_value", "sound_input_table", "axis1_input", "axis2_stability",
@@ -223,7 +223,7 @@ row(claim_id="C07", ledger_id="M12", source="main text",
                       "Mitotic Spindle and E2F Targets - the whole proliferation "
                       "reading - are in the top 5 for neither CD4 nor CD8 in either "
                       "phase",
-    sound_input_table="03_Revised_Panels/SUPPLEMENTARY_AUDIT.md fault 1 (measured "
+    sound_input_table="03_Final_Panels/SUPPLEMENTARY_AUDIT.md fault 1 (measured "
                       "against 12_R1.8_DEG_Recompute/outputs/gsea)",
     axis1_input="moved - almost completely",
     axis2_stability="unstable independently of the input: MAST-recompute vs "
@@ -520,7 +520,7 @@ row(claim_id="C18", ledger_id="M13 + M14", source="main text",
     printed_value="1.48 / P 0.02; 1.56 / P 0.006",
     sound_input_value="not covered - a third pipeline, whose panels read .raw and are "
                       "therefore not affected by the double normalisation",
-    sound_input_table="03_Revised_Panels/Main_Figures/05_Figure_5/05_GSEA_Summary/"
+    sound_input_table="03_Final_Panels/05_Figure_5/05_GSEA_Summary/"
                       "gsea_data/gsea_combined_5types.csv",
     axis1_input="not covered",
     axis2_stability="NES reproduces (1.4780 and 1.5601 at seed 42; 1.452-1.478 and "
@@ -554,7 +554,7 @@ row(claim_id="C19", ledger_id="M15", source="main text",
     axis2_stability="NOT REPRODUCIBLE from any table on disk - 1.2796 at seed 42, "
                     "1.2796-1.2980 over 7 seeds; the band does not reach 1.30, so "
                     "the 0.020 gap is not a seed effect. Every CSV with an NES "
-                    "column under 03_Revised_Panels/Main_Figures, 02_New_Analyses "
+                    "column under 03_Final_Panels, 02_New_Analyses "
                     "and Round_5/02_Preparation_for_Panels was scanned; none gives "
                     "1.30. FDR q 0.676-0.932",
     gate="all 50 Hallmark sets tested",
@@ -578,7 +578,7 @@ row(claim_id="C20", ledger_id="M16-M19", source="main text",
              "pro-inflammatory signaling.",
     printed_value="1.67 / 1.66 / 1.53 / 1.50, all P <= 0.05",
     sound_input_value="not covered",
-    sound_input_table="03_Revised_Panels/Main_Figures/05_Figure_5/05_GSEA_Summary/"
+    sound_input_table="03_Final_Panels/05_Figure_5/05_GSEA_Summary/"
                       "gsea_data/gsea_momac.csv: 1.672274, 1.696945, 1.531753, "
                       "1.500481; NOM_pval 0.0000, 0.0000, 0.004739, 0.023622",
     axis1_input="not covered",

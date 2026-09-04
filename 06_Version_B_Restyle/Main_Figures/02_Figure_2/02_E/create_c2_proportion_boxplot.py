@@ -4,7 +4,7 @@ Figure 2, printed panel E, RESTYLED (Version B) - C2_Epi_CEACAM5/6 cluster
 proportion, pre-treatment responders versus non-responders.
 
 Version A is
-`03_Revised_Panels/Main_Figures/02_Figure_2/02_E/create_c2_proportion_boxplot.py`
+`03_Final_Panels/02_Figure_2/02_E/create_c2_proportion_boxplot.py`
 and is frozen. This is a copy of it with only the changes PANEL_SPEC.md
 allows: the type comes from `00_Config/panel_style_cns.py`, the canvas is the
 millimetre box the panel prints in, non-type point sizes are rescaled by MARK,
