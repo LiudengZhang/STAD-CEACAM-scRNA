@@ -14,6 +14,7 @@ from pathlib import Path
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
 from paths import *
+from shared.figure_config import use_panel_style
 
 # Nature Cancer specifications - 4× scaling method
 DPI = 300
@@ -28,22 +29,19 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 OUTPUT_DIR = BASE_DIR
 
 def main():
-    plt.rcParams.update({
-        'font.family': 'sans-serif',
-        'font.sans-serif': ['Arial', 'Liberation Sans', 'Helvetica', 'DejaVu Sans'],
-        'font.size': 7 * SCALE,
-        'svg.fonttype': 'none',
-        'pdf.fonttype': 42,
-        'ps.fonttype': 42,
-    })
+    use_panel_style(font_pt=7)
 
     print("Loading data...")
     adata = sc.read_h5ad(EPITHELIAL_H5AD)
     print(f"Loaded {adata.n_obs} cells")
 
     gene = 'CEACAM5'
-    idx = adata.raw.var_names.get_loc(gene)
-    expr = adata.raw.X[:, idx]
+    # The working inputs keep the log1p matrix in .raw; the clean deposit
+    # promotes it to .X and carries no .raw, so a file without .raw already
+    # holds the same numbers in .X.
+    src = adata.raw if adata.raw is not None else adata
+    idx = src.var_names.get_loc(gene)
+    expr = src.X[:, idx]
     if hasattr(expr, 'toarray'):
         expr = expr.toarray().flatten()
     else:

@@ -18,6 +18,7 @@ warnings.filterwarnings('ignore')
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
 from paths import *
+from shared.figure_config import use_panel_style
 
 BASE_DIR = Path(__file__).parent
 
@@ -34,9 +35,20 @@ COLOR_NFKB = '#d62728'
 COLOR_OTHER = '#7f7f7f'
 
 
+def _read_gmt(path):
+    """The pinned Hallmark sets, in the shape gseapy.get_library returns."""
+    sets = {}
+    with open(path) as fh:
+        for line in fh:
+            parts = line.rstrip("\n").split("\t")
+            if len(parts) > 2:
+                sets[parts[0]] = [g for g in parts[2:] if g]
+    return sets
+
+
 def get_nfkb_genes():
     try:
-        hallmark = gp.get_library('MSigDB_Hallmark_2020')
+        hallmark = _read_gmt(HALLMARK_GMT)
         return set(hallmark['HALLMARK_TNFA_SIGNALING_VIA_NFKB'])
     except Exception:
         return {'IL1B', 'TNF', 'IL6', 'CSF3', 'IL1A', 'LTA', 'LTB'}
@@ -74,14 +86,15 @@ def load_all_ligand_activities():
 
 
 def main():
-    plt.rcParams.update({
-        'font.family': 'sans-serif',
-        'font.sans-serif': ['Arial', 'Liberation Sans', 'Helvetica', 'DejaVu Sans'],
-        'font.size': 7 * SCALE,
-        'svg.fonttype': 'none',
-        'pdf.fonttype': 42,
-        'ps.fonttype': 42,
-    })
+    # The overlaid points are placed with random jitter. Left unseeded it made
+    # this panel the only kind in the figure that could not reproduce itself:
+    # two consecutive runs of the unchanged script gave three different SVGs
+    # (baseline, run 1 and run 2 all differed). The jitter is decoration - no
+    # statistic depends on it - but a panel that redraws differently every time
+    # cannot be checked, so it is pinned here.
+    np.random.seed(0)
+
+    use_panel_style(font_pt=7)
 
     nfkb_genes = get_nfkb_genes()
     df = load_all_ligand_activities()

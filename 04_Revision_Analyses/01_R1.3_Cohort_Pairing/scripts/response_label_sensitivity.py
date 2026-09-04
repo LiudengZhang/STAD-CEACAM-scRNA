@@ -64,9 +64,9 @@ def main():
     frac = pd.read_csv(CEACAM / "ceacam_state_fractions.csv")
     ihc = pd.read_csv(CEACAM / "ihc_per_marker_values.csv")
 
-    # The scRNA table is keyed by the internal sequencing ID; the audit carries
-    # the crosswalk to the study patient IDs printed in the paper.
-    crosswalk = dict(zip(audit.internal_id, audit["Patient ID"]))
+    # The scRNA table is keyed by the study sample ID; the audit carries that
+    # column beside the study patient ID printed in the paper.
+    crosswalk = dict(zip(audit["Sample"].astype(str), audit["Patient ID"]))
     frac["patient"] = frac["sample"].map(crosswalk)
     if frac["patient"].isna().any():
         raise SystemExit("unmapped scRNA samples: "

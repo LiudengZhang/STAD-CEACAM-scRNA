@@ -10,7 +10,9 @@ Checked:
   2. every `sys.path.insert(... parents[N] / "00_Config")` reaches the real one
   3. every name imported from paths.py is defined there
   4. no machine-specific absolute paths, and no /path/to/ placeholder
-     outside the scripts that document the upstream pipeline
+     outside the scripts that say why they carry one - the ones that document
+     the upstream pipeline, and, since 2026-09-04, the ones whose interpreter
+     and library paths under a home directory were delocalised
   5. no symlink, and no two-group comparison left one-tailed in a panel
   6. the figure driver understands every target the entry point invokes
   7. which declared input directories are present, and which are not
@@ -39,6 +41,15 @@ ABSOLUTE = re.compile(
 # Figure 1C shipped broken.
 PLACEHOLDER = re.compile(r"/path/to/")
 UPSTREAM_MARK = "upstream Round_4 processing pipeline"
+# The second reason a file may legitimately carry a placeholder, added
+# 2026-09-04 with the home-directory rewrite. update_release.py prepends
+# LOCAL_HOME_NOTE, which contains this phrase, wherever that rewrite fires and
+# a '#' comment line is legal. It is a separate mark from UPSTREAM_MARK on
+# purpose: the four shell drivers it applies to are the revision analyses' own
+# drivers, and claiming they document the Round_4 pipeline to buy a pass here
+# would be a false statement in a deposited file. Kept in step with
+# update_release.py:LOCAL_HOME_MARK.
+LOCAL_HOME_MARK = "paths under the author's home directory"
 ONE_TAILED = re.compile(r"alternative\s*=\s*['\"](greater|less)['\"]")
 
 
@@ -105,11 +116,11 @@ def main():
                                        ".json")]
     for f in list(files) + sorted(others):
         text = f.read_text(encoding="utf-8", errors="replace")
-        provenance = UPSTREAM_MARK in text
+        explained = UPSTREAM_MARK in text or LOCAL_HOME_MARK in text
         for i, line in enumerate(text.splitlines(), 1):
             if ABSOLUTE.search(line):
                 problems.append(f"absolute path: {f.relative_to(ROOT)}:{i}")
-            if PLACEHOLDER.search(line) and not provenance:
+            if PLACEHOLDER.search(line) and not explained:
                 problems.append(
                     f"placeholder path: {f.relative_to(ROOT)}:{i}")
 

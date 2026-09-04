@@ -37,6 +37,6 @@ nichenet:
 
 databases:
   # Must match NICHENET_DB_DIR in 00_Config/paths.py
-  ligand_target_matrix: /path/to/Project_4_05232025/Round_5/02_Preparation_for_Panels/_archived_NicheNet_v2/00_Databases/ligand_target_matrix.rds
-  lr_network: /path/to/Project_4_05232025/Round_5/02_Preparation_for_Panels/_archived_NicheNet_v2/00_Databases/lr_network.rds
-  weighted_networks: /path/to/Project_4_05232025/Round_5/02_Preparation_for_Panels/_archived_NicheNet_v2/00_Databases/weighted_networks.rds
+  ligand_target_matrix: /path/to/Project_4_05232025/Round_5/02_Preparation_for_Panels/NicheNet/00_Databases/ligand_target_matrix.rds
+  lr_network: /path/to/Project_4_05232025/Round_5/02_Preparation_for_Panels/NicheNet/00_Databases/lr_network.rds
+  weighted_networks: /path/to/Project_4_05232025/Round_5/02_Preparation_for_Panels/NicheNet/00_Databases/weighted_networks.rds

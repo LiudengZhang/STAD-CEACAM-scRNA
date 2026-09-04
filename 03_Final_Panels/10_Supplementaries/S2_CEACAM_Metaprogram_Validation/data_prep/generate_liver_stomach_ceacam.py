@@ -10,6 +10,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[4] / "00_Config"))
 from paths import EPITHELIAL_H5AD
+from shared.sample_ids import sample_id_map, to_study_ids
 
 import numpy as np
 import pandas as pd
@@ -30,6 +31,10 @@ def main():
     if adata.raw is None:
         raise SystemExit("Epithelial.h5ad has no .raw - refusing to fall back to .X")
     adata = adata.raw.to_adata()[adata.obs_names]   # .raw.to_adata() carries obs
+    # Specimens are named the way Supplementary Table 1 names them, never by the
+    # identifier .obs['sample'] carries. Resolved here, from the whole object,
+    # so the crosswalk is checked against every specimen in it.
+    ids = sample_id_map(adata.obs)
     print(f"  Total epithelial cells: {adata.n_obs}")
 
     rows = []
@@ -50,8 +55,8 @@ def main():
         vals6 = np.asarray(sub[:, 'CEACAM6'].X.todense()).flatten()
         c5 = vals5.mean()
         c6 = vals6.mean()
-        rows.append({'site': 'Liver', 'sample': sample, 'response': resp,
-                      'CEACAM5': c5, 'CEACAM6': c6})
+        rows.append({'site': 'Liver', 'sample': to_study_ids([sample], ids)[0],
+                      'response': resp, 'CEACAM5': c5, 'CEACAM6': c6})
 
     # --- Stomach ---
     stomach = adata[adata.obs['Sample site'] == 'Stomach'].copy()
@@ -69,8 +74,8 @@ def main():
         vals6 = np.asarray(sub[:, 'CEACAM6'].X.todense()).flatten()
         c5 = vals5.mean()
         c6 = vals6.mean()
-        rows.append({'site': 'Stomach', 'sample': sample, 'response': resp,
-                      'CEACAM5': c5, 'CEACAM6': c6})
+        rows.append({'site': 'Stomach', 'sample': to_study_ids([sample], ids)[0],
+                      'response': resp, 'CEACAM5': c5, 'CEACAM6': c6})
 
     df = pd.DataFrame(rows)
     out_path = OUTPUT_DIR / 'liver_stomach_ceacam_per_sample.csv'

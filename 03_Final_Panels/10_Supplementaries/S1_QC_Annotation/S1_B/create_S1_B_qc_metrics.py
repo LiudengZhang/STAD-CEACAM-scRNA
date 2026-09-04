@@ -3,6 +3,7 @@
 S1_B: QC Metrics — Stomach Samples (32)
 Boxplots of QC metrics per sample, colored by R/NR status (gray if not selected).
 """
+import re
 import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[4] / "00_Config"))
@@ -44,7 +45,7 @@ adata = sc.read_h5ad(FULL_DATASET_H5AD, backed='r')
 
 # Filter to stomach
 mask = adata.obs['Sample site'] == 'Stomach'
-plot_df = adata.obs.loc[mask, ['sample', 'stomach_pre_grouping', 'stomach_post_grouping',
+plot_df = adata.obs.loc[mask, ['sample', 'Sample ID', 'stomach_pre_grouping', 'stomach_post_grouping',
                                 'n_genes_by_counts', 'total_counts', 'pct_counts_mt']].copy()
 
 print(f"Stomach cells: {len(plot_df)}")
@@ -52,7 +53,7 @@ print(f"Stomach cells: {len(plot_df)}")
 # =============================================================================
 # Assign color group per sample
 # =============================================================================
-sample_info = plot_df[['sample', 'stomach_pre_grouping', 'stomach_post_grouping']].drop_duplicates('sample')
+sample_info = plot_df[['sample', 'Sample ID', 'stomach_pre_grouping', 'stomach_post_grouping']].drop_duplicates('sample')
 
 def assign_group(row):
     pre = str(row['stomach_pre_grouping'])
@@ -75,6 +76,17 @@ group_order = {'Pre-R': 0, 'Pre-NR': 1, 'Post-R': 2, 'Post-NR': 3, 'Not selected
 sample_info['sort_key'] = sample_info['group'].map(group_order)
 sample_info = sample_info.sort_values(['sort_key', 'sample'])
 sample_order = sample_info['sample'].tolist()
+
+# The x axis carries the de-identified study sample IDs, not the internal
+# specimen codes in `sample`: those codes name the specimen in the lab, and the
+# paper names every sample P01-M1 style. `sample` still drives the ordering and
+# the per-sample subsetting below; only the printed text differs. Anything not
+# shaped like a study ID is an error rather than an identifier on the axis.
+x_labels = sample_info['Sample ID'].astype(str).tolist()
+_bad = [f'{s} -> {lab}' for s, lab in zip(sample_order, x_labels)
+        if not re.fullmatch(r'P\d+-\w+', lab)]
+if _bad:
+    raise SystemExit('not a study sample ID: ' + ', '.join(_bad))
 
 color_map = {
     'Pre-R': COLOR_PRE_R, 'Pre-NR': COLOR_PRE_NR,
@@ -156,7 +168,7 @@ for ax, metric, title, ylabel in zip(axes, metrics, titles, ylabels):
     ax.set_ylabel(ylabel)
     ax.set_xlabel('Sample')
     ax.set_xticks(list(range(len(sample_order))))
-    ax.set_xticklabels(sample_order, rotation=90, ha='center')
+    ax.set_xticklabels(x_labels, rotation=90, ha='center')
     ax.yaxis.grid(True, linestyle='--', alpha=0.3, linewidth=LINEWIDTH * 0.3)
     ax.set_axisbelow(True)
     ax.spines['top'].set_visible(False)

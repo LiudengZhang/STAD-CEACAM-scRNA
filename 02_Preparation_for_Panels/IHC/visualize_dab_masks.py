@@ -21,11 +21,14 @@ OUTPUT_DIR = Path(__file__).parent
 THRESHOLDS = [0.02, 0.05, 0.07]
 
 # Scan filenames are what the slide scanner recorded, and the operator typed
-# the accession in by hand, so a few carry transcription slips. P02's CEACAM6
-# scan is '21-2855M', one digit short of accession 2021-28550; P04's and P22's
-# CEACAM5 scans carry a numeric block suffix where the CEACAM6 scan carries
-# 'M'. Checked against the paraffin specimen register: all nineteen scans in
-# each stain map one-to-one onto the nineteen accessions, so every pair below
+# the accession in by hand, so a few carry transcription slips. An accession
+# is <two-digit year>-<five digits> with an optional block suffix, written
+# here as the synthetic 'YY-NNNNNM'; the real ones are hospital pathology
+# identifiers and are not deposited. P02's CEACAM6 scan is one digit short
+# of its accession; P04's and P22's CEACAM5 scans carry a numeric block
+# suffix where the CEACAM6 scan carries 'M'. Checked against the paraffin
+# specimen register: all nineteen scans in each stain map one-to-one onto
+# the nineteen accessions, so every pair below
 # is two stains of one block, not two blocks. The names are left as they are
 # on disk - renaming them would stop the files being found.
 SAMPLES = {

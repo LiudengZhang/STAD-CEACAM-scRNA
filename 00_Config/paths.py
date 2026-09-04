@@ -191,6 +191,12 @@ def get_deg(cell_type: str, comparison: str = "post") -> Path:
     d = DEG_PRE_DIR if comparison == "pre" else DEG_POST_DIR
     return d / f"{cell_type}_mast_deg.csv"
 
+# Hallmark gene sets, shipped with the code. gseapy given the library
+# NAME downloads it from Enrichr on each call, which makes the analysis
+# depend on a remote service and records nothing about which release was
+# used. See 00_Reference/README.txt.
+HALLMARK_GMT = PROJECT_ROOT / "00_Reference" / "MSigDB_Hallmark_2020.gmt"
+
 # =============================================================================
 # Revision (CIR-26-0753-ET)
 # =============================================================================

@@ -176,9 +176,15 @@ def _panel_scatter(summary, obs):
                    s=(70 if highlight else 45) * SCALE,
                    c="#B2182B" if highlight else "#4d4d4d",
                    edgecolors="white", linewidths=0.5 * SCALE, zorder=3)
-        ax.annotate(shown(state).replace("_", " "),
-                    (r["monocyte_score"], r["macrophage_score"]),
-                    textcoords="offset points", xytext=(6 * SCALE, 3 * SCALE),
+        # C4 and C1 sit at almost the same height, and a label to the right of
+        # C4 would end under C1's point and read as C1's. C4 is labelled on its
+        # left instead, into empty space below the diagonal.
+        label = shown(state).replace("_", " ")
+        left = label.startswith("C4 ")
+        ax.annotate(label, (r["monocyte_score"], r["macrophage_score"]),
+                    textcoords="offset points",
+                    xytext=((-6 if left else 6) * SCALE, 3 * SCALE),
+                    ha="right" if left else "left",
                     fontsize=4.5 * SCALE,
                     color="#B2182B" if highlight else "#333333")
     lim = [min(summary["monocyte_score"].min(), summary["macrophage_score"].min()),
@@ -186,6 +192,10 @@ def _panel_scatter(summary, obs):
     pad = 0.12 * (lim[1] - lim[0])
     ax.plot([lim[0] - pad, lim[1] + pad], [lim[0] - pad, lim[1] + pad],
             color="#bbbbbb", linestyle="--", linewidth=0.8, zorder=1)
+    # Labels sit to the right of their point and the longest is ~30 characters,
+    # so the x axis needs room the data alone does not ask for.
+    ax.set_xlim(lim[0] - pad, lim[1] + 5.5 * pad)
+    ax.set_ylim(lim[0] - pad, lim[1] + pad)
     ax.set_xlabel("Monocyte signature score", fontsize=6 * SCALE)
     ax.set_ylabel("Macrophage signature score", fontsize=6 * SCALE)
     ax.tick_params(axis="both", labelsize=5.5 * SCALE, width=0.8, length=3)

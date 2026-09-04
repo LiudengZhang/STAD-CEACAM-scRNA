@@ -20,6 +20,7 @@ from pathlib import Path
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
 from paths import *
+from shared.figure_config import use_panel_style
 
 # Nature Cancer specifications - 4× scaling method
 DPI = 300
@@ -44,14 +45,7 @@ MEDIAN_COLORS = {
 }
 
 def main():
-    plt.rcParams.update({
-        'font.family': 'sans-serif',
-        'font.sans-serif': ['Arial', 'Liberation Sans', 'Helvetica', 'DejaVu Sans'],
-        'font.size': 7 * SCALE,
-        'svg.fonttype': 'none',
-        'pdf.fonttype': 42,
-        'ps.fonttype': 42,
-    })
+    use_panel_style(font_pt=7)
 
     print("Loading data...")
     adata = sc.read_h5ad(EPITHELIAL_H5AD)
@@ -61,8 +55,12 @@ def main():
     adata_filtered = adata[pre_mask & valid_mask].copy()
     print(f"Pre-treatment cells: {adata_filtered.n_obs}")
 
-    idx = adata_filtered.raw.var_names.get_loc('CEACAM5')
-    expr = adata_filtered.raw.X[:, idx].toarray().flatten()
+    # The working inputs keep the log1p matrix in .raw; the clean deposit
+    # promotes it to .X and carries no .raw, so a file without .raw already
+    # holds the same numbers in .X.
+    src = adata_filtered.raw if adata_filtered.raw is not None else adata_filtered
+    idx = src.var_names.get_loc('CEACAM5')
+    expr = src.X[:, idx].toarray().flatten()
     adata_filtered.obs['CEACAM5'] = expr
 
     sample_means = adata_filtered.obs.groupby('sample', observed=True).agg({

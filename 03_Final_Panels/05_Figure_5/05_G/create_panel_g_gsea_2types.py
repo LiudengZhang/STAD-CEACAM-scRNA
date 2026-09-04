@@ -10,7 +10,6 @@ See Methods for details.
 """
 
 import scanpy as sc
-import pandas as pd
 import numpy as np
 import matplotlib
 matplotlib.use('Agg')
@@ -23,6 +22,7 @@ warnings.filterwarnings('ignore')
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
 from paths import *
+from shared.figure_config import use_panel_style
 
 BASE_DIR = Path(__file__).parent
 
@@ -78,7 +78,7 @@ def run_gsea(deg_df, cell_type):
     gsea_outdir = BASE_DIR / f"gsea_{cell_type}"
     gsea_outdir.mkdir(parents=True, exist_ok=True)
     try:
-        pre_res = gp.prerank(rnk=rnk, gene_sets='MSigDB_Hallmark_2020',
+        pre_res = gp.prerank(rnk=rnk, gene_sets=str(HALLMARK_GMT),
                              outdir=str(gsea_outdir), min_size=5, max_size=500,
                              permutation_num=1000, seed=42, verbose=False)
         return pre_res
@@ -113,7 +113,13 @@ def draw_gsea_subplot(ax_top, ax_bot, pre_res, label):
     ax_top.tick_params(axis='both', labelsize=5 * SCALE, width=1.0, length=4)
     ax_top.set_title(label, fontsize=7 * SCALE)
 
-    stats_text = f"NES = {nes:.2f}\np = {pval:.3f}\nFDR = {fdr:.3f}"
+    # The printed panel reads "p < 0.001", not "p = 0.000". A permutation P
+    # value below the resolution of the test is bounded, never zero, and three
+    # decimal places on their own turn the bound into a false exact value.
+    def fmt(name, v):
+        return f"{name} < 0.001" if v < 0.001 else f"{name} = {v:.3f}"
+
+    stats_text = f"NES = {nes:.2f}\n{fmt('p', pval)}\n{fmt('FDR', fdr)}"
     ax_top.text(0.98, 0.95, stats_text, transform=ax_top.transAxes,
                 fontsize=5 * SCALE, va='top', ha='right',
                 bbox=dict(boxstyle='round', facecolor='white', alpha=0.8, edgecolor='gray',
@@ -141,14 +147,7 @@ def draw_gsea_subplot(ax_top, ax_bot, pre_res, label):
 
 
 def main():
-    plt.rcParams.update({
-        'font.family': 'sans-serif',
-        'font.sans-serif': ['Arial', 'Liberation Sans', 'Helvetica', 'DejaVu Sans'],
-        'font.size': 7 * SCALE,
-        'svg.fonttype': 'none',
-        'pdf.fonttype': 42,
-        'ps.fonttype': 42,
-    })
+    use_panel_style(font_pt=7)
 
     print("=" * 60)
     print("Panel G: GSEA Enrichment — Fibroblast + Epithelial")

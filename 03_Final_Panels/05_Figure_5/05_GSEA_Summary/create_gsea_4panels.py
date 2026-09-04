@@ -14,6 +14,9 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from pathlib import Path
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
+from shared.figure_config import use_panel_style
 
 BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = BASE_DIR / 'gsea_data'
@@ -65,14 +68,7 @@ def assign_dot_size(p_value):
 
 
 def main():
-    plt.rcParams.update({
-        'font.family': 'sans-serif',
-        'font.sans-serif': ['Arial', 'Liberation Sans', 'Helvetica', 'DejaVu Sans'],
-        'font.size': 7 * SCALE,
-        'svg.fonttype': 'none',
-        'pdf.fonttype': 42,
-        'ps.fonttype': 42,
-    })
+    use_panel_style(font_pt=7)
 
     print("=" * 60)
     print("Panel Q: 4× GSEA Dotplots (Fig 2 style)")

@@ -71,3 +71,22 @@ dependencies:
   # 1.23.5, which is the version every figure in the paper was produced with.
   # Installing them here silently upgrades numpy and breaks scanpy and anndata
   # for every script. They live in their own environment; see the Dockerfile.
+
+  # Added 2026-09-01 for the figure restyle. cnsplots supplies the type system
+  # every restyled panel is set in, through 00_Config/panel_style_cns.py. It is
+  # a PyPI package, so it goes in the pip block below.
+  #
+  # --no-deps is deliberate and must be kept. cnsplots declares matplotlib,
+  # scanpy, seaborn, numba and numpy without upper bounds; resolving them would
+  # move the versions this analysis stack is pinned to, and every figure in the
+  # paper was produced at those versions. Only three of its dependencies were
+  # missing here - glasbey, num2tex and PyComplexHeatmap - and they are listed
+  # beside it. Installed this way on 2026-09-01, no existing package version
+  # moved: verified against the environment before and after.
+  - pip
+  - pip:
+      - --no-deps
+      - cnsplots==0.2.0
+      - glasbey==0.3.0
+      - num2tex==0.8
+      - PyComplexHeatmap==1.8.5

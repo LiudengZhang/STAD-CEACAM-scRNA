@@ -12,6 +12,7 @@ from pathlib import Path
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
 from paths import EPITHELIAL_H5AD
+from shared.figure_config import use_panel_style
 
 warnings.filterwarnings('ignore')
 
@@ -23,12 +24,15 @@ BOX_COLORS = {'R': '#2166AC', 'NR': '#B2182B'}
 MIN_CELLS = 20
 
 def main():
-    plt.rcParams.update({
-        'font.family': 'sans-serif',
-        'font.sans-serif': ['Arial', 'Liberation Sans', 'Helvetica', 'DejaVu Sans'],
-        'svg.fonttype': 'none',
-        'pdf.fonttype': 42, 'ps.fonttype': 42,
-    })
+    # The overlaid points are placed with random jitter. Left unseeded it made
+    # this panel the only kind in the figure that could not reproduce itself:
+    # two consecutive runs of the unchanged script gave three different SVGs
+    # (baseline, run 1 and run 2 all differed). The jitter is decoration - no
+    # statistic depends on it - but a panel that redraws differently every time
+    # cannot be checked, so it is pinned here.
+    np.random.seed(0)
+
+    use_panel_style()
 
     adata = sc.read_h5ad(H5AD)
     adata = adata[adata.obs['Sample site'] == 'Stomach'].copy()

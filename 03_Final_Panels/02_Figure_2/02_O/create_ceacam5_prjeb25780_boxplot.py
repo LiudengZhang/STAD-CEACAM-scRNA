@@ -17,6 +17,7 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
 from paths import TIGER_BAYESPRISM_EPI, TIGER_META
+from shared.figure_config import use_panel_style
 
 # Target slot from assembly layout (mm)
 # Row 3 stacked L/M: w = 180 * 0.15 = 27mm, h = (50 - 1) / 2 = 24.5mm
@@ -33,24 +34,7 @@ COLOR_NR = '#B2182B'
 
 
 def main():
-    plt.rcParams.update({
-        'font.family': 'sans-serif',
-        'font.sans-serif': ['Arial', 'Liberation Sans', 'Helvetica', 'DejaVu Sans'],
-        'font.size': 6,
-        'axes.labelsize': 6,
-        'xtick.labelsize': 5,
-        'ytick.labelsize': 5,
-        'axes.linewidth': 0.5,
-        'xtick.major.width': 0.5,
-        'ytick.major.width': 0.5,
-        'xtick.major.size': 2,
-        'ytick.major.size': 2,
-        'axes.spines.top': False,
-        'axes.spines.right': False,
-        'svg.fonttype': 'none',
-        'pdf.fonttype': 42,
-        'ps.fonttype': 42,
-    })
+    use_panel_style(font_pt=6, scale=1, **{'axes.labelsize': 6, 'xtick.labelsize': 5, 'ytick.labelsize': 5, 'axes.linewidth': 0.5, 'xtick.major.width': 0.5, 'ytick.major.width': 0.5, 'xtick.major.size': 2, 'ytick.major.size': 2, 'axes.spines.top': False, 'axes.spines.right': False})
 
     # Load BayesPrism deconvolved epithelial expression
     print("Loading BayesPrism epithelial expression...")

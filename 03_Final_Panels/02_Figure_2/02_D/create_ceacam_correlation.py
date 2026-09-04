@@ -14,6 +14,7 @@ import sys
 # Central config
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
 from paths import EPITHELIAL_H5AD
+from shared.figure_config import use_panel_style
 
 # Target slot from assembly layout (mm)
 # Row 1 stacked D/E: w = 180 * 0.16 = 28.8mm, h = (55 - 1) / 2 = 27mm
@@ -26,25 +27,7 @@ OUTPUT_DIR = Path(__file__).parent
 
 
 def main():
-    # Nature Cancer style — direct pt sizes (no scaling)
-    plt.rcParams.update({
-        'font.family': 'sans-serif',
-        'font.sans-serif': ['Arial', 'Liberation Sans', 'Helvetica', 'DejaVu Sans'],
-        'font.size': 6,
-        'axes.labelsize': 6,
-        'xtick.labelsize': 5,
-        'ytick.labelsize': 5,
-        'axes.linewidth': 0.5,
-        'xtick.major.width': 0.5,
-        'ytick.major.width': 0.5,
-        'xtick.major.size': 2,
-        'ytick.major.size': 2,
-        'axes.spines.top': False,
-        'axes.spines.right': False,
-        'svg.fonttype': 'none',
-        'pdf.fonttype': 42,
-        'ps.fonttype': 42,
-    })
+    use_panel_style(font_pt=6, scale=1, **{'axes.labelsize': 6, 'xtick.labelsize': 5, 'ytick.labelsize': 5, 'axes.linewidth': 0.5, 'xtick.major.width': 0.5, 'ytick.major.width': 0.5, 'xtick.major.size': 2, 'ytick.major.size': 2, 'axes.spines.top': False, 'axes.spines.right': False})
 
     print("Loading epithelial data...")
     adata = sc.read_h5ad(EPITHELIAL_H5AD)
@@ -54,13 +37,14 @@ def main():
     adata_pre = adata[pre_mask].copy()
     print(f"Pre-treatment cells: {adata_pre.n_obs}")
 
-    # This file's .X is not the output of the annotation pipeline: the
+    # The working file's .X is not the output of the annotation pipeline: the
     # scale(max_value=10) clip never fired, and a third of it is NaN, in whole
     # cell rows concentrated on the deepest-sequenced cells. Read the
     # log1p CP10K matrix in .raw, which reproduces the counts deposit to 1e-2.
-    if adata_pre.raw is None:
-        raise SystemExit("Epithelial.h5ad has no .raw - refusing to fall back to .X")
-    adata_pre = adata_pre.raw.to_adata()[adata_pre.obs_names]
+    # The clean deposit has already done that promotion - .X there is the same
+    # matrix and there is no .raw to lift - so no .raw means nothing to do.
+    if adata_pre.raw is not None:
+        adata_pre = adata_pre.raw.to_adata()[adata_pre.obs_names]
 
     if 'CEACAM5' not in adata_pre.var_names or 'CEACAM6' not in adata_pre.var_names:
         print("Error: CEACAM5 or CEACAM6 not found")

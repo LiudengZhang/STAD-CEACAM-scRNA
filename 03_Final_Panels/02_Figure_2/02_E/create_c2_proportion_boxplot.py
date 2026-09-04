@@ -16,6 +16,7 @@ from pathlib import Path
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
 from paths import *
+from shared.figure_config import use_panel_style
 
 # Nature Cancer specifications - 4× scaling method
 DPI = 300
@@ -40,14 +41,7 @@ MEDIAN_COLORS = {
 }
 
 def main():
-    plt.rcParams.update({
-        'font.family': 'sans-serif',
-        'font.sans-serif': ['Arial', 'Liberation Sans', 'Helvetica', 'DejaVu Sans'],
-        'font.size': 7 * SCALE,
-        'svg.fonttype': 'none',
-        'pdf.fonttype': 42,
-        'ps.fonttype': 42,
-    })
+    use_panel_style(font_pt=7)
 
     print("Loading data...")
     adata = sc.read_h5ad(EPITHELIAL_H5AD)
@@ -96,7 +90,9 @@ def main():
     y_max = max(np.max(responder_vals), np.max(non_responder_vals))
     y_bracket = y_max * 1.15
     ax.plot([1, 1, 2, 2], [y_bracket, y_bracket*1.05, y_bracket*1.05, y_bracket], 'k-', linewidth=0.5)
-    pval_text = '***' if pval < 0.001 else '**' if pval < 0.01 else '*' if pval < 0.05 else 'ns'
+    # Exact P rather than a threshold label; the test above is already
+    # two-sided, so only the annotation had to change (R1.3c).
+    pval_text = f'P = {pval:.3f}' if pval >= 0.001 else 'P < 0.001'
     ax.text(1.5, y_bracket*1.08, pval_text, ha='center', va='bottom', fontsize=6 * SCALE)
 
     ax.set_title('CEACAM5/6\nEpithelial', fontsize=7 * SCALE, fontweight='normal')

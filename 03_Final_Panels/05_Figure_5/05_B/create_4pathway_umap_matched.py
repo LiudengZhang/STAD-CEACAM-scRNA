@@ -10,13 +10,13 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from pathlib import Path
-import gseapy as gp
 import warnings
 warnings.filterwarnings('ignore')
 
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
 from paths import *
+from shared.figure_config import use_panel_style
 
 BASE_DIR = Path(__file__).parent
 
@@ -35,22 +35,40 @@ PATHWAYS = [
 ]
 
 
+def _read_gmt(path):
+    """The pinned Hallmark sets, in the shape gseapy.get_library returns."""
+    sets = {}
+    with open(path) as fh:
+        for line in fh:
+            parts = line.rstrip("\n").split("\t")
+            if len(parts) > 2:
+                sets[parts[0]] = [g for g in parts[2:] if g]
+    return sets
+
+
 def main():
-    plt.rcParams.update({
-        'font.family': 'sans-serif',
-        'font.sans-serif': ['Arial', 'Liberation Sans', 'Helvetica', 'DejaVu Sans'],
-        'font.size': 7 * SCALE,
-        'svg.fonttype': 'none',
-        'pdf.fonttype': 42,
-        'ps.fonttype': 42,
-    })
+    use_panel_style(font_pt=7)
 
     print("Loading MoMac data...")
     adata = sc.read_h5ad(MOMAC_H5AD)
     print(f"  Loaded {adata.n_obs} cells")
 
     print("Fetching Hallmark gene sets...")
-    gene_sets = gp.get_library('MSigDB_Hallmark_2020')
+    gene_sets = _read_gmt(HALLMARK_GMT)
+
+    # The published panel scored only the highly-variable genes of each pathway
+    # - 33 of the 87 in IL-6/JAK/STAT3, 106 of the 200 in TNF-alpha via NF-kB -
+    # because the working file's .X carries just that subset and the filter
+    # below tested membership of .X.var_names. The clean deposit promotes
+    # .raw.X to .X, so there var_names is every gene and the same filter would
+    # silently widen the pathway and redraw the panel. var['highly_variable']
+    # names the subset in both files, so the selection no longer depends on
+    # which one is loaded.
+    if "highly_variable" not in adata.var:
+        raise SystemExit(
+            f"{MOMAC_H5AD} has no var['highly_variable'] - cannot reproduce the "
+            f"published gene selection; rebuild it with 06_Clean_Data/build_clean_h5ad.py")
+    scored_genes = set(adata.var_names[adata.var["highly_variable"].to_numpy(dtype=bool)])
 
     print("Computing pathway scores...")
     for pathway_name, display_name in PATHWAYS:
@@ -63,7 +81,7 @@ def main():
             print(f"  Warning: Could not find {pathway_name}")
             continue
         genes = gene_sets[matching_key]
-        genes_in_data = [g for g in genes if g in adata.var_names]
+        genes_in_data = [g for g in genes if g in scored_genes]
         if len(genes_in_data) < 5:
             continue
         score_name = pathway_name.replace(' ', '_').replace('-', '_').replace('/', '_')

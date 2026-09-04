@@ -8,6 +8,7 @@ from pathlib import Path
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
 from paths import TCD8_H5AD
+from shared.figure_config import use_panel_style
 
 warnings.filterwarnings('ignore')
 
@@ -65,12 +66,7 @@ def assign_group(row):
 
 
 def main():
-    plt.rcParams.update({
-        'font.family': 'sans-serif',
-        'font.sans-serif': ['Arial', 'Liberation Sans', 'Helvetica', 'DejaVu Sans'],
-        'svg.fonttype': 'none',
-        'pdf.fonttype': 42, 'ps.fonttype': 42,
-    })
+    use_panel_style()
 
     adata = sc.read_h5ad(H5AD)
     adata = adata[adata.obs['Sample site'] == 'Stomach'].copy()
@@ -81,10 +77,14 @@ def main():
     state_avail = [g for g in STATE_GENES if g in gene_names]
     print(f"NF-kB: {len(nfkb_avail)}/{len(HALLMARK_NFKB)}, State: {len(state_avail)}/{len(STATE_GENES)}")
 
+    # score_genes with use_raw=True reaches straight into adata.raw.var_names,
+    # so it has to be told when the file carries no .raw - the clean deposit
+    # holds the same log1p matrix in .X.
+    use_raw = adata.raw is not None
     sc.tl.score_genes(adata, gene_list=nfkb_avail, score_name='nfkb',
-                     ctrl_size=50, use_raw=True)
+                     ctrl_size=50, use_raw=use_raw)
     sc.tl.score_genes(adata, gene_list=state_avail, score_name='state',
-                     ctrl_size=min(50, len(state_avail)), use_raw=True)
+                     ctrl_size=min(50, len(state_avail)), use_raw=use_raw)
 
     df = adata.obs[['sample', 'group', 'nfkb', 'state']].copy()
     df['sample'] = df['sample'].astype(str)

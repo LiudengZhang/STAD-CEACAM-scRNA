@@ -24,11 +24,17 @@ No protein-level evidence (nuclear p65, phospho-p65, IkB degradation) exists for
 this cohort and none is generated here; that limitation is stated in the
 manuscript rather than worked around.
 
-Inputs : Round_5/02_Preparation_for_Panels/GSEA/{pre,post}/*_gsea_hallmark.csv
+Inputs : 12_R1.8_DEG_Recompute/outputs/gsea/*_{pre,post}_{ttest,mast}_hallmark.csv
          Round_5/01_Raw_Inputs/01_H5AD/Epithelial.h5ad, MoMac.h5ad
+         13_R1.8_Neutrophil_Rebuilt_Recompute/outputs/nfkb_per_celltype_sound13.csv
+             - PANEL S9_E ONLY, since 2026-09-03. See ADOPTED_GSEA below.
 Outputs: nfkb_per_celltype.csv, hallmark_specificity.csv,
          epithelial_cytokines.csv, nfkb_specificity_report.txt,
          panels S9_E, S9_F (the regulon panel is S11_C)
+
+The tables this module writes are the live run and are unchanged. Panel S9_E is
+drawn from the adopted sound-input table instead, under the author's ruling of
+2026-09-03. The two disagree in six quantities, listed at ADOPTED_GSEA.
 """
 
 from pathlib import Path
@@ -42,7 +48,36 @@ import scanpy as sc
 from scipy import stats
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
-from paths import PREPARATION, EPITHELIAL_H5AD, MOMAC_H5AD, REVISED_PANELS  # noqa: E402
+from paths import EPITHELIAL_H5AD, MOMAC_H5AD, REVISED_PANELS  # noqa: E402
+
+RECOMPUTE_GSEA = (Path(__file__).resolve().parents[2]
+                  / "12_R1.8_DEG_Recompute" / "outputs" / "gsea")
+
+# ---------------------------------------------------------------- the adopted table
+# Author's ruling, 2026-09-03. Panel S9E is drawn from the SOUND-INPUT recompute,
+# not from this module's own nfkb_per_celltype.csv.
+#
+# Why the two are different files and why both are kept. RECOMPUTE_GSEA above is
+# the "live" run: module 12, computed on the doubly-normalised .X described in
+# 00_Data_Audit/FINDINGS.md sections 1 and 7. On 2026-09-03 the author adopted
+# the sound-input recompute for every NF-kB number in the Results and the
+# response letter, and then ruled that this panel be redrawn to match, so that a
+# reader is not shown a figure from the damaged matrix beside text from the sound
+# one.
+#
+# The ANALYSIS below is untouched: load_gsea() still reads RECOMPUTE_GSEA and
+# nfkb_per_celltype.csv, hallmark_specificity.csv, nfkb_method_concordance.csv
+# and the report are still the live run, byte for byte. Only the table the PANEL
+# is drawn from has moved. That keeps one name for one set of contents - the
+# failure this project already has once, in nfkb_rankings_13types_mast.csv.
+#
+# Six quantities change between the two, and only these six:
+#     post FDR q < 0.05 count   4  -> 3     rank-1 count      5  -> 3
+#     pericyte ordinal         31  -> 30    B-cell ordinal   37  -> 38
+#     pre positive count        6  -> 5     pre q < 0.05      1  -> 3
+ADOPTED_GSEA = (Path(__file__).resolve().parents[2]
+                / "13_R1.8_Neutrophil_Rebuilt_Recompute" / "outputs"
+                / "nfkb_per_celltype_sound13.csv")
 
 warnings.filterwarnings("ignore")
 sc.settings.verbosity = 0
@@ -50,12 +85,19 @@ sc.settings.verbosity = 0
 OUT = Path(__file__).resolve().parents[1] / "outputs"
 OUT.mkdir(parents=True, exist_ok=True)
 S9 = REVISED_PANELS / "Supplementary_New" / "S9_Mechanism_Specificity"
-GSEA = PREPARATION / "GSEA"
+PRIMARY, SENSITIVITY = "ttest", "mast"
 
 SCALE, CM, DPI = 4, 1 / 2.54, 300
 MIN_CELLS = 20
 NFKB_TERM = "TNF-alpha Signaling via NF-kB"
 CYTOKINES = ["IL1A", "IL1B", "IL6", "TNF", "CXCL8"]
+# The names the figures use, matching Fig. 5H.
+LABELS = {"B_cells": "B cells", "DC_cells": "DC",
+          "Endothelial_cells": "Endothelial", "Epithelial": "Epithelial",
+          "Fibroblast": "Fibroblast", "Mast_cells": "Mast", "MoMac": "MoMac",
+          "Neutrophils": "Neutrophils", "NK_cells": "NK",
+          "Pericyte": "Pericyte", "Plasma_cells": "Plasma",
+          "TCD4_cells": "CD4+ T", "TCD8_cells": "CD8+ T"}
 COLOR_R, COLOR_NR = "#2166AC", "#B2182B"
 
 plt.rcParams.update({
@@ -76,58 +118,53 @@ def _find_nfkb_term(terms):
 
 def load_gsea():
     """
-    Read the per-cell-type Hallmark tables and express every NES on a single
-    "non-responder versus responder" axis, so a positive value always means
-    enriched in non-responders.
+    NES, nominal P, FDR and Hallmark rank for TNFa/NF-kB in each cell type, at
+    each timepoint, under both differential-expression methods.
 
-    Sign convention, established empirically rather than from the comment in
-    run_gsea_from_mast.py, which is wrong. In DEG/post/MoMac_mast_deg.csv the
-    genes IL1B, IL1A, IL6, TNF, CXCL8 and NFKBIA all carry POSITIVE
-    logfoldchanges, and all six are independently confirmed here to be higher in
-    post-treatment non-responders. MAST logfoldchanges is therefore already
-    NR-relative-to-R. run_gsea_from_mast.py negates it before ranking, so in the
-    saved tables a NEGATIVE NES means enriched in non-responders. The sign is
-    flipped back here.
+    Source is 12_R1.8_DEG_Recompute, which repeats the comparison on .raw for
+    all 13 cell types. The prepared GSEA/{pre,post} tables are NOT used: they
+    descend from MAST runs on a matrix that was never log1p CP10K
+    (00_Data_Audit/FINDINGS.md section 7). Module 12 ranks non-responders
+    against responders, so a positive NES already means enriched in
+    non-responders and no sign flip is applied here.
     """
     rows = []
-    for phase in ("pre", "post"):
-        for f in sorted((GSEA / phase).glob("*_gsea_hallmark.csv")):
-            cell = f.name.replace("_gsea_hallmark.csv", "")
-            d = pd.read_csv(f)
-            term = _find_nfkb_term(d["Term"])
-            if term is None:
-                continue
-            d["NES_NRvsR"] = -d["NES"]
-            # Rank by enrichment in non-responders, most enriched first.
-            d = d.sort_values("NES_NRvsR", ascending=False).reset_index(drop=True)
-            d["rank"] = np.arange(1, len(d) + 1)
-            r = d[d["Term"] == term].iloc[0]
-            outranking = d[d["rank"] < r["rank"]]["Term"].tolist()
-            rows.append(dict(
-                phase=phase, cell_type=cell, term=term,
-                nes=float(r["NES_NRvsR"]), nes_as_stored=float(r["NES"]),
-                nom_p=float(r["NOM p-val"]),
-                fdr_q=float(r["FDR q-val"]), rank=int(r["rank"]),
-                n_sets=len(d),
-                sets_outranking_it="; ".join(outranking[:5]),
-            ))
+    for f in sorted(RECOMPUTE_GSEA.glob("*_hallmark.csv")):
+        cell, phase, method = f.name[:-len("_hallmark.csv")].rsplit("_", 2)
+        d = pd.read_csv(f)
+        term = _find_nfkb_term(d["Term"])
+        if term is None:
+            continue
+        d = d.sort_values("NES", ascending=False).reset_index(drop=True)
+        d["rank"] = np.arange(1, len(d) + 1)
+        r = d[d["Term"] == term].iloc[0]
+        outranking = d[d["rank"] < r["rank"]]["Term"].tolist()
+        rows.append(dict(
+            method=method, phase=phase, cell_type=cell, term=term,
+            nes=float(r["NES"]), nom_p=float(r["NOM p-val"]),
+            fdr_q=float(r["FDR q-val"]), rank=int(r["rank"]), n_sets=len(d),
+            sets_outranking_it="; ".join(outranking[:5]),
+        ))
+    if not rows:
+        raise SystemExit(
+            f"no Hallmark tables under {RECOMPUTE_GSEA} - run "
+            "12_R1.8_DEG_Recompute/scripts/recompute_deg.py first")
     return pd.DataFrame(rows)
 
 
-def load_ttest_rankings():
+def load_adopted():
     """
-    The NES values that Figure 5H actually plots. The Methods describe Figure
-    5H/I as a Welch t-test analysis, and nfkb_rankings_13types_mast.csv is the
-    file the radar panel reads - but that file is byte-identical to
-    nfkb_rankings_13types_ttest_reproduce.csv, i.e. despite its name it holds
-    the t-test values, not the MAST ones. The MAST values live in
-    nfkb_rankings_13types_mast_BACKUP_mast_method.csv. The filename is a
-    reproducibility hazard and is corrected in the code release.
+    The adopted sound-input table, in the same schema load_gsea() returns.
+
+    This is a deposited table, not a recomputation: 17_NFkB_Claim_Ledger's
+    positive control reproduces all 26 of its contrasts to a maximum NES
+    difference of 3.4e-09, so reading it is equivalent to re-running it.
     """
-    f = GSEA / "nfkb_rankings_13types_ttest_reproduce.csv"
-    d = pd.read_csv(f)
-    return d[["cell_type", "pre_nes", "post_nes"]].rename(
-        columns={"pre_nes": "ttest_pre_nes", "post_nes": "ttest_post_nes"})
+    if not ADOPTED_GSEA.exists():
+        raise SystemExit(
+            f"the adopted NF-kB table is missing: {ADOPTED_GSEA} - it is "
+            "written by 13_R1.8_Neutrophil_Rebuilt_Recompute")
+    return pd.read_csv(ADOPTED_GSEA)
 
 
 def sample_means(path, gene, phase, group_col):
@@ -155,19 +192,26 @@ def main():
     g = load_gsea()
     g.to_csv(OUT / "nfkb_per_celltype.csv", index=False)
 
-    spec = g[["phase", "cell_type", "rank", "n_sets", "nes", "fdr_q",
+    spec = g[["method", "phase", "cell_type", "rank", "n_sets", "nes", "fdr_q",
               "sets_outranking_it"]].copy()
     spec.to_csv(OUT / "hallmark_specificity.csv", index=False)
+
+    prim = g[g["method"] == PRIMARY]
+    sens = g[g["method"] == SENSITIVITY]
 
     L = ["NF-kB SPECIFICITY AND THE EPITHELIAL COMPARTMENT - Reviewer 1 point R1.8",
          "=" * 96, ""]
     L.append(f"Hallmark term used: {g['term'].iloc[0]}")
+    L.append("Primary test: Welch t-test on log1p CP10K from .raw, the same test")
+    L.append("Fig. 5H reports. MAST is carried alongside as a sensitivity analysis.")
     L.append("")
+    counts = {}
     for phase in ("pre", "post"):
-        sub = g[g["phase"] == phase].sort_values("nes", ascending=False)
+        sub = prim[prim["phase"] == phase].sort_values("nes", ascending=False)
         n_pos = int((sub["nes"] > 0).sum())
         n_fdr25 = int(((sub["nes"] > 0) & (sub["fdr_q"] < 0.25)).sum())
         n_fdr05 = int(((sub["nes"] > 0) & (sub["fdr_q"] < 0.05)).sum())
+        counts[phase] = (n_pos, len(sub), n_fdr25, n_fdr05)
         L.append(f"[{phase.upper()}-TREATMENT, non-responders vs responders]")
         L.append("-" * 96)
         L.append(f"  {'cell type':<22}{'NES':>8}{'nom P':>10}{'FDR q':>10}"
@@ -179,38 +223,42 @@ def main():
         L.append(f"  Positive NES in {n_pos}/{len(sub)} cell types; "
                  f"FDR q < 0.25 in {n_fdr25}; FDR q < 0.05 in {n_fdr05}.")
         L.append("")
-    L.append("CONCORDANCE WITH THE INDEPENDENT DE METHOD USED FOR FIGURE 5H")
+
+    L.append("SENSITIVITY ANALYSIS: THE SAME COMPARISON UNDER MAST")
     L.append("-" * 96)
-    tt = load_ttest_rankings()
-    cmp_df = (g[g["phase"] == "post"][["cell_type", "nes", "fdr_q"]]
-              .rename(columns={"nes": "mast_post_nes"})
-              .merge(tt[["cell_type", "ttest_post_nes"]], on="cell_type", how="inner"))
+    cmp_df = (prim[prim["phase"] == "post"][["cell_type", "nes", "fdr_q"]]
+              .rename(columns={"nes": "ttest_post_nes", "fdr_q": "ttest_post_fdr"})
+              .merge(sens[sens["phase"] == "post"][["cell_type", "nes", "fdr_q"]]
+                     .rename(columns={"nes": "mast_post_nes",
+                                      "fdr_q": "mast_post_fdr"}),
+                     on="cell_type", how="inner"))
     cmp_df["same_direction"] = (
-        np.sign(cmp_df["mast_post_nes"]) == np.sign(cmp_df["ttest_post_nes"]))
+        np.sign(cmp_df["ttest_post_nes"]) == np.sign(cmp_df["mast_post_nes"]))
     cmp_df.to_csv(OUT / "nfkb_method_concordance.csv", index=False)
-    L.append("  Figure 5H is drawn from a Welch t-test analysis; the tables above are")
-    L.append("  from the independent MAST hurdle model. Both are expressed as")
-    L.append("  non-responder versus responder.")
-    L.append(f"  {'cell type':<22}{'MAST NES':>10}{'t-test NES':>12}{'agree':>8}")
-    for _, r in cmp_df.sort_values("mast_post_nes", ascending=False).iterrows():
-        L.append(f"  {r['cell_type']:<22}{r['mast_post_nes']:>10.3f}"
-                 f"{r['ttest_post_nes']:>12.3f}{'yes' if r['same_direction'] else 'NO':>8}")
+    L.append("  Both methods were run on the same cells, the same genes and the same")
+    L.append("  contrast; only the test differs. MAST fits ~ condition + sample_id +")
+    L.append("  cngeneson, and with four patients per arm the condition term is close")
+    L.append("  to collinear with sample_id, so the two are not mutually confirmatory.")
+    L.append("  The manuscript therefore reports the t-test throughout.")
+    L.append(f"  {'cell type':<22}{'t-test NES':>12}{'MAST NES':>10}{'agree':>8}")
+    for _, r in cmp_df.sort_values("ttest_post_nes", ascending=False).iterrows():
+        L.append(f"  {r['cell_type']:<22}{r['ttest_post_nes']:>12.3f}"
+                 f"{r['mast_post_nes']:>10.3f}"
+                 f"{'yes' if r['same_direction'] else 'NO':>8}")
     agree = int(cmp_df["same_direction"].sum())
-    rho = cmp_df["mast_post_nes"].corr(cmp_df["ttest_post_nes"], method="spearman")
+    rho = cmp_df["ttest_post_nes"].corr(cmp_df["mast_post_nes"], method="spearman")
     L.append(f"  Direction agrees in {agree}/{len(cmp_df)} cell types; "
              f"Spearman rho = {rho:.3f}.")
     L.append("")
-    L.append("  NOTE FOR THE CODE RELEASE: nfkb_rankings_13types_mast.csv is")
-    L.append("  byte-identical to nfkb_rankings_13types_ttest_reproduce.csv, i.e. the")
-    L.append("  file named '_mast' contains the t-test values. The MAST values are in")
-    L.append("  nfkb_rankings_13types_mast_BACKUP_mast_method.csv. Figure 5H reads the")
-    L.append("  misnamed file, which is consistent with the Methods (Figure 5H/I is")
-    L.append("  described as a Welch t-test analysis) but the filename must be")
-    L.append("  corrected before the code is deposited.")
+    L.append("  NOTE FOR THE CODE RELEASE: in the prepared inputs,")
+    L.append("  nfkb_rankings_13types_mast.csv is byte-identical to")
+    L.append("  nfkb_rankings_13types_ttest_reproduce.csv, i.e. the file named '_mast'")
+    L.append("  holds the t-test values that Fig. 5H plots. That is consistent with the")
+    L.append("  Methods, but the filename is corrected before deposition.")
     L.append("")
     L.append("SPECIFICITY: WHAT OUTRANKS TNFa/NF-kB")
     L.append("-" * 96)
-    post = g[g["phase"] == "post"].sort_values("rank")
+    post = prim[prim["phase"] == "post"].sort_values("rank")
     for _, r in post.iterrows():
         if r["rank"] == 1:
             L.append(f"  {r['cell_type']:<22} top-ranked Hallmark set")
@@ -226,6 +274,7 @@ def main():
     L.append("  enrichment is not equated with biochemical pathway activation; no")
     L.append("  nuclear p65, phospho-p65 or IkB data exist for this cohort.")
     L.append("")
+
 
     # -------------------------------------------- 3: epithelial cytokines
     rows = []
@@ -270,16 +319,32 @@ def main():
     (OUT / "nfkb_specificity_report.txt").write_text(report, encoding="utf-8")
     print(report)
 
-    _panel_nfkb(g)
+    # S9E is drawn from the adopted sound table, not from `g`. See ADOPTED_GSEA.
+    _panel_nfkb(load_adopted())
     _panel_cytokines(cyto)
 
 
 def _panel_nfkb(g):
+    """
+    Post-treatment NES per cell type under the primary test, with the FDR and
+    the set's rank among all Hallmark sets beside each bar. The rank is the
+    part that answers the reviewer: it separates "enriched" from "the single
+    most enriched programme in this population".
+
+    The MAST sensitivity analysis is not drawn here. It is written to
+    nfkb_method_concordance.csv and discussed in the response letter, where the
+    reason the two tests diverge can be stated; a bar chart cannot carry that.
+
+    Since 2026-09-03 the frame passed in is the ADOPTED sound-input table, not
+    this module's own live one. Nothing about how the panel is drawn changed -
+    same size, same colours, same annotation, same sort - only the numbers.
+    """
     d = (S9 / "S9_E"); d.mkdir(parents=True, exist_ok=True)
-    post = g[g["phase"] == "post"].sort_values("nes")
+    post = (g[(g["method"] == PRIMARY) & (g["phase"] == "post")]
+            .sort_values("nes"))
     fig, ax = plt.subplots(figsize=(7.5 * SCALE * CM, 5.0 * SCALE * CM))
     y = np.arange(len(post))
-    colors = ["#B2182B" if q < 0.25 else "#cccccc" for q in post["fdr_q"]]
+    colors = [COLOR_NR if q < 0.25 else "#cccccc" for q in post["fdr_q"]]
     ax.barh(y, post["nes"], color=colors, edgecolor="#444444", linewidth=0.5,
             height=0.65)
     # Annotations always sit to the right of the bar's far end, so the ones on
@@ -291,19 +356,19 @@ def _panel_nfkb(g):
                 fontsize=4.5 * SCALE, color="#333333")
     ax.axvline(0, color="#666666", linewidth=0.8)
     ax.set_yticks(y)
-    ax.set_yticklabels([c.replace("_", " ") for c in post["cell_type"]],
+    ax.set_yticklabels([LABELS[c] for c in post["cell_type"]],
                        fontsize=5.5 * SCALE)
     ax.set_xlabel("NES, TNF$\\alpha$ signalling via NF-$\\kappa$B\n"
                   "(post-treatment, non-responders vs responders)",
                   fontsize=6 * SCALE)
-    ax.set_xlim(min(0, post["nes"].min()) - 0.3, post["nes"].max() + 0.9)
+    ax.set_xlim(min(0, post["nes"].min()) - 0.3, post["nes"].max() + 1.9)
     ax.tick_params(axis="x", labelsize=5.5 * SCALE, width=0.8, length=3)
     ax.tick_params(axis="y", length=0)
-    for s in ("top", "right", "left"):
-        ax.spines[s].set_visible(False)
+    for sp in ("top", "right", "left"):
+        ax.spines[sp].set_visible(False)
     handles = [plt.Rectangle((0, 0), 1, 1, facecolor=c, edgecolor="#444444",
                              linewidth=0.5, label=l)
-               for c, l in (("#B2182B", "FDR q < 0.25"), ("#cccccc", "FDR q >= 0.25"))]
+               for c, l in ((COLOR_NR, "FDR q < 0.25"), ("#cccccc", "FDR q >= 0.25"))]
     ax.legend(handles=handles, loc="lower right", frameon=False,
               fontsize=5.5 * SCALE)
     fig.subplots_adjust(left=0.24, right=0.98, top=0.97, bottom=0.20)
@@ -344,4 +409,16 @@ def _panel_cytokines(cyto):
 
 
 if __name__ == "__main__":
-    main()
+    import argparse
+
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument(
+        "--redraw-adopted-panel", action="store_true",
+        help="redraw panel S9E from the adopted sound table and do nothing "
+             "else. The full run recomputes the epithelial cytokine means from "
+             "the h5ads and rewrites five outputs; this draws the one panel the "
+             "2026-09-03 ruling covers and touches no analysis output.")
+    if ap.parse_args().redraw_adopted_panel:
+        _panel_nfkb(load_adopted())
+    else:
+        main()

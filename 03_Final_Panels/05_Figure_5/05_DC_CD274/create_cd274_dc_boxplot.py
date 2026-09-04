@@ -8,9 +8,9 @@ import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
 from paths import DC_CELLS_H5AD
+from shared.figure_config import use_panel_style
 
 import numpy as np
-import pandas as pd
 import scanpy as sc
 import matplotlib
 matplotlib.use('Agg')
@@ -31,13 +31,7 @@ OUT_DIR = Path(__file__).parent
 
 
 def main():
-    plt.rcParams.update({
-        'font.family': 'sans-serif',
-        'font.sans-serif': ['Arial', 'Liberation Sans', 'Helvetica', 'DejaVu Sans'],
-        'svg.fonttype': 'none',
-        'pdf.fonttype': 42,
-        'ps.fonttype': 42,
-    })
+    use_panel_style()
 
     print("=" * 60)
     print("Panel M: CD274 DC cells — Post-R vs Post-NR")

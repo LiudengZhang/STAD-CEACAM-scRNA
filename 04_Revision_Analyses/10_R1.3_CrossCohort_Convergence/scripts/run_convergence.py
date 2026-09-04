@@ -42,6 +42,7 @@ from scipy import stats
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
 from paths import EPITHELIAL_H5AD, NEW_ANALYSES  # noqa: E402
+from shared.sample_ids import sample_id_map, to_study_ids  # noqa: E402
 
 warnings.filterwarnings("ignore")
 sc.settings.verbosity = 0
@@ -118,6 +119,9 @@ def sample_means_from_h5ad(genes, phase="Pre", group_col="stomach_pre_grouping",
     genes are pulled from one read; the object is five gigabytes.
     """
     ad = sc.read_h5ad(EPITHELIAL_H5AD)
+    # Resolved before subsetting, so the crosswalk is checked against every
+    # specimen in the object rather than only the pre-treatment stomach ones.
+    ids = sample_id_map(ad.obs)
     if site is not None and "Sample site" in ad.obs:
         ad = ad[ad.obs["Sample site"] == site]
     ad = ad[ad.obs["Treatment phase"] == phase]
@@ -138,6 +142,10 @@ def sample_means_from_h5ad(genes, phase="Pre", group_col="stomach_pre_grouping",
         out = df.groupby(["sample", "group"], observed=True)["value"].mean().reset_index()
         out["gene"] = gene
         out["group"] = out["group"].map({"No-response": "NR", "Responsed": "R"})
+        # Specimens are named the way Supplementary Table 1 names them. The
+        # relabel is in place, after the grouping, so no row moves and no value
+        # changes.
+        out["sample"] = to_study_ids(out["sample"], ids)
         frames.append(out)
     return pd.concat(frames, ignore_index=True)
 
@@ -145,7 +153,10 @@ def sample_means_from_h5ad(genes, phase="Pre", group_col="stomach_pre_grouping",
 def main():
     sweep = pd.read_csv(SWEEP).set_index("analysis")
     audit = pd.read_csv(PAIRING / "cohort_audit.csv")
-    crosswalk = dict(zip(audit.internal_id, audit["Patient ID"]))
+    # Keyed by the study sample ID: every scRNA table read below is written with
+    # the Supplementary Table 1 labels, and cohort_audit.csv carries that column
+    # beside the study patient ID.
+    crosswalk = dict(zip(audit["Sample"].astype(str), audit["Patient ID"]))
 
     # ------------------------------------------------------- 1. combination
     print("[1/4] combining the two independent cohorts ...")

@@ -20,6 +20,7 @@ from pathlib import Path
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
 from paths import MOMAC_H5AD
+from shared.figure_config import use_panel_style
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -56,13 +57,7 @@ COLORS = {
     'Post-NR': '#f1c0e8',
 }
 
-plt.rcParams.update({
-    'font.family': 'sans-serif',
-    'font.sans-serif': ['Arial', 'Liberation Sans', 'Helvetica', 'DejaVu Sans'],
-    'font.size': 7 * SCALE,
-    'pdf.fonttype': 42, 'ps.fonttype': 42,
-    'svg.fonttype': 'none',
-})
+use_panel_style(font_pt=7)
 
 
 def exact_permutation_test(x, y, alternative='two-sided'):

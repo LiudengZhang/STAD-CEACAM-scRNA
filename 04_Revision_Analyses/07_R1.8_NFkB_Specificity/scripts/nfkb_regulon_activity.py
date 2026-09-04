@@ -31,6 +31,7 @@ factors are active and their feedback programme is running".
 Inputs : Round_5/02_Preparation_for_Panels/SCENIC/{aucell_matrix.csv,cell_metadata.csv}
          Round_5/01_Raw_Inputs/01_H5AD/{MoMac,Epithelial,Fibroblast}.h5ad
 Outputs: nfkb_regulon_activity.csv, nfkb_feedback_targets.csv,
+         nfkb_sample_values.csv,
          nfkb_regulon_report.txt, panel S11_C
 """
 
@@ -137,7 +138,7 @@ def main():
     L.append("co-expressed with the TF AND carries the TF's binding motif (cisTarget).")
     L.append("")
 
-    rows = []
+    rows, svals = [], []
     cell_types = sorted(meta["major_cell_type"].dropna().unique())
     for reg in REGULONS:
         if reg not in auc.columns:
@@ -154,6 +155,14 @@ def main():
                                  n_NR=len(nr), n_R=len(r),
                                  mean_NR=float(nr.mean()), mean_R=float(r.mean()),
                                  rank_biserial_r=eff, p_two_tailed=p))
+                # The per-sample values behind that summary. Fig. S11C plots
+                # these directly, so the reviewer sees the distribution and the
+                # sample count rather than a group mean.
+                for grp, vals in (("NR", nr), ("R", r)):
+                    for v in vals:
+                        svals.append(dict(source="regulon", key=reg, phase=phase,
+                                          stratum=ct or "All cells",
+                                          group=grp, value=float(v)))
     reg_df = pd.DataFrame(rows)
     reg_df.to_csv(OUT / "nfkb_regulon_activity.csv", index=False)
 
@@ -194,8 +203,15 @@ def main():
                                   n_NR=len(nr), n_R=len(r),
                                   mean_NR=float(nr.mean()), mean_R=float(r.mean()),
                                   rank_biserial_r=eff, p_two_tailed=p))
+                for grp, vals in (("NR", nr), ("R", r)):
+                    for v in vals:
+                        svals.append(dict(source="panel", key=panel_name,
+                                          phase=phase, stratum=comp,
+                                          group=grp, value=float(v)))
     fb = pd.DataFrame(frows)
     fb.to_csv(OUT / "nfkb_feedback_targets.csv", index=False)
+    sv = pd.DataFrame(svals)
+    sv.to_csv(OUT / "nfkb_sample_values.csv", index=False)
 
     L.append("DIRECT TARGET PANELS (sample-level, two-sided)")
     L.append("-" * 94)
@@ -227,61 +243,90 @@ def main():
     (OUT / "nfkb_regulon_report.txt").write_text(report, encoding="utf-8")
     print(report)
 
-    _panel(reg_df, fb)
+    _panel(reg_df, fb, sv)
 
 
-def _panel(reg_df, fb):
-    d = (S11 / "S11_C"); d.mkdir(parents=True, exist_ok=True)
-    fig, axes = plt.subplots(1, 2, figsize=(9.0 * SCALE * CM, 4.2 * SCALE * CM))
-
-    # left: NFKB1 regulon in MoMac, four groups
-    sub = reg_df[(reg_df["regulon"] == "NFKB1(+)")
-                 & (reg_df["cell_type"] == "MoMac")]
-    ax = axes[0]
-    xs, labels, colors = [], [], []
-    for phase in ("Pre", "Post"):
-        s = sub[sub["phase"] == phase]
-        if not len(s):
+def _box(ax, series, colors, ylabel, title=None):
+    """
+    One sample-level box per group with every sample drawn on top. The groups
+    here have five or six samples, so the points are the honest display and the
+    box is only there to carry the median and the spread.
+    """
+    rng = np.random.default_rng(0)
+    labels = [lab for lab, _ in series]
+    data = [vals for _, vals in series]
+    bp = ax.boxplot(data, widths=0.55, showfliers=False, patch_artist=True,
+                    medianprops=dict(color="#333333", linewidth=1.0),
+                    whiskerprops=dict(color="#666666", linewidth=0.8),
+                    capprops=dict(color="#666666", linewidth=0.8),
+                    boxprops=dict(linewidth=0.6, edgecolor="#333333"))
+    for patch, c in zip(bp["boxes"], colors):
+        patch.set_facecolor(c)
+        patch.set_alpha(0.35)
+    for i, (vals, c) in enumerate(zip(data, colors), start=1):
+        if not len(vals):
             continue
-        xs += [s["mean_R"].iloc[0], s["mean_NR"].iloc[0]]
-        labels += [f"{phase}\nR", f"{phase}\nNR"]
-        colors += [COLOR_R, COLOR_NR]
-    ax.bar(range(len(xs)), xs, color=colors, alpha=0.85, edgecolor="#333333",
-           linewidth=0.5, width=0.65)
-    ax.set_xticks(range(len(labels)))
-    ax.set_xticklabels(labels, fontsize=5.5 * SCALE)
-    ax.set_ylabel("NFKB1 regulon activity (AUCell)\nmonocytes/macrophages",
-                  fontsize=6 * SCALE)
+        jitter = rng.uniform(-0.13, 0.13, len(vals))
+        ax.scatter(np.full(len(vals), i) + jitter, vals, s=9 * SCALE, c=c,
+                   edgecolors="white", linewidths=0.4, zorder=3)
+    ax.set_xticks(range(1, len(labels) + 1))
+    ax.set_xticklabels([f"{lab}\nn = {len(v)}" for lab, v in zip(labels, data)],
+                       fontsize=5.0 * SCALE)
+    ax.set_ylabel(ylabel, fontsize=6 * SCALE)
     ax.tick_params(axis="both", labelsize=5.5 * SCALE, width=0.8, length=3)
     for s_ in ("top", "right"):
         ax.spines[s_].set_visible(False)
-    post = sub[sub["phase"] == "Post"]
-    if len(post):
-        ax.set_title(f"post-treatment P = {post['p_two_tailed'].iloc[0]:.3f}",
-                     fontsize=6 * SCALE)
+    if title:
+        ax.set_title(title, fontsize=6 * SCALE)
 
-    # right: feedback panel across compartments, post-treatment
-    ax = axes[1]
-    f = fb[(fb["panel"] == "NF-kB negative-feedback targets")
-           & (fb["phase"] == "Post")]
-    x = np.arange(len(f))
-    w = 0.38
-    ax.bar(x - w / 2, f["mean_R"], width=w, color=COLOR_R, alpha=0.85,
-           edgecolor="#333333", linewidth=0.5, label="R")
-    ax.bar(x + w / 2, f["mean_NR"], width=w, color=COLOR_NR, alpha=0.85,
-           edgecolor="#333333", linewidth=0.5, label="NR")
-    ax.set_xticks(x)
-    ax.set_xticklabels([c.replace("Monocytes/Macrophages", "Mono/Mac")
-                        for c in f["compartment"]], fontsize=5.5 * SCALE)
-    ax.set_ylabel("NF-$\\kappa$B feedback target score\n(post-treatment)",
-                  fontsize=6 * SCALE)
-    ax.axhline(0, color="#666666", linewidth=0.8)
-    ax.tick_params(axis="both", labelsize=5.5 * SCALE, width=0.8, length=3)
-    for s_ in ("top", "right"):
-        ax.spines[s_].set_visible(False)
-    ax.legend(frameon=False, fontsize=5.5 * SCALE)
 
-    fig.subplots_adjust(left=0.13, right=0.98, top=0.90, bottom=0.16, wspace=0.42)
+def _panel(reg_df, fb, sv):
+    """
+    Sample-level boxplots with the individual samples shown, as promised to
+    Reviewer 1 in the response to point R1.8. The earlier version of this panel
+    drew group means as bars, which hid both the spread and the fact that each
+    group holds five or six samples.
+    """
+    d = (S11 / "S11_C"); d.mkdir(parents=True, exist_ok=True)
+    fig, axes = plt.subplots(1, 2, figsize=(9.0 * SCALE * CM, 4.6 * SCALE * CM))
+
+    # left: NFKB1 regulon in monocytes/macrophages, both timepoints
+    reg = sv[(sv["source"] == "regulon") & (sv["key"] == "NFKB1(+)")
+             & (sv["stratum"] == "MoMac")]
+    series, colors = [], []
+    for phase in ("Pre", "Post"):
+        for grp, c in (("R", COLOR_R), ("NR", COLOR_NR)):
+            v = reg.loc[(reg["phase"] == phase) & (reg["group"] == grp), "value"].values
+            if len(v):
+                series.append((f"{phase}\n{grp}", v))
+                colors.append(c)
+    post = reg_df[(reg_df["regulon"] == "NFKB1(+)")
+                  & (reg_df["cell_type"] == "MoMac")
+                  & (reg_df["phase"] == "Post")]
+    title = (f"post-treatment P = {post['p_two_tailed'].iloc[0]:.3f}"
+             if len(post) else None)
+    _box(axes[0], series, colors,
+         "NFKB1 regulon activity (AUCell)\nmonocytes/macrophages", title)
+
+    # right: NF-kB negative-feedback target score after treatment, by compartment
+    pan = sv[(sv["source"] == "panel")
+             & (sv["key"] == "NF-kB negative-feedback targets")
+             & (sv["phase"] == "Post")]
+    order = [c for c in ("Monocytes/Macrophages", "Epithelial", "Fibroblast")
+             if c in set(pan["stratum"])]
+    series, colors = [], []
+    for comp in order:
+        short = "Mono/Mac" if comp == "Monocytes/Macrophages" else comp
+        for grp, c in (("R", COLOR_R), ("NR", COLOR_NR)):
+            v = pan.loc[(pan["stratum"] == comp) & (pan["group"] == grp), "value"].values
+            if len(v):
+                series.append((f"{short}\n{grp}", v))
+                colors.append(c)
+    _box(axes[1], series, colors,
+         "NF-$\\kappa$B feedback target score\n(post-treatment)")
+    axes[1].axhline(0, color="#666666", linewidth=0.8, zorder=0)
+
+    fig.subplots_adjust(left=0.13, right=0.98, top=0.90, bottom=0.20, wspace=0.42)
     stem = d / "S11_C_nfkb_regulon_and_feedback"
     for ext in ("svg", "pdf", "png"):
         fig.savefig(f"{stem}.{ext}", dpi=DPI, facecolor="white")

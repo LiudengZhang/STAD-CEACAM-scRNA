@@ -53,7 +53,7 @@ B. INDEPENDENT BULK COHORT: PRJEB25780 (TIGER), n = 45 anti-PD-1-treated
    block is not subject to that constraint and is the one that matches
    the TCGA analysis.
 
-C. INDEPENDENT SPATIAL COHORT: GSE246011 (4 sections, 4,196 spots)
+C. INDEPENDENT SPATIAL COHORT: GSE246011 (4 sections, 12,472 spots)
 ----------------------------------------------------------------------------------------------
    Not used in the submitted manuscript. Distance to the nearest
    PTPRC-high spot, modelled with a random intercept per section.
@@ -75,8 +75,8 @@ C. INDEPENDENT SPATIAL COHORT: GSE246011 (4 sections, 4,196 spots)
    therefore expected under this parameterisation and is not evidence
    against the primary result. It is also not evidence for it.
 
-      unadjusted               CEACAM beta = -0.3599 [-0.3900, -0.3298]   P = 3.74e-121
-      + epithelial content     CEACAM beta = -0.2930 [-0.3342, -0.2518]   P = 3.61e-44
+      unadjusted               CEACAM beta = +0.0505 [+0.0363, +0.0647]   P = 2.96e-12
+      + epithelial content     CEACAM beta = +0.0333 [+0.0188, +0.0477]   P = 6.43e-06
 
 D. IS TOTAL EPITHELIAL CONTENT AN ADMISSIBLE COVARIATE?
 ----------------------------------------------------------------------------------------------
@@ -111,8 +111,4 @@ CONCLUSION
    the reader judge.
    The bulk cohort provides the orthogonal, purity-adjusted test the
    Visium data cannot, at n = 45 rather than n = 10.
-   GSE246011 runs in the opposite direction, but under a different
-   definition of immune-rich, of distance and of the exposure, so it
-   estimates a different quantity. It is reported here for
-   completeness and is deliberately NOT cited in the manuscript as
-   independent replication; see the caveat in section C.
+   GSE246011 replicates the direction of the primary analysis.

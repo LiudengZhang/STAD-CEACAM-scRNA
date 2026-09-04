@@ -19,6 +19,7 @@ from collections import Counter
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
 from paths import *
+from shared.figure_config import use_panel_style
 
 BASE_DIR = Path(__file__).parent
 INTERMEDIATE = NMF_INTERMEDIATE
@@ -87,15 +88,7 @@ def create_panel_G():
         for j, gene in enumerate(all_genes):
             score_matrix[i, j] = counts.get(gene, 0) / max_count
 
-    # Create figure
-    plt.rcParams.update({
-        'font.family': 'sans-serif',
-        'font.sans-serif': ['Arial', 'Liberation Sans', 'Helvetica', 'DejaVu Sans'],
-        'font.size': 7 * SCALE,
-        'svg.fonttype': 'none',
-        'pdf.fonttype': 42,
-        'ps.fonttype': 42,
-    })
+    use_panel_style(font_pt=7)
 
     fig, ax = plt.subplots(figsize=(PANEL_WIDTH_CM * CM_TO_INCH, PANEL_HEIGHT_CM * CM_TO_INCH))
 

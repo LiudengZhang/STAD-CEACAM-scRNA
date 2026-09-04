@@ -2,89 +2,91 @@ NF-kB SPECIFICITY AND THE EPITHELIAL COMPARTMENT - Reviewer 1 point R1.8
 ================================================================================================
 
 Hallmark term used: TNF-alpha Signaling via NF-kB
+Primary test: Welch t-test on log1p CP10K from .raw, the same test
+Fig. 5H reports. MAST is carried alongside as a sensitivity analysis.
 
 [PRE-TREATMENT, non-responders vs responders]
 ------------------------------------------------------------------------------------------------
   cell type                  NES     nom P     FDR q  rank of 50
-  DC_cells                 2.018    0.0000    0.0000       1 / 35
-  Pericyte                 1.650    0.0034    0.0819       1 / 40
-  NK_cells                 1.492    0.0087    0.0397       1 / 29
-  B_cells                  1.382    0.0175    0.9370       1 / 26
-  Mast_cells               1.312    0.0308    0.0545       1 / 31
-  Endothelial_cells        1.162    0.2694    0.5359      14 / 44
-  Epithelial               0.812    0.7804    0.9872      25 / 40
-  Fibroblast               0.806    0.8314    1.0000      25 / 45
-  Plasma_cells             0.472    0.9497    0.9788       7 / 29
-  Neutrophils             -0.689    0.9718    0.9530      24 / 44
-  MoMac                   -1.120    0.2527    0.5267      34 / 48
-  TCD4_cells              -1.647    0.0087    0.0891      43 / 45
-  TCD8_cells              -1.944    0.0000    0.0000      41 / 41
+  Endothelial_cells        2.001    0.0000    0.0000       1 / 48
+  NK_cells                 1.669    0.0077    0.3074       1 / 39
+  TCD4_cells               1.618    0.0112    0.8680       1 / 41
+  TCD8_cells               1.609    0.0053    0.3497       1 / 39
+  B_cells                  1.184    0.1214    0.4550      12 / 40
+  MoMac                    1.055    0.2500    0.4721       3 / 45
+  DC_cells                -0.631    0.9889    1.0000       5 / 47
+  Epithelial              -1.036    0.4281    0.8406      30 / 43
+  Plasma_cells            -1.094    0.3539    1.0000      33 / 41
+  Fibroblast              -1.196    0.0841    0.6344      40 / 49
+  Neutrophils             -1.209    0.0791    1.0000      34 / 34
+  Pericyte                -1.405    0.0000    0.2369      49 / 49
+  Mast_cells              -1.621    0.0000    0.0000      40 / 40
 
-  Positive NES in 9/13 cell types; FDR q < 0.25 in 4; FDR q < 0.05 in 2.
+  Positive NES in 6/13 cell types; FDR q < 0.25 in 1; FDR q < 0.05 in 1.
 
 [POST-TREATMENT, non-responders vs responders]
 ------------------------------------------------------------------------------------------------
   cell type                  NES     nom P     FDR q  rank of 50
-  MoMac                    1.774    0.0000    0.0418       1 / 48
-  NK_cells                 1.581    0.0016    0.0030       1 / 29
-  B_cells                  1.363    0.1211    0.5969       2 / 22
-  Mast_cells               1.305    0.0075    0.0147       1 / 26
-  Endothelial_cells        1.287    0.1438    0.3831      12 / 44
-  Pericyte                 1.227    0.1944    0.5322      11 / 40
-  Neutrophils              1.188    0.1530    0.4994      10 / 43
-  Epithelial               1.033    0.4080    0.7452      16 / 40
-  DC_cells                 0.859    0.7174    0.9111      16 / 35
-  Plasma_cells             0.735    0.8271    0.9127       9 / 21
-  Fibroblast              -0.768    0.8497    1.0000      18 / 45
-  TCD8_cells              -1.000    1.0000    0.5948      29 / 41
-  TCD4_cells              -1.497    0.0000    0.1743      40 / 45
+  MoMac                    2.233    0.0000    0.0000       1 / 43
+  DC_cells                 1.985    0.0000    0.0000       1 / 45
+  Epithelial               1.861    0.0000    0.0000       1 / 42
+  Fibroblast               1.598    0.0000    0.0000       1 / 49
+  Mast_cells               1.470    0.0139    0.6615       1 / 40
+  Plasma_cells             1.436    0.0066    0.2048       2 / 41
+  Neutrophils              1.326    0.0635    0.1976       7 / 26
+  Endothelial_cells        1.296    0.1355    1.0000       2 / 46
+  NK_cells                 1.227    0.0647    0.5964       6 / 39
+  TCD4_cells               1.217    0.1236    0.5604       9 / 39
+  TCD8_cells               1.152    0.1965    0.9572       8 / 38
+  Pericyte                 0.967    0.5891    0.8308      31 / 49
+  B_cells                 -0.990    0.4562    1.0000      37 / 38
 
-  Positive NES in 10/13 cell types; FDR q < 0.25 in 3; FDR q < 0.05 in 3.
+  Positive NES in 12/13 cell types; FDR q < 0.25 in 6; FDR q < 0.05 in 4.
 
-CONCORDANCE WITH THE INDEPENDENT DE METHOD USED FOR FIGURE 5H
+SENSITIVITY ANALYSIS: THE SAME COMPARISON UNDER MAST
 ------------------------------------------------------------------------------------------------
-  Figure 5H is drawn from a Welch t-test analysis; the tables above are
-  from the independent MAST hurdle model. Both are expressed as
-  non-responder versus responder.
-  cell type               MAST NES  t-test NES   agree
-  MoMac                      1.774       1.894     yes
-  NK_cells                   1.581       1.340     yes
-  B_cells                    1.363       1.006     yes
-  Mast_cells                 1.305       1.496     yes
-  Endothelial_cells          1.287       1.338     yes
-  Pericyte                   1.227       0.962     yes
-  Neutrophils                1.188       1.554     yes
-  Epithelial                 1.033       1.654     yes
-  DC_cells                   0.859       1.498     yes
-  Plasma_cells               0.735       1.722     yes
-  Fibroblast                -0.768       1.450      NO
-  TCD8_cells                -1.000       1.458      NO
-  TCD4_cells                -1.497       1.567      NO
-  Direction agrees in 10/13 cell types; Spearman rho = -0.214.
+  Both methods were run on the same cells, the same genes and the same
+  contrast; only the test differs. MAST fits ~ condition + sample_id +
+  cngeneson, and with four patients per arm the condition term is close
+  to collinear with sample_id, so the two are not mutually confirmatory.
+  The manuscript therefore reports the t-test throughout.
+  cell type               t-test NES  MAST NES   agree
+  MoMac                        2.233     1.205     yes
+  DC_cells                     1.985     1.120     yes
+  Epithelial                   1.861    -1.394      NO
+  Fibroblast                   1.598     0.847     yes
+  Mast_cells                   1.470    -1.834      NO
+  Plasma_cells                 1.436    -1.587      NO
+  Neutrophils                  1.326    -1.031      NO
+  Endothelial_cells            1.296    -1.075      NO
+  NK_cells                     1.227    -1.782      NO
+  TCD4_cells                   1.217    -1.682      NO
+  TCD8_cells                   1.152    -1.711      NO
+  Pericyte                     0.967     0.862     yes
+  B_cells                     -0.990    -1.595     yes
+  Direction agrees in 5/13 cell types; Spearman rho = 0.456.
 
-  NOTE FOR THE CODE RELEASE: nfkb_rankings_13types_mast.csv is
-  byte-identical to nfkb_rankings_13types_ttest_reproduce.csv, i.e. the
-  file named '_mast' contains the t-test values. The MAST values are in
-  nfkb_rankings_13types_mast_BACKUP_mast_method.csv. Figure 5H reads the
-  misnamed file, which is consistent with the Methods (Figure 5H/I is
-  described as a Welch t-test analysis) but the filename must be
-  corrected before the code is deposited.
+  NOTE FOR THE CODE RELEASE: in the prepared inputs,
+  nfkb_rankings_13types_mast.csv is byte-identical to
+  nfkb_rankings_13types_ttest_reproduce.csv, i.e. the file named '_mast'
+  holds the t-test values that Fig. 5H plots. That is consistent with the
+  Methods, but the filename is corrected before deposition.
 
 SPECIFICITY: WHAT OUTRANKS TNFa/NF-kB
 ------------------------------------------------------------------------------------------------
-  MoMac                  top-ranked Hallmark set
-  NK_cells               top-ranked Hallmark set
+  DC_cells               top-ranked Hallmark set
+  Epithelial             top-ranked Hallmark set
   Mast_cells             top-ranked Hallmark set
-  B_cells                rank 2, outranked by: UV Response Up
-  Plasma_cells           rank 9, outranked by: Myc Targets V1; mTORC1 Signaling; TGF-beta Signaling; heme Metabolism; E2F Targets
-  Neutrophils            rank 10, outranked by: PI3K/AKT/mTOR  Signaling; Hypoxia; UV Response Up; IL-2/STAT5 Signaling; Androgen Response
-  Pericyte               rank 11, outranked by: Apical Junction; Xenobiotic Metabolism; Angiogenesis; Adipogenesis; Epithelial Mesenchymal Transition
-  Endothelial_cells      rank 12, outranked by: Hypoxia; p53 Pathway; Interferon Alpha Response; Cholesterol Homeostasis; Epithelial Mesenchymal Transition
-  DC_cells               rank 16, outranked by: Unfolded Protein Response; Hypoxia; mTORC1 Signaling; Myogenesis; Androgen Response
-  Epithelial             rank 16, outranked by: Bile Acid Metabolism; Coagulation; Pancreas Beta Cells; Fatty Acid Metabolism; Complement
-  Fibroblast             rank 18, outranked by: Angiogenesis; Notch Signaling; Xenobiotic Metabolism; Fatty Acid Metabolism; Androgen Response
-  TCD8_cells             rank 29, outranked by: G2-M Checkpoint; Spermatogenesis; E2F Targets; Glycolysis; Mitotic Spindle
-  TCD4_cells             rank 40, outranked by: G2-M Checkpoint; Mitotic Spindle; E2F Targets; Spermatogenesis; Glycolysis
+  Fibroblast             top-ranked Hallmark set
+  MoMac                  top-ranked Hallmark set
+  Endothelial_cells      rank 2, outranked by: Epithelial Mesenchymal Transition
+  Plasma_cells           rank 2, outranked by: Myogenesis
+  NK_cells               rank 6, outranked by: Myogenesis; Coagulation; Apoptosis; Complement; IL-6/JAK/STAT3 Signaling
+  Neutrophils            rank 7, outranked by: IL-2/STAT5 Signaling; Epithelial Mesenchymal Transition; Inflammatory Response; IL-6/JAK/STAT3 Signaling; Coagulation
+  TCD8_cells             rank 8, outranked by: IL-2/STAT5 Signaling; Epithelial Mesenchymal Transition; Apoptosis; Estrogen Response Early; Myogenesis
+  TCD4_cells             rank 9, outranked by: IL-2/STAT5 Signaling; Complement; Fatty Acid Metabolism; Apoptosis; Epithelial Mesenchymal Transition
+  Pericyte               rank 31, outranked by: Epithelial Mesenchymal Transition; IL-6/JAK/STAT3 Signaling; Angiogenesis; Hypoxia; Complement
+  B_cells                rank 37, outranked by: Complement; Epithelial Mesenchymal Transition; IL-6/JAK/STAT3 Signaling; Apoptosis; Fatty Acid Metabolism
 
   Revised wording: instead of 'every population exhibited elevated NF-kB
   pathway activity', the manuscript now reports the number of cell types

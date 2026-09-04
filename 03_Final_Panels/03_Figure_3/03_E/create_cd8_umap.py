@@ -7,12 +7,12 @@ Panel (right of Rows 1-2): UMAP of CD8+ T cells colored by minor cell states.
 import scanpy as sc
 import matplotlib.pyplot as plt
 import pandas as pd
-import numpy as np
 from pathlib import Path
 import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
 from paths import TCD8_H5AD
+from shared.figure_config import use_panel_style
 
 SCALE = 4
 DPI = 300
@@ -51,14 +51,7 @@ def main():
     print("CD8+ T cell UMAP (4× scaling, right-margin legend)")
     print("=" * 60)
 
-    plt.rcParams.update({
-        'font.family': 'sans-serif',
-        'font.sans-serif': ['Arial', 'Liberation Sans', 'Helvetica', 'DejaVu Sans'],
-        'font.size': 5 * SCALE,
-        'svg.fonttype': 'none',
-        'pdf.fonttype': 42,
-        'ps.fonttype': 42,
-    })
+    use_panel_style(font_pt=5)
 
     print("\nLoading data...")
     adata = sc.read_h5ad(TCD8_H5AD)

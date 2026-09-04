@@ -8,6 +8,7 @@ from pathlib import Path
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
 from paths import TCD4_H5AD
+from shared.figure_config import use_panel_style
 
 warnings.filterwarnings('ignore')
 
@@ -45,11 +46,22 @@ HALLMARK_NFKB = [
     'ZC3H12A','ZFP36',
 ]
 
+# The Th17 signature behind the published panel: rho = 0.397, P = 0.0243, which
+# is the "rho = 0.40, P = 0.02" printed in Figure 5M and quoted in the Results.
+#
+# A 28-gene variant sat here instead - IL26, IL6R, TGFBR2, CSF2, IFNG, TNF, IL2,
+# CTLA4, CD44, IL4I1, LGALS3 and CXCR3 added, CXCR6, CTSH, PTPN13, TMEM176A,
+# TMEM176B, CAPG, LGMN and FKBP5 dropped. It was written on 23 Feb 2026, one day
+# after the version that made the figure, and no figure was ever regenerated
+# from it. It scores rho = 0.655, P = 5e-5: a different published claim.
+#
+# Verified by running both lists against TCD4.h5ad in one pass, unchanged since
+# Oct 2025 - 24 genes give 0.397 and a Th17 range of -0.014..0.211, matching the
+# printed y axis of 0.00..0.20; 28 genes give 0.655 over 0.047..0.248.
 STATE_GENES = [
-    'IL17A','IL17F','RORC','CCR6','IL23R','IL22','IL26','IL21',
-    'BATF','IRF4','STAT3','AHR','RORA','IL1R1','IL6R','TGFBR2',
-    'CCL20','CSF2','IFNG','TNF','IL2','CTLA4','ICOS','CD44',
-    'IL4I1','LGALS3','CXCR3','KLRB1',
+    'IL17A','IL17F','RORC','CCR6','IL23R','IL22','AHR','BATF','IRF4','STAT3',
+    'CCL20','CXCR6','KLRB1','IL21','IL1R1','RORA','CTSH','PTPN13','TMEM176A',
+    'TMEM176B','CAPG','LGMN','FKBP5','ICOS',
 ]
 
 
@@ -67,12 +79,7 @@ def assign_group(row):
 
 
 def main():
-    plt.rcParams.update({
-        'font.family': 'sans-serif',
-        'font.sans-serif': ['Arial', 'Liberation Sans', 'Helvetica', 'DejaVu Sans'],
-        'svg.fonttype': 'none',
-        'pdf.fonttype': 42, 'ps.fonttype': 42,
-    })
+    use_panel_style()
 
     adata = sc.read_h5ad(H5AD)
     adata = adata[adata.obs['Sample site'] == 'Stomach'].copy()
@@ -83,10 +90,14 @@ def main():
     state_avail = [g for g in STATE_GENES if g in gene_names]
     print(f"NF-kB: {len(nfkb_avail)}/{len(HALLMARK_NFKB)}, State: {len(state_avail)}/{len(STATE_GENES)}")
 
+    # score_genes with use_raw=True reaches straight into adata.raw.var_names,
+    # so it has to be told when the file carries no .raw - the clean deposit
+    # holds the same log1p matrix in .X.
+    use_raw = adata.raw is not None
     sc.tl.score_genes(adata, gene_list=nfkb_avail, score_name='nfkb',
-                     ctrl_size=50, use_raw=True)
+                     ctrl_size=50, use_raw=use_raw)
     sc.tl.score_genes(adata, gene_list=state_avail, score_name='state',
-                     ctrl_size=min(50, len(state_avail)), use_raw=True)
+                     ctrl_size=min(50, len(state_avail)), use_raw=use_raw)
 
     df = adata.obs[['sample', 'group', 'nfkb', 'state']].copy()
     df['sample'] = df['sample'].astype(str)

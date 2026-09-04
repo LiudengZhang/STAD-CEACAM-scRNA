@@ -106,6 +106,13 @@ def main():
 
     v = pd.DataFrame(rows)
     v.to_csv(OUT / "mp_external_validation.csv", index=False)
+    # The per-sample scores as well as the summary. _panel() draws these 45
+    # points per programme, and until 2026-09-01 they existed only inside this
+    # function, so the panel could not be redrawn without recomputing the score
+    # - which would have put the scoring code in two places. One file, no
+    # number changed.
+    pd.DataFrame(scores).rename_axis("sample").to_csv(
+        OUT / "mp_external_sample_scores.csv")
 
     L.append(f"  {'program':<26}{'genes':>9}{'mean NR':>10}{'mean R':>10}"
              f"{'r':>8}{'P':>10}{'P adj':>10}")

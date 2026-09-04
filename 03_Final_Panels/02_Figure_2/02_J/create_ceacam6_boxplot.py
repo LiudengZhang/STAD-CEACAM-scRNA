@@ -8,53 +8,29 @@ Create Panel 2B: CEACAM6 boxplot comparing Responders vs Non-Responders
 Sample-level aggregation (merged Pre+Post) with Mann-Whitney U test
 """
 
-import scanpy as sc
+import os
+import sys
+from pathlib import Path
+
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
+import scanpy as sc
 from scipy import stats
-import os
 
-# Central config
-from pathlib import Path
-import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
-from paths import *
+from paths import EPITHELIAL_H5AD
+from shared.figure_config import (DPI, RESPONSE_COLORS, RESPONSE_MEDIAN_COLORS,
+                                  SCALE, panel_figsize, save_panel_scaled,
+                                  use_panel_style)
 
-# Nature Cancer specifications - 4× scaling method
-# Electronic size = Print target × 4, then scale down for crisp text
-DPI = 300
-PANEL_WIDTH_CM = 3.2 * 4   # 12.8 cm electronic → 3.2 cm print
-PANEL_HEIGHT_CM = 3.0 * 4  # 12 cm electronic → 3.0 cm print (increased for title)
-CM_TO_INCH = 1 / 2.54
-SCALE = 4  # Scaling factor for fonts and line widths
+COLORS = RESPONSE_COLORS
+MEDIAN_COLORS = RESPONSE_MEDIAN_COLORS
 
-# Paths
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-# DATA_PATH - now using EPITHELIAL_H5AD from central config
 OUTPUT_DIR = BASE_DIR
-USE_RAW = True  # Use raw counts instead of normalized
-
-# Colors: Blue for R, Red for NR
-COLORS = {
-    'Responsed': '#0072B2',      # Blue for responders
-    'No-response': '#D55E00',    # Vermillion/red for non-responders
-}
-MEDIAN_COLORS = {
-    'Responsed': '#005689',      # Darker blue median line
-    'No-response': '#A34700',    # Darker red median line
-}
 
 def main():
-    # Set up matplotlib - 4× scaled fonts
-    plt.rcParams.update({
-        'font.family': 'sans-serif',
-        'font.sans-serif': ['Arial', 'Liberation Sans', 'Helvetica', 'DejaVu Sans'],
-        'font.size': 7 * SCALE,  # 28pt electronic → 7pt print
-        'svg.fonttype': 'none',
-        'pdf.fonttype': 42,
-        'ps.fonttype': 42,
-    })
+    use_panel_style(font_pt=7)
 
     # Load data
     print("Loading data...")
@@ -67,24 +43,16 @@ def main():
     adata_filtered = adata[pre_mask & valid_mask].copy()
     print(f"Pre-treatment cells with response status: {adata_filtered.n_obs}")
 
-    # Get CEACAM6 expression - prefer raw counts for better statistical power
-    if USE_RAW and adata_filtered.raw is not None and 'CEACAM6' in adata_filtered.raw.var_names:
-        print("Using raw counts for CEACAM6 expression")
-        ceacam6_idx = adata_filtered.raw.var_names.get_loc('CEACAM6')
-        if hasattr(adata_filtered.raw.X, 'toarray'):
-            ceacam6_expr = adata_filtered.raw.X[:, ceacam6_idx].toarray().flatten()
-        else:
-            ceacam6_expr = adata_filtered.raw.X[:, ceacam6_idx].flatten()
-    elif 'CEACAM6' in adata_filtered.var_names:
-        print("Using normalized data for CEACAM6 expression")
-        ceacam6_idx = adata_filtered.var_names.get_loc('CEACAM6')
-        if hasattr(adata_filtered.X, 'toarray'):
-            ceacam6_expr = adata_filtered.X[:, ceacam6_idx].toarray().flatten()
-        else:
-            ceacam6_expr = adata_filtered.X[:, ceacam6_idx].flatten()
-    else:
-        print("Error: CEACAM6 not found")
-        return
+    # Expression comes from .raw wherever there is a .raw: .X in the working
+    # inputs is the scaled matrix left by the double normalisation of
+    # 2025-07-30 and carries NaN rows. The earlier version fell back to it when
+    # CEACAM6 was missing from .raw, which would have drawn a panel instead of
+    # stopping - that is not what the guard below does. The clean deposit
+    # promotes .raw.X to .X and carries no .raw at all, so a file without one
+    # holds the same log1p numbers in .X.
+    src = adata_filtered.raw if adata_filtered.raw is not None else adata_filtered
+    ceacam6_idx = src.var_names.get_loc('CEACAM6')
+    ceacam6_expr = src.X[:, ceacam6_idx].toarray().flatten()
 
     # Add to obs for aggregation
     adata_filtered.obs['CEACAM6'] = ceacam6_expr
@@ -109,9 +77,7 @@ def main():
     print(f"\nTwo-sided Mann-Whitney U test: U={stat:.2f}, p={pval:.4f}")
 
     # Create figure with exact dimensions
-    fig_width = PANEL_WIDTH_CM * CM_TO_INCH
-    fig_height = PANEL_HEIGHT_CM * CM_TO_INCH
-    fig, ax = plt.subplots(figsize=(fig_width, fig_height))
+    fig, ax = plt.subplots(figsize=panel_figsize(3.2, 3.0))
 
     # Prepare data for boxplot
     data = [responder_vals, non_responder_vals]
@@ -170,15 +136,8 @@ def main():
 
     # Save
     os.makedirs(OUTPUT_DIR, exist_ok=True)
-    output_path = os.path.join(OUTPUT_DIR, "ceacam6_pre_boxplot.png")
-    plt.savefig(output_path, dpi=DPI, facecolor='white')
-    plt.savefig(output_path.replace('.png', '.svg'), dpi=DPI, facecolor='white')
-    print(f"\nSaved: {output_path}")
-
-    output_pdf = os.path.join(OUTPUT_DIR, "ceacam6_pre_boxplot.pdf")
-    plt.savefig(output_pdf, dpi=DPI, facecolor='white')
-    print(f"Saved: {output_pdf}")
-
+    print("\nSaved:", save_panel_scaled(
+        fig, os.path.join(OUTPUT_DIR, "ceacam6_pre_boxplot")))
     plt.close()
 
 if __name__ == '__main__':

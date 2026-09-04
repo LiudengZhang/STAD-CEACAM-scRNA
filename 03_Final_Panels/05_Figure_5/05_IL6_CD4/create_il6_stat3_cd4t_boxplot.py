@@ -12,6 +12,7 @@ from pathlib import Path
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
 from paths import TCD4_H5AD
+from shared.figure_config import use_panel_style
 
 warnings.filterwarnings('ignore')
 
@@ -36,12 +37,7 @@ PATHWAY_GENES = [
 
 
 def main():
-    plt.rcParams.update({
-        'font.family': 'sans-serif',
-        'font.sans-serif': ['Arial', 'Liberation Sans', 'Helvetica', 'DejaVu Sans'],
-        'svg.fonttype': 'none',
-        'pdf.fonttype': 42, 'ps.fonttype': 42,
-    })
+    use_panel_style()
 
     print("=" * 60)
     print("Panel O: IL-6/JAK/STAT3 — CD4+ T cells")
@@ -58,8 +54,12 @@ def main():
     gene_names = list(adata.raw.var_names) if adata.raw else list(adata.var_names)
     avail = [g for g in PATHWAY_GENES if g in gene_names]
     print(f"  Genes available: {len(avail)}/{len(PATHWAY_GENES)}")
+    # score_genes with use_raw=True reaches straight into adata.raw.var_names,
+    # so it has to be told when the file carries no .raw - the clean deposit
+    # holds the same log1p matrix in .X.
     sc.tl.score_genes(adata, gene_list=avail, score_name='value',
-                     ctrl_size=min(50, len(avail)), use_raw=True)
+                     ctrl_size=min(50, len(avail)),
+                     use_raw=adata.raw is not None)
 
     # Sample-level aggregation
     df = adata.obs[['sample', 'response', 'value']].copy()

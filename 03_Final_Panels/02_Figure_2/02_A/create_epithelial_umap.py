@@ -7,13 +7,13 @@ Panel A: Large square UMAP of epithelial cells colored by minor cell states.
 import scanpy as sc
 import matplotlib.pyplot as plt
 import pandas as pd
-import numpy as np
 from pathlib import Path
 from adjustText import adjust_text
 import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
 from paths import *
+from shared.figure_config import use_panel_style
 
 DPI = 300
 SCALE = 4
@@ -50,14 +50,7 @@ SHORT_LABELS = {
 
 
 def main():
-    plt.rcParams.update({
-        'font.family': 'sans-serif',
-        'font.sans-serif': ['Arial', 'Liberation Sans', 'Helvetica', 'DejaVu Sans'],
-        'font.size': 5 * SCALE,
-        'svg.fonttype': 'none',
-        'pdf.fonttype': 42,
-        'ps.fonttype': 42,
-    })
+    use_panel_style(font_pt=5)
 
     print("Loading data...")
     adata = sc.read_h5ad(EPITHELIAL_H5AD)

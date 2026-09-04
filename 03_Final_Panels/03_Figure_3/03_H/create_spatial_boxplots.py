@@ -9,7 +9,6 @@ Moved from old 03_D. Scaling violations fixed.
 """
 
 import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
 from scipy import stats
 import os
@@ -18,6 +17,7 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
 from paths import SPATIAL_SPOT_DATA
+from shared.figure_config import use_panel_style
 
 DPI = 300
 PANEL_WIDTH_CM = 5.0 * 4
@@ -32,14 +32,7 @@ CEACAM_HIGH_COLOR = '#d62728'
 
 
 def create_paired_boxplot(sample_data, col, title, ylabel, output_path, y_max_limit=None):
-    plt.rcParams.update({
-        'font.family': 'sans-serif',
-        'font.sans-serif': ['Arial', 'Liberation Sans', 'Helvetica', 'DejaVu Sans'],
-        'font.size': 9 * SCALE,
-        'svg.fonttype': 'none',
-        'pdf.fonttype': 42,
-        'ps.fonttype': 42,
-    })
+    use_panel_style(font_pt=9)
 
     fig_width = PANEL_WIDTH_CM * CM_TO_INCH
     fig_height = PANEL_HEIGHT_CM * CM_TO_INCH

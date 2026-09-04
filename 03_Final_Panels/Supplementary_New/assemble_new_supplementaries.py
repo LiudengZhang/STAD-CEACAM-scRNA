@@ -35,8 +35,12 @@ FIGURES = {
     # E-G were added in the third revision pass: the CEACAM evidence read across
     # cohorts rather than one at a time (R1.3). They belong here rather than in a
     # new figure, beside the per-marker IHC panel a reader is already looking at.
+    # H answers the premise of R1.5 rather than its request: whether the two
+    # genes mark the same cells, and how much of the apparent single-positive
+    # population is dropout. It sits last because it is the methodological
+    # panel, read after the biology above it.
     "S8_CEACAM_Metaprogram": dict(
-        height=268.0,
+        height=306.0,
         title=None,
         panels=[
             ("A", "S8_A/S8_A_metaprogram_four_groups.svg", M, 6, W - 2 * M, 52),
@@ -47,6 +51,7 @@ FIGURES = {
             ("E", "S8_E/S8_E_convergence_forest.svg", M, 198, W - 2 * M, 34),
             ("F", "S8_F/S8_F_leave_one_out.svg", M, 238, 100, 26),
             ("G", "S8_G/S8_G_rna_protein_concordance.svg", 112, 238, 65, 26),
+            ("H", "S8_H/S8_H_dropout_and_coexpression.svg", M, 270, W - 2 * M, 32),
         ],
     ),
     "S9_Mechanism_Specificity": dict(

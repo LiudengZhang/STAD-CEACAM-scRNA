@@ -8,7 +8,7 @@ Combine all into gsea_combined_5types.csv
 import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
-from paths import TCD4_H5AD, TCD8_H5AD, DC_CELLS_H5AD
+from paths import TCD4_H5AD, TCD8_H5AD, DC_CELLS_H5AD, HALLMARK_GMT
 
 import numpy as np
 import pandas as pd
@@ -61,7 +61,7 @@ def run_gsea(deg_df, cell_type):
         return None
     gsea_outdir = BASE_DIR / f"gsea_{cell_type.replace('+', 'plus').replace(' ', '_')}"
     gsea_outdir.mkdir(parents=True, exist_ok=True)
-    pre_res = gp.prerank(rnk=rnk, gene_sets='MSigDB_Hallmark_2020',
+    pre_res = gp.prerank(rnk=rnk, gene_sets=str(HALLMARK_GMT),
                          outdir=str(gsea_outdir), min_size=5, max_size=500,
                          permutation_num=1000, seed=42, verbose=False)
     return pre_res

@@ -16,6 +16,7 @@ warnings.filterwarnings('ignore')
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
 from paths import *
+from shared.figure_config import use_panel_style
 
 # 4x scaling
 SCALE = 4
@@ -60,6 +61,7 @@ def load_primary():
 
     df = pd.DataFrame(expr)
     df['sample'] = adata.obs['sample'].values
+    df['study_id'] = adata.obs['Sample ID'].values
     df['treatment_phase'] = adata.obs['Treatment phase'].values
     df['pre_group'] = adata.obs['stomach_pre_grouping'].values
     df['post_group'] = adata.obs['stomach_post_grouping'].values
@@ -70,6 +72,7 @@ def load_primary():
         'treatment_phase': 'first',
         'pre_group': 'first',
         'post_group': 'first',
+        'study_id': 'first',
     }).reset_index()
 
     # 4-group assignment
@@ -87,8 +90,17 @@ def load_primary():
 
     agg['group'] = agg.apply(assign_4group, axis=1)
 
-    # Exclude GC_1228: statistical outlier on CD274 (Grubbs' test G=5.43, P<0.05)
-    agg = agg[agg['sample'] != 'GC_1228'].reset_index(drop=True)
+    # One sample is a statistical outlier on CD274 (Grubbs' test G = 5.43,
+    # P < 0.05) and is excluded from the correlation. It is named by its study
+    # ID from Supplementary Table 1, not by the internal specimen number the
+    # 'sample' column carries: that number identifies a specimen in the hospital
+    # record and does not belong in deposited code. The two are 1:1 across all
+    # 70 specimens, so this selects the same row.
+    OUTLIER_STUDY_ID = 'P32-P1'
+    if OUTLIER_STUDY_ID not in set(agg['study_id']):
+        raise SystemExit(f"{OUTLIER_STUDY_ID} is not among the stomach samples - "
+                         "the outlier exclusion would silently do nothing")
+    agg = agg[agg['study_id'] != OUTLIER_STUDY_ID].reset_index(drop=True)
 
     counts = agg['group'].value_counts()
     print(f"  {len(agg)} stomach samples (after outlier removal): {counts.to_dict()}")
@@ -171,14 +183,7 @@ def plot_scatter(ax, x, y, groups, color_map, draw_order, title, xlabel, ylabel,
 
 
 def main():
-    plt.rcParams.update({
-        'font.family': 'sans-serif',
-        'font.sans-serif': ['Arial', 'Liberation Sans', 'Helvetica', 'DejaVu Sans'],
-        'font.size': 6 * SCALE,
-        'svg.fonttype': 'none',
-        'pdf.fonttype': 42,
-        'ps.fonttype': 42,
-    })
+    use_panel_style(font_pt=6)
 
     primary = load_primary()
 

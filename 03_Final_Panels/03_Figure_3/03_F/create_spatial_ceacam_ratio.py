@@ -12,6 +12,7 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
 from paths import SPATIAL_SPOT_DATA
+from shared.figure_config import use_panel_style
 
 DPI = 300
 SCALE = 4
@@ -24,14 +25,7 @@ SAMPLE_NAME = 'sample_03'
 
 
 def main():
-    plt.rcParams.update({
-        'font.family': 'sans-serif',
-        'font.sans-serif': ['Arial', 'Liberation Sans', 'Helvetica', 'DejaVu Sans'],
-        'font.size': 8 * SCALE,
-        'svg.fonttype': 'none',
-        'pdf.fonttype': 42,
-        'ps.fonttype': 42,
-    })
+    use_panel_style(font_pt=8)
 
     print("=" * 60)
     print("Panel C: Spatial CEACAM Ratio")

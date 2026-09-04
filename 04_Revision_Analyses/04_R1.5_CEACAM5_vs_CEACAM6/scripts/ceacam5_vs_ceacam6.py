@@ -35,6 +35,7 @@ from scipy import stats
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
 from paths import EPITHELIAL_H5AD, PREPARATION, REVISED_PANELS  # noqa: E402
+from shared.sample_ids import sample_id_map, to_study_ids  # noqa: E402
 
 OUT = Path(__file__).resolve().parents[1] / "outputs"
 OUT.mkdir(parents=True, exist_ok=True)
@@ -63,10 +64,21 @@ def mw(a, b):
 
 def load_pre_epithelial():
     ad = sc.read_h5ad(EPITHELIAL_H5AD)
+    # Resolved before subsetting, so the crosswalk is checked against every
+    # specimen in the object rather than only the pre-treatment stomach ones.
+    ids = sample_id_map(ad.obs)
     ad = ad[ad.obs["Sample site"] == "Stomach"]
     ad = ad[ad.obs["Treatment phase"] == "Pre"]
     ad = ad[ad.obs["stomach_pre_grouping"].isin(["Responsed", "No-response"])].copy()
-    src = ad.raw if ad.raw is not None else ad
+    # .raw only. Eight of the input h5ads carry a double normalisation in .X
+    # that left whole cell rows NaN, so falling back to it would put damaged
+    # expression behind these numbers without saying so. This never fired -
+    # every object reaching here has a .raw - which is the argument for
+    # raising rather than keeping a path nothing has ever taken.
+    if ad.raw is None:
+        raise SystemExit("this object has no .raw; refusing to read .X - "
+                         "see 00_Data_Audit/FINDINGS.md sections 1 and 7")
+    src = ad.raw
     out = {}
     for g in ("CEACAM5", "CEACAM6"):
         i = list(src.var_names).index(g)
@@ -76,14 +88,14 @@ def load_pre_epithelial():
     df["sample"] = ad.obs["sample"].astype(str).values
     df["group"] = ad.obs["stomach_pre_grouping"].map(
         {"Responsed": "R", "No-response": "NR"}).values
-    return df
+    return df, ids
 
 
 def main():
     L = ["CEACAM5 VERSUS CEACAM6 - Reviewer 1 point R1.5", "=" * 90, ""]
 
     # ============================================ A. single-positive states
-    cells = load_pre_epithelial()
+    cells, ids = load_pre_epithelial()
     # Positivity is detection of at least one UMI, the standard threshold for a
     # sparse count matrix; no arbitrary expression cutoff is introduced.
     c5, c6 = cells["CEACAM5"] > 0, cells["CEACAM6"] > 0
@@ -101,6 +113,9 @@ def main():
     for s in STATES:
         if s not in frac.columns:
             frac[s] = 0.0
+    # Specimens are named the way Supplementary Table 1 names them. The relabel
+    # is in place, after the grouping, so no row moves and no value changes.
+    frac["sample"] = to_study_ids(frac["sample"], ids)
     frac.to_csv(OUT / "ceacam_state_fractions.csv", index=False)
 
     rows = []

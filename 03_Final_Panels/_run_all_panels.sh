@@ -14,6 +14,9 @@
 
 set -euo pipefail
 
+# Set so that set iteration order, and with it Figure 4B, repeats.
+export PYTHONHASHSEED=0
+
 CONDA_CMD="conda run -n ${STAD_CONDA_ENV:-stad_ceacam} python"
 BASE="$(cd "$(dirname "$0")" && pwd)"
 PASS=0
@@ -71,8 +74,6 @@ run_fig2() {
     run_script "$BASE/02_Figure_2/02_A/create_epithelial_umap.py"
     run_script "$BASE/02_Figure_2/02_B/create_ceacam5_umap.py"
     run_script "$BASE/02_Figure_2/02_C/create_ceacam6_umap.py"
-    run_script "$BASE/02_Figure_2/02_C1/create_tumor_score_umap.py"
-    run_script "$BASE/02_Figure_2/02_C2/create_cnv_score_umap.py"
     run_script "$BASE/02_Figure_2/02_D/create_ceacam_correlation.py"
     run_script "$BASE/02_Figure_2/02_E/create_c2_proportion_boxplot.py"
     # Milo needs its own environment; see the Dockerfile.

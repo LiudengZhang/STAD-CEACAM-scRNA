@@ -89,7 +89,14 @@ def main():
         print(f"  {ct}: {count:,}")
 
     # Show sender info
-    sender_mask = raw_adata.obs[sender_col] == sender_name
+    # np.asarray is required, do not remove it. This mask indexes a scipy
+    # sparse matrix below; scipy's sparse __getitem__ calls .nonzero() on a
+    # boolean index, and pandas removed Series.nonzero() in 1.0, so passing
+    # the Series raises AttributeError under current pandas/scipy. The mask
+    # is already aligned to raw_adata.obs, so coercing it to a numpy bool
+    # array is a dtype change only and selects exactly the same rows.
+    # (Fixed 2026-09-03; original kept as 01_prepare_data.py.bak_20260903.)
+    sender_mask = np.asarray(raw_adata.obs[sender_col] == sender_name)
     print(f"\nSender ({sender_name}): {sender_mask.sum()} cells")
 
     # Export MTX files
@@ -127,7 +134,8 @@ def main():
         cell_dir = output_dir / f"mtx_{safe_name}"
         cell_dir.mkdir(exist_ok=True)
 
-        mask = raw_adata.obs[cell_type_col] == receiver
+        # np.asarray required here too - see the note at sender_mask above.
+        mask = np.asarray(raw_adata.obs[cell_type_col] == receiver)
         n_cells = mask.sum()
 
         if n_cells == 0:

@@ -1,15 +1,28 @@
 #!/usr/bin/env python3
 """
-Panel 2J: Milo differential abundance analysis for epithelial cells
-4× scaling method for crisp text rendering
+Panel 2F (printed): Milo differential abundance analysis for epithelial cells.
+4x scaling method for crisp text rendering.
+
+RUN THIS IN THE pertpy_milo ENVIRONMENT, NOT Liudeng_Python_310.
+
+pertpy pulls in scvi, which imports jax; in Liudeng_Python_310 that import is
+broken - "No module named 'jaxlib.xla_extension'" - and the script dies before
+it reads any data. Nothing is wrong with the panel or with pertpy; the two
+environments simply disagree about jax. pertpy_milo carries pertpy 1.0.3 and
+imports Milo cleanly.
+
+    conda run -n pertpy_milo python create_epithelial_milo_pre_rvsnr.py
+
+run_all.sh knows this and runs the script in that environment; the docstring
+says it too, so anyone running the file directly is not left to rediscover it.
+The header still says "Panel 2J" in the pre-submission lettering; the paper
+prints this as Figure 2F. See ../../../PROVENANCE.csv.
 """
 
 import scanpy as sc
 import pertpy as pt
 import mudata as mu
 import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
 import os
 import warnings
 warnings.filterwarnings('ignore')
@@ -19,6 +32,7 @@ from pathlib import Path
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
 from paths import *
+from shared.figure_config import use_panel_style
 
 # Nature Cancer specifications - 4× scaling method
 DPI = 300
@@ -46,14 +60,7 @@ SAMPLE_COL = "sample"
 
 
 def main():
-    plt.rcParams.update({
-        'font.family': 'sans-serif',
-        'font.sans-serif': ['Arial', 'Liberation Sans', 'Helvetica', 'DejaVu Sans'],
-        'font.size': 7 * SCALE,
-        'svg.fonttype': 'none',
-        'pdf.fonttype': 42,
-        'ps.fonttype': 42,
-    })
+    use_panel_style(font_pt=7)
 
     print("=" * 60)
     print("Milo Differential Abundance Analysis")

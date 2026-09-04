@@ -218,29 +218,109 @@ pos = (lin.loc["C3_Mac_Inflam_IL1B", "lineage_index"] - lo) / (hi - lo)
 check("IL-1B cluster position on the lineage axis", pos, 0.41)
 
 # ------------------------------------------------------------ NF-kB (R1.8)
-nfkb = pd.read_csv(out("07_R1.8_NFkB_Specificity", "nfkb_per_celltype.csv"))
+# ADOPTED TABLE, 2026-09-03. Until this date these checks read
+# 07_R1.8_NFkB_Specificity/outputs/nfkb_per_celltype.csv, which is written by
+# nfkb_specificity.py out of 12_R1.8_DEG_Recompute/outputs/gsea - the "live"
+# run, computed on the doubly-normalised .X that 00_Data_Audit/FINDINGS.md
+# sections 1 and 7 describe. The author has adopted the sound-input recompute,
+# and on 2026-09-03 ruled that the sixteen flagged rows of
+# 02_New_Analyses/17_NFkB_Claim_Ledger/outputs/claim_comparison.csv be applied
+# as that file recommends. So every NF-kB number now printed in the Results and
+# in the response letter comes from ONE table:
+#
+#     13_R1.8_Neutrophil_Rebuilt_Recompute/outputs/nfkb_per_celltype_sound13.csv
+#
+# and that is the table checked here. The file name says which recompute it is,
+# which is the point: the live table is NOT overwritten and NOT renamed, so no
+# path in this repository ever means two different things.
+#
+# The panels agree, as of 2026-09-03. Panels S9E and S10C were drawn from the
+# live run until that date, which left them disagreeing with this text in six
+# quantities; the author then ruled that they be redrawn from the same adopted
+# table, and they were. 03_Revised_Panels/Supplementary_New/S9_Mechanism_
+# Specificity/REDRAW_2026-09-03.md and the S10 equivalent record what moved, and
+# PROVENANCE.csv rows S9,E and S10,C carry the re-adjudication.
+#
+# 07_R1.8_NFkB_Specificity/outputs/nfkb_per_celltype.csv and
+# 08_R2.1_PreTx_Inflammatory/outputs/nfkb_pre_vs_post.csv still exist and are
+# still the live run. Nothing printed reads them any more. They are kept, not
+# overwritten, so that one file name means one set of contents.
+NFKB_SOUND = out("13_R1.8_Neutrophil_Rebuilt_Recompute",
+                 "nfkb_per_celltype_sound13.csv")
+nfkb = pd.read_csv(NFKB_SOUND)
+nfkb = nfkb[nfkb["method"] == "ttest"]
 post_n = nfkb[nfkb["phase"] == "post"]
-check_eq("cell types with positive post NES", int((post_n["nes"] > 0).sum()), 10)
+pre_n = nfkb[nfkb["phase"] == "pre"]
+check_eq("cell types with positive post NES", int((post_n["nes"] > 0).sum()), 12)
 check_eq("cell types tested", len(post_n), 13)
+# claim C02: "FDR q < 0.05 in three ... and q < 0.06 in a fourth"
 check_eq("post NES with FDR < 0.05", int(((post_n["nes"] > 0)
                                           & (post_n["fdr_q"] < 0.05)).sum()), 3)
-for cell, q in (("MoMac", 0.042), ("NK_cells", 0.003), ("Mast_cells", 0.015)):
-    check(f"{cell} FDR q",
-          post_n.loc[post_n["cell_type"] == cell, "fdr_q"].iloc[0], q, tol=0.001)
-check("CD4 T post NES", post_n.loc[post_n["cell_type"] == "TCD4_cells", "nes"].iloc[0],
-      -1.50, tol=0.01)
-check("CD8 T post NES", post_n.loc[post_n["cell_type"] == "TCD8_cells", "nes"].iloc[0],
+# claim C08: "positively enriched in five of the thirteen populations"
+check_eq("cell types with positive pre NES", int((pre_n["nes"] > 0).sum()), 5)
+# claim C09: "reaches FDR q < 0.05 in three (endothelial, NK and CD8+ T cells)"
+check_eq("pre NES with FDR < 0.05", int(((pre_n["nes"] > 0)
+                                         & (pre_n["fdr_q"] < 0.05)).sum()), 3)
+
+
+def _post(cell, col):
+    return post_n.loc[post_n["cell_type"] == cell, col].iloc[0]
+
+
+check("MoMac post NES", _post("MoMac", "nes"), 2.23, tol=0.01)
+check("MoMac post FDR q", _post("MoMac", "fdr_q"), 0.0, tol=0.001)
+# claim C10: the Results no longer quote a pre-treatment MoMac NES at all, only
+# the q. Both are checked, because a sign flip in this contrast is what made the
+# printed +1.06 wrong and it must not go unnoticed if it flips back.
+check("MoMac pre NES", pre_n.loc[pre_n["cell_type"] == "MoMac", "nes"].iloc[0],
       -1.00, tol=0.01)
-check("Epithelial post NES",
-      post_n.loc[post_n["cell_type"] == "Epithelial", "nes"].iloc[0], 1.03, tol=0.01)
-check_eq("Hallmark sets tested in MoMac",
-         int(post_n.loc[post_n["cell_type"] == "MoMac", "n_sets"].iloc[0]), 48)
-check_eq("MoMac rank among Hallmark sets",
-         int(post_n.loc[post_n["cell_type"] == "MoMac", "rank"].iloc[0]), 1)
+check("MoMac pre FDR q", pre_n.loc[pre_n["cell_type"] == "MoMac", "fdr_q"].iloc[0],
+      0.89, tol=0.01)
+# claim C12
+check("Epithelial post NES", _post("Epithelial", "nes"), 1.90, tol=0.01)
+# Not a printed number: no sentence quotes the B-cell NES, and what IS printed -
+# "the one population with a negative score" - is checked immediately below. It
+# is kept as a regression anchor on the row that carries that claim. Moved from
+# -0.99 to -1.23 on 2026-09-03, when panel S9E was redrawn from the adopted
+# table: until then it anchored the live table the panel came from, and there is
+# now no such table to anchor to.
+check("B cells post NES", _post("B_cells", "nes"), -1.23, tol=0.01)
+checks += 1
+if int((post_n["nes"] < 0).sum()) != 1:
+    failures.append("B cells are claimed to be the only population with a "
+                    "negative post-treatment NES, but another one is negative")
+
+# claims C03, C04, C05. The manuscript now says the set is among the three
+# highest-ranked Hallmark sets in seven populations, ranks in the lower third in
+# pericytes and last in B cells. Rank 1 is a coin toss - it is 4, 5 or 6 on the
+# permutation seed alone - so the printed statement is rank <= 3, which gives the
+# SAME seven populations on the live and the sound tables. The two checks below
+# keep guarding the rank-1 set, because it is what moved and what the printed
+# sentence was retreated from; their expected values are the sound table's.
+top_ranked = set(post_n.loc[post_n["rank"] == 1, "cell_type"])
+check_eq("populations where TNFa/NF-kB is the top-ranked Hallmark set",
+         len(top_ranked), 3)
+checks += 1
+expected_top = {"MoMac", "Epithelial", "Fibroblast"}
+if top_ranked != expected_top:
+    failures.append(f"the top-ranked populations are {sorted(top_ranked)}, "
+                    f"not {sorted(expected_top)}")
+checks += 1
+# The printed claim itself: seven populations at rank <= 3, named in the Results.
+top3 = set(post_n.loc[post_n["rank"] <= 3, "cell_type"])
+expected_top3 = {"MoMac", "Epithelial", "Fibroblast", "DC_cells",
+                 "Endothelial_cells", "Mast_cells", "Plasma_cells"}
+if top3 != expected_top3:
+    failures.append(f"the populations at rank <= 3 are {sorted(top3)}, "
+                    f"not {sorted(expected_top3)}")
+check_eq("Pericyte rank among Hallmark sets", int(_post("Pericyte", "rank")), 30)
+check_eq("Hallmark sets tested in Pericyte", int(_post("Pericyte", "n_sets")), 49)
+check_eq("B cells rank among Hallmark sets", int(_post("B_cells", "rank")), 38)
+check_eq("Hallmark sets tested in B cells", int(_post("B_cells", "n_sets")), 38)
 
 conc = pd.read_csv(out("07_R1.8_NFkB_Specificity", "nfkb_method_concordance.csv"))
-check_eq("cell types where MAST and t-test agree",
-         int(conc["same_direction"].sum()), 10)
+check_eq("cell types where MAST and t-test agree in direction",
+         int(conc["same_direction"].sum()), 5)
 
 cyto = pd.read_csv(out("07_R1.8_NFkB_Specificity", "epithelial_cytokines.csv"))
 epi = cyto[(cyto["compartment"] == "Epithelial") & (cyto["phase"] == "Post")]
@@ -273,16 +353,42 @@ for i, val in enumerate(pre_ps):
     check(f"pre-treatment NR vs R P ({'abundance' if i == 0 else 'signature'})",
           val, 0.89, tol=0.006)
 
-nfkb_pp = pd.read_csv(out("08_R2.1_PreTx_Inflammatory", "nfkb_pre_vs_post.csv"))
-mmrow = nfkb_pp[nfkb_pp["cell_type"] == "MoMac"].iloc[0]
-check("MoMac pre NES", mmrow["pre_nes"], -1.12, tol=0.01)
-check("MoMac post NES", mmrow["post_nes"], 1.77, tol=0.01)
-check("MoMac pre-to-post change", mmrow["post_nes"] - mmrow["pre_nes"], 2.90, tol=0.01)
+# Round 10: the Results first said the two measures "separate only after"
+# treatment. They do not - post-treatment P is 0.33 and 0.13 - so both
+# timepoints are now stated, and both are checked here.
+post_ps = [float(m) for m in
+           re.findall(r"post-treatment NR vs R\s+P = ([0-9.]+)", report)]
 checks += 1
-deltas = (nfkb_pp["post_nes"] - nfkb_pp["pre_nes"]).abs()
-if deltas.idxmax() != nfkb_pp.index[nfkb_pp["cell_type"] == "MoMac"][0]:
-    failures.append("MoMac is claimed to have the largest pre-to-post change, "
+if len(post_ps) != 2:
+    failures.append("the post-treatment NR versus R test is no longer reported "
+                    "twice in pretx_inflammatory_report.txt")
+else:
+    check("post-treatment NR vs R P (abundance)", post_ps[0], 0.33, tol=0.006)
+    check("post-treatment NR vs R P (signature)", post_ps[1], 0.13, tol=0.006)
+checks += 1
+if any(v < 0.05 for v in post_ps):
+    failures.append("a post-treatment IL-1B comparison now reaches P < 0.05; the "
+                    "Results say neither does, and must be restated if that changes")
+
+# The letter's para-98 sentence quotes the same four numbers as the Results, so
+# it is checked against the same adopted table (claims C08, C10, C11, C40).
+# 08_R2.1_PreTx_Inflammatory/outputs/nfkb_pre_vs_post.csv is a projection of the
+# live run and is what panel S10C is drawn from; it is left alone and no longer
+# guards a printed number. See the note at the head of the NF-kB block.
+_pre_i = pre_n.set_index("cell_type")
+_post_i = post_n.set_index("cell_type")
+check("MoMac pre NES (S10C sentence)", _pre_i.loc["MoMac", "nes"], -1.00, tol=0.01)
+check("MoMac post NES (S10C sentence)", _post_i.loc["MoMac", "nes"], 2.23, tol=0.01)
+checks += 1
+# The manuscript calls monocytes/macrophages the strongest population after
+# treatment.
+if _post_i["nes"].idxmax() != "MoMac":
+    failures.append("MoMac is claimed to have the strongest post-treatment NES, "
                     "but another cell type does")
+checks += 1
+if int((_pre_i["nes"] > 0).sum()) != 5 or int((_post_i["nes"] > 0).sum()) != 12:
+    failures.append("the letter's para-98 sentence no longer holds: it says 5 of "
+                    "13 populations positive before treatment and 12 of 13 after")
 
 # ------------------------------------------------------------- adaptive (R2.2)
 ad_tests = pd.read_csv(out("09_R2.2_Adaptive_Immune", "adaptive_state_tests.csv"))
@@ -423,6 +529,102 @@ conc = pd.read_csv(out("10_R1.3_CrossCohort_Convergence",
 for marker, expected in (("Summed", 0.88), ("CEACAM5", 0.86), ("CEACAM6", 0.62)):
     check(f"transcript-protein concordance, {marker}",
           conc.loc[marker, "Spearman rho"], expected, tol=0.01)
+
+# ------------------------------------------------- Figure 2D correlation (ED.4)
+# The submitted panel reported rho = 0.93 over "n = 49,696 pre-treatment
+# epithelial cells". Both came from the damaged .X of Epithelial.h5ad: 49,696 is
+# the number of rows of that matrix that are not NaN, out of 106,653. The Results
+# now give all three levels of aggregation, read from .raw.
+LEVELS = (Path(__file__).resolve().parents[1] / "03_Revised_Panels"
+          / "Main_Figures" / "02_Figure_2" / "02_D"
+          / "ceacam_correlation_levels.csv")
+checks += 1
+if not LEVELS.exists():
+    failures.append(f"{LEVELS.name} is missing; run "
+                    "02_D/create_ceacam_metacell_correlation.py")
+else:
+    lv = pd.read_csv(LEVELS).set_index("level")
+    check("Fig. 2D rho, per cell", lv.loc["cell", "rho"], 0.44, tol=0.005)
+    check("Fig. 2D rho, metacells of 10", lv.loc["metacell_k10", "rho"], 0.72,
+          tol=0.005)
+    check("Fig. 2D rho, per sample", lv.loc["sample", "rho"], 0.93, tol=0.005)
+    check_eq("Fig. 2D cells", int(lv.loc["cell", "n"]), 60937)
+    check_eq("Fig. 2D metacells", int(lv.loc["metacell_k10", "n"]), 2168)
+    check_eq("Fig. 2D samples", int(lv.loc["sample", "n"]), 20)
+
+# ------------------------------------------------- reference list integrity
+# Reference 53 (MAST) was removed this round and 54-58 shifted down, so nine
+# in-text citations changed number. A gap, a dangling citation or an uncited
+# entry would all survive a proof-read and none would survive copy-editing.
+CLEAN_DOCX = (Path(__file__).resolve().parent / "01_Main_Text"
+              / "Manuscript_R1_clean.docx")
+checks += 1
+if not CLEAN_DOCX.exists():
+    failures.append("Manuscript_R1_clean.docx is missing; run apply_edits.py")
+else:
+    import zipfile
+    from xml.etree import ElementTree as ET
+    W = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
+    root = ET.fromstring(zipfile.ZipFile(CLEAN_DOCX).read("word/document.xml"))
+    paras = ["".join(t.text or "" for t in q.iter(W + "t"))
+             for q in root.iter(W + "p")]
+    start = next(i for i, q in enumerate(paras) if q.strip() == "References")
+    listed = {}
+    for q in paras[start + 1:]:
+        m = re.match(r"\s*(\d+)\.\s", q)
+        if m:
+            listed[int(m.group(1))] = q.strip()
+    body = " ".join(paras[:start])
+    cited = set()
+    for m in re.finditer(r"\(([\d,\u2013\u2014 -]+)\)", body):
+        for part in m.group(1).split(","):
+            part = part.strip()
+            rng = re.fullmatch(r"(\d+)\s*[\u2013\u2014-]\s*(\d+)", part)
+            if rng and int(rng.group(1)) < int(rng.group(2)) <= 200:
+                cited.update(range(int(rng.group(1)), int(rng.group(2)) + 1))
+            elif part.isdigit():
+                cited.add(int(part))
+    top = max(listed)
+    for label, bad in (("gaps in the reference list",
+                        sorted(set(range(1, top + 1)) - set(listed))),
+                       ("citations with no reference",
+                        sorted(c for c in cited if c not in listed)),
+                       ("references never cited",
+                        sorted(r for r in listed if r not in cited))):
+        checks += 1
+        if bad:
+            failures.append(f"{label}: {bad}")
+    check_eq("reference list length", top, 61)
+    checks += 1
+    if "MAST" in " ".join(paras):
+        failures.append("MAST still appears in the manuscript; it was removed "
+                        "from the Methods this round and reference 53 with it")
+
+# ------------------------------------------------------- one letter, one source
+# The response letter diverged once into two parallel documents, only one of
+# which was shipped. The chain is fixed at apply_consistency_fixes.py ->
+# ..._v3.docx -> build_clean_response.py -> ..._v3_clean.docx; anything else in
+# that directory that looks like a response letter is a second source of truth.
+LETTER_DIR = Path(__file__).resolve().parent / "05_Response_to_Reviewers"
+ALLOWED_LETTERS = {"Response_to_Reviewers_CIR260753ET_v3.docx",
+                   "Response_to_Reviewers_CIR260753ET_v3_clean.docx"}
+checks += 1
+stray = sorted(f.name for f in LETTER_DIR.glob("*.docx")
+               if f.name not in ALLOWED_LETTERS)
+if stray:
+    failures.append(
+        "a second response letter is live beside the shipped one: "
+        f"{', '.join(stray)}. Move it to 99_Superseded/ - the letter has one "
+        "editing entry point, apply_consistency_fixes.py")
+checks += 1
+stray_py = sorted(f.name for f in LETTER_DIR.glob("*.py")
+                  if f.name not in {"apply_consistency_fixes.py",
+                                    "build_clean_response.py"})
+if stray_py:
+    failures.append(
+        f"unexpected script(s) in {LETTER_DIR.name}: {', '.join(stray_py)}. "
+        "Only apply_consistency_fixes.py and build_clean_response.py build the "
+        "shipped letter")
 
 # ------------------------------------------------------------------- report
 print(f"Checked {checks} claims against the analysis outputs.")

@@ -1,0 +1,71 @@
+CEACAM5/CEACAM6 CO-EXPRESSION AND DROPOUT - Reviewer 1 point R1.5
+==========================================================================================
+
+Pre-treatment stomach epithelial cells: 60,937 from 20 samples
+seed = 42
+
+A. SEQUENCING DEPTH
+------------------------------------------------------------------------------------------
+stratum  n_cells  median_total_counts   rho  pct_double_pos  pct_single_pos  pct_double_neg  pct_double_of_expressing
+     Q1    12221              601.000 0.214           5.139          21.078          73.783                    19.600
+     Q2    12171              859.000 0.292           9.876          25.799          64.325                    27.683
+     Q3    12173             1319.000 0.366          16.192          29.467          54.342                    35.462
+     Q4    12184             2618.500 0.518          25.927          27.290          46.783                    48.720
+     Q5    12188            12784.000 0.699          44.519          22.514          32.967                    66.414
+
+B. CO-DETECTION AGAINST INDEPENDENCE, WITHIN STRATUM
+------------------------------------------------------------------------------------------
+stratum  pct_double_pos  expected_double_pos  obs_over_expected  odds_ratio   p_fisher
+     Q1           5.139                2.458              2.091       3.414  1.508e-94
+     Q2           9.876                5.187              1.904       3.818 7.364e-173
+     Q3           16.19                9.532              1.699       4.113 1.677e-251
+     Q4           25.93                 15.6              1.662       6.729          0
+     Q5           44.52                31.04              1.434       12.21          0
+
+C. WITHIN SAMPLE, PER CELL
+------------------------------------------------------------------------------------------
+pooled across samples, per cell            rho 0.4385
+  the same, CEACAM6 permuted within sample rho 0.1797   <- what between-patient differences alone give
+median rho 0.3016   IQR 0.2556-0.3657   range 0.1986-0.5068
+positive in 20 of 20 samples
+within-sample permutation null, median -0.0070
+
+sample  n_cells    rho      p  rho_permuted
+P04-P1     3317 0.1986 0.0000        0.0210
+P18-P1     1067 0.2054 0.0000        0.0223
+P17-P1     1666 0.2061 0.0000       -0.0103
+P29-P1      369 0.2333 0.0000       -0.0384
+P02-P1    13195 0.2469 0.0000       -0.0042
+P31-P1     1691 0.2585 0.0000        0.0203
+P35-P1      615 0.2589 0.0000       -0.0425
+P20-P1     1849 0.2745 0.0000       -0.0133
+P22-P1     1207 0.2764 0.0000        0.0043
+P30-P1     5785 0.2878 0.0000       -0.0099
+P15-P1     2093 0.3155 0.0000        0.0125
+P33-P1     1663 0.3356 0.0000        0.0061
+P26-P1     7924 0.3454 0.0000        0.0033
+P32-P1     3816 0.3507 0.0000        0.0223
+P21-P1     2086 0.3550 0.0000       -0.0102
+P03-P1     4142 0.3977 0.0000        0.0026
+P28-P1      315 0.4121 0.0000       -0.0157
+P25-P1      942 0.4151 0.0000       -0.0533
+P01-P1     4817 0.4732 0.0000       -0.0120
+P19-P1     2378 0.5068 0.0000       -0.0147
+
+D. METACELL SIZE, AGAINST POOLING AT RANDOM
+------------------------------------------------------------------------------------------
+       k  n_pools    rho      p  rho_random_pools
+  1.0000    60937 0.4385 0.0000            0.4385
+  5.0000     5767 0.6588 0.0000            0.6235
+ 10.0000     2168 0.7207 0.0000            0.7090
+ 20.0000      883 0.7687 0.0000            0.7950
+ 50.0000      297 0.8212 0.0000            0.8304
+100.0000      156 0.8440 0.0000            0.8579
+200.0000       77 0.8214 0.0000            0.9179
+     NaN       20 0.9263 0.0000               NaN
+
+Past a small k the two curves coincide, so the rise of rho with pool
+size is the arithmetic of averaging rather than recovered signal. The
+metacell view is a presentation of the data; the co-expression claim
+rests on B, which is computed inside a depth stratum and is unaffected
+by pooling.

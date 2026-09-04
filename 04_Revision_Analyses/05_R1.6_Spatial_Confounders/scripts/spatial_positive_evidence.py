@@ -368,15 +368,23 @@ def gse246011():
     for f in files:
         a = anndata.read_h5ad(f)
         genes = {g: g for g in ("CEACAM5", "CEACAM6", "PTPRC", "EPCAM", "COL1A1")
-                 if g in a.var_names}
+                 if a.raw is not None and g in a.raw.var_names}
         if "PTPRC" not in genes or "EPCAM" not in genes:
             continue
-        X = a.X.toarray() if hasattr(a.X, "toarray") else np.asarray(a.X)
+        # .X in these sections is the z-scored matrix - 77% negative, values
+        # clipped at exactly 10 - not counts. Normalising it per spot divides by
+        # a row sum that is near zero or negative, and log1p of the result is
+        # NaN for 43% of entries. .raw carries the counts, which is what a
+        # per-spot normalisation is defined on.
+        if a.raw is None:
+            raise SystemExit(f"{f}: no .raw - refusing to normalise the scaled .X")
+        src = a.raw
+        X = src.X.toarray() if hasattr(src.X, "toarray") else np.asarray(src.X)
         # Normalise per spot so the markers are comparable across spots.
         tot = X.sum(axis=1, keepdims=True)
         tot[tot == 0] = 1
         Xn = np.log1p(X / tot * 1e4)
-        gi = {g: list(a.var_names).index(g) for g in genes}
+        gi = {g: list(src.var_names).index(g) for g in genes}
 
         df = pd.DataFrame({g: Xn[:, i] for g, i in gi.items()})
         df["sample"] = f.stem.replace("_spatial", "")
@@ -523,7 +531,9 @@ def _panel(med, t, g):
         ax.barh(y, s["beta_purity_adjusted"], color=cols, edgecolor="#333",
                 linewidth=0.4, height=0.7)
         ax.set_yticks(y)
-        ax.set_yticklabels(s["cell_type"], fontsize=4.5 * SCALE)
+        ax.set_yticklabels([c.replace("Monocytes Macrophages",
+                                      "Mono/Mac") for c in s["cell_type"]],
+                           fontsize=4.5 * SCALE)
         ax.axvline(0, color="#666", linewidth=0.8)
         ax.set_xlabel("Fraction change per log2 CEACAM\n(purity-adjusted)",
                       fontsize=5.5 * SCALE)
@@ -548,7 +558,7 @@ def _panel(med, t, g):
         ax.tick_params(axis="both", labelsize=5 * SCALE, width=0.8, length=3)
         for s_ in ("top", "right"):
             ax.spines[s_].set_visible(False)
-    fig.subplots_adjust(left=0.09, right=0.98, top=0.86, bottom=0.22, wspace=0.55)
+    fig.subplots_adjust(left=0.09, right=0.98, top=0.86, bottom=0.22, wspace=0.85)
     stem = d / "S11_A_spatial_positive_evidence"
     for ext in ("svg", "pdf", "png"):
         fig.savefig(f"{stem}.{ext}", dpi=DPI, facecolor="white")

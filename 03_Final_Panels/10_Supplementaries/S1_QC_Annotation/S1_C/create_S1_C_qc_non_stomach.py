@@ -3,6 +3,7 @@
 S1_C: QC Metrics — Non-Stomach Samples (38)
 Boxplots of QC metrics per sample, colored by tissue site.
 """
+import re
 import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[4] / "00_Config"))
@@ -45,7 +46,7 @@ print("Loading data...")
 adata = sc.read_h5ad(FULL_DATASET_H5AD, backed='r')
 
 mask = adata.obs['Sample site'] != 'Stomach'
-plot_df = adata.obs.loc[mask, ['sample', 'Sample site',
+plot_df = adata.obs.loc[mask, ['sample', 'Sample ID', 'Sample site',
                                 'n_genes_by_counts', 'total_counts', 'pct_counts_mt']].copy()
 
 print(f"Non-stomach cells: {len(plot_df)}")
@@ -53,12 +54,23 @@ print(f"Non-stomach cells: {len(plot_df)}")
 # =============================================================================
 # Sample ordering — group by tissue
 # =============================================================================
-sample_info = plot_df[['sample', 'Sample site']].drop_duplicates('sample')
+sample_info = plot_df[['sample', 'Sample ID', 'Sample site']].drop_duplicates('sample')
 
 tissue_order = ['Liver', 'Peripheral blood', 'Lymph node', 'Ovary', 'Metastatic lymph node']
 sample_info['sort_key'] = sample_info['Sample site'].map({t: i for i, t in enumerate(tissue_order)})
 sample_info = sample_info.sort_values(['sort_key', 'sample'])
 sample_order = sample_info['sample'].tolist()
+
+# The x axis carries the de-identified study sample IDs, not the internal
+# specimen codes in `sample`: those codes name the specimen in the lab, and the
+# paper names every sample P01-M1 style. `sample` still drives the ordering and
+# the per-sample subsetting below; only the printed text differs. Anything not
+# shaped like a study ID is an error rather than an identifier on the axis.
+x_labels = sample_info['Sample ID'].astype(str).tolist()
+_bad = [f'{s} -> {lab}' for s, lab in zip(sample_order, x_labels)
+        if not re.fullmatch(r'P\d+-\w+', lab)]
+if _bad:
+    raise SystemExit('not a study sample ID: ' + ', '.join(_bad))
 
 sample_to_tissue = dict(zip(sample_info['sample'], sample_info['Sample site']))
 
@@ -135,7 +147,7 @@ for ax, metric, title, ylabel in zip(axes, metrics, titles, ylabels):
     ax.set_ylabel(ylabel)
     ax.set_xlabel('Sample')
     ax.set_xticks(list(range(len(sample_order))))
-    ax.set_xticklabels(sample_order, rotation=90, ha='center')
+    ax.set_xticklabels(x_labels, rotation=90, ha='center')
     ax.yaxis.grid(True, linestyle='--', alpha=0.3, linewidth=LINEWIDTH * 0.3)
     ax.set_axisbelow(True)
     ax.spines['top'].set_visible(False)

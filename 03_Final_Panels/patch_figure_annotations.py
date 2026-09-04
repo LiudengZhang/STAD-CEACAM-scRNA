@@ -26,6 +26,13 @@ figure actually contains:
                     neighbours share - right edge for tick labels, midpoint for
                     the UMAP annotation and the rotated axis titles.
 
+Figure 1 is different in kind: panel A is a schematic, not a measurement, and
+the author replaced it with a redrawn vector version (_panel_1A/). That panel
+is taller relative to its width than the one it replaces, so the page grows
+and panels B and C move down unchanged - nothing inside them is rescaled or
+re-lettered. The pictograms are openly licensed and the CC BY 4.0 ones need a
+credit line, which edits.py adds to the Figure 1 legend.
+
 Every value below traces to twosided_sweep.csv, except the three panels the
 sweep did not cover, which are marked and traced to their panel scripts.
 
@@ -42,6 +49,58 @@ from paths import REVIEWER_MATERIALS  # noqa: E402
 
 SRC = REVIEWER_MATERIALS / "figures_submitted"
 OUT = Path(__file__).parent / "Main_Figures" / "_patched"
+PANEL_1A = Path(__file__).parent / "Main_Figures" / "_panel_1A" / "figure1A.pdf"
+
+# Two measured panels are redrawn rather than annotated, because the numbers
+# behind them were wrong rather than merely unlabelled.
+#
+#   Figure 2D  the submitted panel reports rho = 0.93 over "n = 49,696
+#              pre-treatment epithelial cells". Both come from the damaged .X
+#              of Epithelial.h5ad (00_Data_Audit/FINDINGS.md, sections 1 and 7):
+#              49,696 is exactly the number of rows of that matrix that are not
+#              NaN, out of 106,653, and 0.93 is the correlation among them. Read
+#              from .raw the same cells give rho = 0.44. The replacement shows
+#              kNN metacells of 10 cells, and prints the per-cell value beside
+#              the metacell value.
+#   Figure 5H  the submitted radar was built from the same corrupted
+#              differential-expression lineage. It disagrees with the clean
+#              recompute in the two places the text now makes claims about:
+#              B cells after treatment (+1.01 there, -0.99 in the recompute) and
+#              monocytes/macrophages before treatment (-0.98 there, +1.06).
+#
+# Each entry is (figure, panel letter, slot in mm, letter origin in mm, source
+# PDF). The slot is bounded by the white gutters measured in the submitted file,
+# so no neighbouring panel is touched; LETTER_INSET keeps the panel letter clear
+# of the artwork placed beside it.
+LETTER_INSET = 3.0      # mm
+
+PANEL_SWAPS = {
+    "Figure 2": [
+        ("D", (79.8, 5.5, 118.3, 30.5), (80.50, 9.49),
+         Path(__file__).parent / "Main_Figures" / "02_Figure_2" / "02_D"
+         / "ceacam_metacell_correlation.pdf"),
+    ],
+    "Figure 5": [
+        ("H", (118.8, 45.5, 171.1, 81.0), (119.54, 50.65),
+         Path(__file__).parent / "Main_Figures" / "05_Figure_5" / "05_F"
+         / "nfkb_radar_celltype_enrichment.pdf"),
+    ],
+}
+
+MM = 72 / 25.4          # millimetres to PDF points
+
+# Geometry of the submitted Figure 1, measured from the file itself: panel A
+# occupies x 13.3-237.7 mm and ends at y 56.9 mm; the first drawing of the
+# B/C row starts at y 69.6 mm, and their panel letters sit at y 67.6 mm.
+FIG1_A_BAND = 62.0      # mm; everything above this is panel A
+FIG1_A_LEFT = 13.3      # mm; left edge of panel A, shared with B
+FIG1_A_WIDTH = 224.4    # mm; width of panel A, shared with the B/C row
+FIG1_A_TOP = 13.0       # mm; top of the panel-A block, including its letter
+FIG1_A_GAP = 10.7       # mm; gap between panel A and the B/C letters
+# The submitted page runs to 177.8 mm but its ink stops at 123.4 mm, so the
+# copied block is trimmed rather than carrying 54 mm of trailing white into a
+# page that is already taller.
+FIG1_KEEP_BOTTOM = 126.0  # mm
 
 FONT = "helv"          # metrically close to the ArialMT the figures use
 WHITE = (1, 1, 1)
@@ -184,6 +243,84 @@ def patch_labels(page, name):
     return [w for *_, w in done]
 
 
+def replace_panels(page, name):
+    """
+    Redraw whole panels whose numbers changed, in place, inside their own slot.
+
+    The slot is cleared and the panel letter is redrawn at the origin the
+    submitted file used, so the lettering of the figure is untouched. The
+    replacement keeps its own aspect ratio and is centred in what is left of
+    the slot.
+    """
+    done = []
+    for letter, (x0, y0, x1, y1), (lx, ly), src in PANEL_SWAPS.get(name, []):
+        if not src.exists():
+            sys.exit(f"{src} not found - run its panel script first")
+        # Redaction, not a white rectangle. Painting over the slot leaves the
+        # superseded panel in the content stream: the first attempt at this left
+        # "rho = 0.93 (***)" extractable, and a PDF text search still found it
+        # under the replacement. apply_redactions removes the objects. The slot
+        # is bounded by the white gutters measured in the submitted file, so
+        # nothing outside it intersects.
+        slot = fitz.Rect(x0 * MM, y0 * MM, x1 * MM, y1 * MM)
+        page.add_redact_annot(slot)
+        page.apply_redactions(images=fitz.PDF_REDACT_IMAGE_REMOVE,
+                              graphics=fitz.PDF_REDACT_LINE_ART_REMOVE_IF_TOUCHED)
+        page.draw_rect(slot, color=WHITE, fill=WHITE, width=0)
+        page.insert_text((lx * MM, ly * MM), letter, fontname="hebo",
+                         fontsize=10, color=(0, 0, 0))
+
+        art = fitz.open(src)
+        ar = art[0].rect
+        ax0, ay0 = lx + LETTER_INSET, y0 + 0.5
+        aw, ah = x1 - ax0 - 0.3, y1 - ay0 - 0.3
+        scale = min(aw / (ar.width / MM), ah / (ar.height / MM))
+        w, h = ar.width / MM * scale, ar.height / MM * scale
+        ox, oy = ax0 + (aw - w) / 2, ay0 + (ah - h) / 2
+        page.show_pdf_page(
+            fitz.Rect(ox * MM, oy * MM, (ox + w) * MM, (oy + h) * MM), art, 0)
+        art.close()
+        done.append(f"{letter}, panel redrawn from {src.parent.name}/{src.name}")
+    return done
+
+
+def replace_figure_1a(doc):
+    """
+    Swap panel A of Figure 1 for the redrawn vector panel and let the page grow.
+
+    Panels B and C are copied across as a single clipped block, so they keep
+    their own scale, position relative to each other and lettering; only their
+    vertical offset changes. Returns the new document.
+    """
+    if not PANEL_1A.exists():
+        sys.exit(f"{PANEL_1A} not found")
+    src = doc[0]
+    a = fitz.open(PANEL_1A)
+    ar = a[0].rect
+    scale = (FIG1_A_WIDTH * MM) / ar.width
+    a_h = ar.height * scale / MM                      # mm
+
+    keep_top = FIG1_A_BAND * MM                       # source y where B/C starts
+    keep_bot = min(FIG1_KEEP_BOTTOM * MM, src.rect.height)
+    keep_h = (keep_bot - keep_top) / MM               # mm
+    # The gap the submitted figure leaves between panel A and the B/C letters is
+    # preserved, and the clip starts 5.6 mm above those letters.
+    dest_top = FIG1_A_TOP + a_h + FIG1_A_GAP - (67.6 - FIG1_A_BAND)
+
+    out = fitz.open()
+    page = out.new_page(width=src.rect.width,
+                        height=(dest_top + keep_h) * MM)
+    page.show_pdf_page(
+        fitz.Rect(FIG1_A_LEFT * MM, FIG1_A_TOP * MM,
+                  (FIG1_A_LEFT + FIG1_A_WIDTH) * MM, (FIG1_A_TOP + a_h) * MM),
+        a, 0)
+    page.show_pdf_page(
+        fitz.Rect(0, dest_top * MM, src.rect.width, (dest_top + keep_h) * MM),
+        doc, 0, clip=fitz.Rect(0, keep_top, src.rect.width, keep_bot))
+    a.close()
+    return out
+
+
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
     total = 0
@@ -199,6 +336,11 @@ def main():
             changed += patch_drawings(page, name, SIZES[name])
         if name in LABEL_PATCHES:
             changed += patch_labels(page, name)
+        if name in PANEL_SWAPS:
+            changed += replace_panels(page, name)
+        if name == "Figure 1":
+            doc = replace_figure_1a(doc)
+            changed.append("A, schematic replaced with the redrawn vector panel")
         dst = OUT / f"Figure_{i}.pdf"
         if dst.exists():
             dst.chmod(0o644)

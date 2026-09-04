@@ -13,12 +13,13 @@ Produces the resource the reviewer asks for, at two levels:
      with two-sided tests at both timepoints and Benjamini-Hochberg correction
      within each lineage.
   2. Programme. The Hallmark gene sets most strongly enriched in non-responders
-     in each adaptive lineage, pre and post treatment, from the existing GSEA
-     tables. Sign convention as established in WP8: the stored NES is
-     R-relative and is negated so positive means enriched in non-responders.
+     in each adaptive lineage, pre and post treatment, from the module 12
+     recompute. Module 12 ranks non-responders against responders, so a
+     positive NES already means enriched in non-responders and no sign flip is
+     applied here.
 
 Inputs : Round_5/01_Raw_Inputs/01_H5AD/{TCD4,TCD8,NK_cells,B_cells}.h5ad
-         Round_5/02_Preparation_for_Panels/GSEA/{pre,post}/*_gsea_hallmark.csv
+         12_R1.8_DEG_Recompute/outputs/gsea/*_{pre,post}_ttest_hallmark.csv
 Outputs: adaptive_state_fractions.csv, adaptive_state_tests.csv,
          adaptive_hallmark_top.csv, adaptive_immune_report.txt,
          panels S10_D and S10_E
@@ -37,7 +38,11 @@ from statsmodels.stats.multitest import multipletests
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
 from paths import (TCD4_H5AD, TCD8_H5AD, NK_CELLS_H5AD, B_CELLS_H5AD,
-                   PREPARATION, REVISED_PANELS)  # noqa: E402
+                   REVISED_PANELS)  # noqa: E402
+from shared.sample_ids import sample_id_map, to_study_ids  # noqa: E402
+
+RECOMPUTE_GSEA = (Path(__file__).resolve().parents[2]
+                  / "12_R1.8_DEG_Recompute" / "outputs" / "gsea")
 
 warnings.filterwarnings("ignore")
 sc.settings.verbosity = 0
@@ -79,7 +84,12 @@ def main():
 
     for lineage, (path, _) in LINEAGES.items():
         ad = sc.read_h5ad(path)
+        # Each lineage object is relabelled from its own crosswalk. They are not
+        # pooled into one: NK_cells.h5ad spells eight lymph-node specimens
+        # differently from the other objects, and while none of those survive
+        # the stomach filter below, a merged crosswalk would refuse to build.
         ad = ad[ad.obs["Sample site"] == "Stomach"].copy()
+        ids = sample_id_map(ad.obs)
         ad.obs["group4"] = ad.obs.apply(four_group_label, axis=1)
         ad = ad[ad.obs["group4"].isin(GROUPS)].copy()
         obs = ad.obs[["sample", "group4", "minor_cell_state"]].copy()
@@ -92,7 +102,7 @@ def main():
         tab = (obs.groupby(["sample", "group4"], observed=True)["minor_cell_state"]
                .value_counts(normalize=True).rename("fraction").reset_index())
         tab["lineage"] = lineage
-        frac_rows.append(tab)
+        frac_rows.append((tab, ids))
 
         states = sorted(obs["minor_cell_state"].unique())
         for state in states:
@@ -117,7 +127,12 @@ def main():
                     rank_biserial_r=float(2.0 * u / (len(filled[a]) * len(filled[b])) - 1),
                     p_two_tailed=float(p)))
 
-    fractions = pd.concat(frac_rows, ignore_index=True)
+    # Specimens are named the way Supplementary Table 1 names them. The relabel
+    # is in place, after every grouping and test, so no row moves and no value
+    # changes.
+    fractions = pd.concat(
+        [t.assign(sample=to_study_ids(t["sample"], m)) for t, m in frac_rows],
+        ignore_index=True)
     fractions.to_csv(OUT / "adaptive_state_fractions.csv", index=False)
 
     tests = pd.DataFrame(test_rows)
@@ -132,11 +147,19 @@ def main():
     hall = []
     for lineage, (_, gsea_name) in LINEAGES.items():
         for phase in ("pre", "post"):
-            f = PREPARATION / "GSEA" / phase / f"{gsea_name}_gsea_hallmark.csv"
+            # The prepared GSEA/{pre,post} tables are not used: they descend
+            # from MAST runs on a matrix that was never log1p CP10K
+            # (00_Data_Audit/FINDINGS.md section 7). Repointed to module 12 on
+            # the author's ruling of 2026-09-03; the Welch t-test branch is the
+            # author's choice, consistent with the standing ruling that MAST is
+            # dropped and with pretreatment_inflammatory.py, which draws the
+            # other panels of this figure. Module 12 ranks non-responders
+            # against responders, so no sign flip.
+            f = RECOMPUTE_GSEA / f"{gsea_name}_{phase}_ttest_hallmark.csv"
             if not f.exists():
                 continue
             d = pd.read_csv(f)
-            d["NES_NRvsR"] = -d["NES"]
+            d["NES_NRvsR"] = d["NES"]
             d = d.sort_values("NES_NRvsR", ascending=False)
             for _, r in d.head(5).iterrows():
                 hall.append(dict(lineage=lineage, phase=phase, direction="NR-enriched",
@@ -241,7 +264,7 @@ def _panel_hallmark(hallmark):
     post = hallmark[hallmark["phase"] == "post"]
     lineages = list(LINEAGES)
     fig, axes = plt.subplots(1, len(lineages),
-                             figsize=(12.0 * SCALE * CM, 4.4 * SCALE * CM))
+                             figsize=(15.0 * SCALE * CM, 4.4 * SCALE * CM))
     for ax, lineage in zip(axes, lineages):
         sub = post[post["lineage"] == lineage].drop_duplicates("term")
         sub = pd.concat([sub[sub["direction"] == "NR-enriched"].head(4),
@@ -253,8 +276,11 @@ def _panel_hallmark(hallmark):
                 height=0.7)
         ax.axvline(0, color="#666666", linewidth=0.8)
         ax.set_yticks(y)
-        ax.set_yticklabels([t if len(t) < 26 else t[:23] + "..." for t in sub["term"]],
-                           fontsize=4.5 * SCALE)
+        # Hallmark names run to 34 characters; anything shorter than the
+        # longest one here would cut "Interferon Gamma Response", which the
+        # response letter quotes by name.
+        ax.set_yticklabels([t if len(t) < 34 else t[:31] + "..."
+                            for t in sub["term"]], fontsize=4.5 * SCALE)
         ax.set_title(lineage, fontsize=6.5 * SCALE)
         ax.tick_params(axis="x", labelsize=5 * SCALE, width=0.8, length=3)
         ax.tick_params(axis="y", length=0)
@@ -262,7 +288,8 @@ def _panel_hallmark(hallmark):
             ax.spines[s].set_visible(False)
     fig.supxlabel("NES, post-treatment (positive = enriched in non-responders)",
                   fontsize=6 * SCALE, y=0.03)
-    fig.subplots_adjust(left=0.12, right=0.99, top=0.90, bottom=0.18, wspace=1.05)
+    fig.subplots_adjust(left=0.155, right=0.995, top=0.90, bottom=0.18,
+                        wspace=1.55)
     stem = d / "S10_E_adaptive_hallmark"
     for ext in ("svg", "pdf", "png"):
         fig.savefig(f"{stem}.{ext}", dpi=DPI, facecolor="white")

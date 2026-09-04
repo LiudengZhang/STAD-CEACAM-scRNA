@@ -1,7 +1,33 @@
 #!/usr/bin/env python3
 """
-Panel A: MoMac GSEA Horizontal Barplot — Top 9 Hallmark Pathways by |NES|
-4× scaling method for Nature Cancer.
+Panel A: MoMac GSEA horizontal barplot - top 9 Hallmark gene sets by |NES|.
+4x scaling method.
+
+Reads the MAST prerank GSEA table, GSEA/MoMac_mast_prerank_gsea.csv.
+
+That input is the whole history of this panel. The twelve per-cell-type
+*_mast_prerank_gsea.csv were moved under GSEA/_archived/ after the figures were
+made, and this script was repointed at GSEA/post/MoMac_gsea_hallmark.csv - a
+different run, built on the doubly normalised .X (00_Data_Audit/FINDINGS.md
+sections 1 and 7). That repoint, not the figure, is why Panel A stopped
+reproducing, and twice led an agent to conclude the published panel was wrong.
+Both conclusions were retracted. On 2026-09-01 the original table was restored
+here from _archived/ (byte-identical, md5 0e005bfe87764018f8edbb8e994bc637) and
+the script pointed back at it.
+
+Against the archived table the nine bars reproduce the printed panel to within
+0.0001 NES, measured off the vector rectangles in
+00_GROUND_TRUTH/figures/Figure 5.pdf against its -2/0/2 tick centres:
+
+    TNF-alpha Signaling via NF-kB  +2.140    Coagulation      -1.488
+    Inflammatory Response          +1.860    Spermatogenesis  -1.803
+    Interferon Gamma Response      +1.750    Mitotic Spindle  -1.875
+    IL-6/JAK/STAT3 Signaling       +1.748    G2-M Checkpoint  -2.223
+                                             E2F Targets      -2.450
+
+Do not repoint this at GSEA/post/ or at 05_GSEA_Summary/gsea_data/gsea_momac.csv.
+Neither reproduces the paper, and gsea_momac.csv swaps out four of the nine gene
+sets that Figure 5B and the Results sentence both rest on.
 """
 
 import pandas as pd
@@ -10,11 +36,11 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from pathlib import Path
-import pickle
 
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
 from paths import *
+from shared.figure_config import use_panel_style
 
 BASE_DIR = Path(__file__).parent
 
@@ -29,18 +55,11 @@ PANEL_HEIGHT_CM = 4.2 * SCALE
 COLOR_POS = '#B2182B'   # NR-upregulated (positive NES) — red
 COLOR_NEG = '#2166AC'   # R-upregulated (negative NES) — blue
 
-GSEA_CSV = GSEA_POST_DIR / "MoMac_gsea_hallmark.csv"
+GSEA_CSV = GSEA_DIR / "MoMac_mast_prerank_gsea.csv"
 
 
 def main():
-    plt.rcParams.update({
-        'font.family': 'sans-serif',
-        'font.sans-serif': ['Arial', 'Liberation Sans', 'Helvetica', 'DejaVu Sans'],
-        'font.size': 7 * SCALE,
-        'svg.fonttype': 'none',
-        'pdf.fonttype': 42,
-        'ps.fonttype': 42,
-    })
+    use_panel_style(font_pt=7)
 
     print("Loading MAST Prerank GSEA results...")
     results = pd.read_csv(GSEA_CSV)
@@ -63,6 +82,9 @@ def main():
 
     ax.set_yticks(y_pos)
     ax.set_yticklabels(top9['clean_name'], fontsize=6 * SCALE)
+    # The printed panel names the contrast here - 'NES (Post-NR/Post-R)'. No script
+    # on disk emits that string; it was added when the figure was assembled, and
+    # writing it here instead would be inventing provenance for it.
     ax.set_xlabel('NES', fontsize=6 * SCALE)
     ax.tick_params(axis='x', labelsize=6 * SCALE, width=1.0, length=4)
     ax.tick_params(axis='y', width=1.0, length=4)

@@ -2,8 +2,29 @@ IS THE INFLAMMATORY PROGRAMME ALREADY PRESENT BEFORE TREATMENT?
 Reviewer 2 point R2.1
 ============================================================================================
 
+SOURCES
+--------------------------------------------------------------------------------------------
+   Sections 1 and 2 are this module's own live run, read from its own
+   outputs/pretx_state_abundance.csv and outputs/pretx_signature_scores.csv.
+
+   Section 3, and the NF-kB sentence in the CONCLUSION that repeats it, are
+   read from the ADOPTED sound-input table
+
+       13_R1.8_Neutrophil_Rebuilt_Recompute/outputs/nfkb_per_celltype_sound13.csv
+
+   under the author's ruling of 2026-09-03, and NOT from this module's own
+   outputs/nfkb_pre_vs_post.csv. That file is the live run on the doubly-
+   normalised matrix of 00_Data_Audit/FINDINGS.md sections 1 and 7. It is
+   unchanged and still sits beside this report; it is simply not the table
+   the counts below are taken from.
+
+   The adopted table is the one Supplementary Figure S10 panel C is drawn
+   from, so this report and that panel report the same numbers.
+
 1. ABUNDANCE OF THE IL-1b+ INFLAMMATORY STATE (% of monocytes/macrophages)
 --------------------------------------------------------------------------------------------
+   Source: this module's own live run, outputs/pretx_state_abundance.csv
+
    Pre-R     n=4  mean = 16.22%  median = 17.08%
    Pre-NR    n=4  mean = 21.16%  median = 18.78%
    Post-R    n=5  mean =  8.88%  median =  8.77%
@@ -16,6 +37,8 @@ Reviewer 2 point R2.1
 
 2. IL-1b+ STATE SIGNATURE SCORE ACROSS ALL MONOCYTES/MACROPHAGES
 --------------------------------------------------------------------------------------------
+   Source: this module's own live run, outputs/pretx_signature_scores.csv
+
    Signature: top 50 markers of C3_Mac_Inflam_IL1B within this object
    Pre-R     n=4  mean score = +0.0346
    Pre-NR    n=4  mean score = +0.2033
@@ -27,28 +50,39 @@ Reviewer 2 point R2.1
 
 3. TNFa/NF-kB HALLMARK ENRICHMENT, PRE VERSUS POST (positive = enriched in non-responders)
 --------------------------------------------------------------------------------------------
-   cell type                pre NES  post NES    change
-   MoMac                     -1.120     1.774    +2.895
-   NK_cells                   1.492     1.581    +0.089
-   B_cells                    1.382     1.363    -0.019
-   Mast_cells                 1.312     1.305    -0.007
-   Endothelial_cells          1.162     1.287    +0.125
-   Pericyte                   1.650     1.227    -0.423
-   Neutrophils               -0.689     1.188    +1.878
-   Epithelial                 0.812     1.033    +0.221
-   DC_cells                   2.018     0.859    -1.159
-   Plasma_cells               0.472     0.735    +0.264
-   Fibroblast                 0.806    -0.768    -1.574
-   TCD8_cells                -1.944    -1.000    +0.944
-   TCD4_cells                -1.647    -1.497    +0.150
+   Source: the ADOPTED table 13_R1.8_Neutrophil_Rebuilt_Recompute/
+           outputs/nfkb_per_celltype_sound13.csv (method = ttest),
+           NOT this module's own outputs/nfkb_pre_vs_post.csv
 
-   Monocytes/macrophages move from NES -1.120 before treatment to +1.774 after.
+   cell type                pre NES    pre q  post NES   post q    change
+   MoMac                     -1.001    0.892     2.228    0.000    +3.229
+   Epithelial                -0.919    0.792     1.900    0.000    +2.819
+   DC_cells                  -0.759    1.000     1.691    0.052    +2.450
+   Fibroblast                -1.250    0.932     1.602    0.000    +2.852
+   Plasma_cells              -1.201    1.000     1.386    0.202    +2.587
+   Mast_cells                -1.514    0.012     1.375    0.503    +2.889
+   Neutrophils               -1.252    1.000     1.317    0.246    +2.569
+   Endothelial_cells          2.007    0.000     1.246    1.000    -0.761
+   TCD4_cells                 1.749    0.071     1.169    0.802    -0.580
+   NK_cells                   1.697    0.047     1.159    0.925    -0.538
+   TCD8_cells                 1.693    0.016     1.126    1.000    -0.567
+   Pericyte                  -1.337    0.073     0.910    0.808    +2.247
+   B_cells                    1.159    0.692    -1.225    1.000    -2.384
+
+   Positive enrichment in 5/13 cell types before treatment (3 at q < 0.05)
+   and in 12/13 after (3 at q < 0.05).
+   The strongest after treatment is MoMac (NES +2.228, q = 0.000); before
+   treatment it is NES -1.001 (q = 0.892).
 
 CONCLUSION
 --------------------------------------------------------------------------------------------
-   The IL-1b+ state does not separate responders from non-responders
-   before treatment (P = 0.886); the separation appears after
-   treatment (P = 0.329). Combined with the myeloid NF-kB
-   enrichment reversing sign between the two timepoints, the programme
-   is best described as emerging on treatment rather than as a
-   pre-existing feature of the non-responder microenvironment.
+   The IL-1b+ state does not distinguish responders from non-responders
+   before treatment (P = 0.886); after treatment it separates in
+   the direction of non-response without reaching significance at these
+   group sizes (P = 0.329). NF-kB enrichment follows the same
+   timing: positive in 5 of 13 cell types before treatment and
+   3 at q < 0.05, against 12 of 13 and 3 after, with
+   monocytes/macrophages the strongest
+   population after treatment. The programme is therefore best described
+   as emerging on treatment rather than as a pre-existing feature of the
+   non-responder microenvironment.
