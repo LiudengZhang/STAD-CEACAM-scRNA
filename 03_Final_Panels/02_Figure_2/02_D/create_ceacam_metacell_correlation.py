@@ -11,7 +11,7 @@ and reports the per-cell value beside the metacell value so that neither is
 mistaken for the other.
 
 The pooling and the data path are copied from
-02_New_Analyses/04_R1.5_CEACAM5_vs_CEACAM6/scripts/dropout_and_coexpression.py,
+04_Revision_Analyses/04_R1.5_CEACAM5_vs_CEACAM6/scripts/dropout_and_coexpression.py,
 which also carries the control this panel does not draw: pooling at random
 gives rho = 0.71 at k = 10, so the rise from 0.44 is largely the arithmetic of
 averaging. The co-expression claim rests on the within-stratum odds ratio in

@@ -7,7 +7,7 @@ Which patients were sampled does not: dropping any single patient leaves both
 the direction and the magnitude of the difference intact. The two questions are
 different and this panel separates them.
 
-Input : 02_New_Analyses/10_R1.3_CrossCohort_Convergence/outputs/loo_stability.csv
+Input : 04_Revision_Analyses/10_R1.3_CrossCohort_Convergence/outputs/loo_stability.csv
 Output: S8_F_leave_one_out.{svg,pdf,png}
 """
 

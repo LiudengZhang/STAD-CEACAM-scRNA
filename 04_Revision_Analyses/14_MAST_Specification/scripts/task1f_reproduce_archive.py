@@ -31,7 +31,7 @@ MOD = Path(__file__).resolve().parents[1]
 OUT = MOD / "outputs"
 ARCH = (MOD.parents[1] / "07_Archive"
         / "2026-08-31_deg_recompute_on_sound_per_cell_type_inputs"
-        / "02_New_Analyses" / "12_R1.8_DEG_Recompute" / "outputs" / "deg")
+        / "04_Revision_Analyses" / "12_R1.8_DEG_Recompute" / "outputs" / "deg")
 CELL = sys.argv[1] if len(sys.argv) > 1 else "Endothelial_cells"
 PHASE = sys.argv[2] if len(sys.argv) > 2 else "pre"
 cfg = PHASES[PHASE]

@@ -20,7 +20,7 @@ comparisons on a single standardised scale (Hedges' g with a percentile
 bootstrap 95% CI), so the reader can see the direction and magnitude of every
 effect independently of the choice of tail, alongside the exact two-sided P.
 
-Input : 02_New_Analyses/02_R1.3_TwoSided_Stats_Sweep/outputs/twosided_sweep.csv
+Input : 04_Revision_Analyses/02_R1.3_TwoSided_Stats_Sweep/outputs/twosided_sweep.csv
 Output: S7_B_twosided_forest.{svg,pdf,png}
 """
 

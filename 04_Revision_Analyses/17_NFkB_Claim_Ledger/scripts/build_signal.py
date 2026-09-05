@@ -14,7 +14,7 @@ from gsea_common import OUT, PUB_SEED, SEEDS
 
 runs = pd.read_csv(OUT / "signal_runs.csv")
 
-HEADER = f"""# signal.csv - the gate. 02_New_Analyses/17_NFkB_Claim_Ledger/
+HEADER = f"""# signal.csv - the gate. 04_Revision_Analyses/17_NFkB_Claim_Ledger/
 #
 # One row per contrast (13 cell types x pre/post) per differential-expression
 # set. Everything except the permutation seed is held at the published run's

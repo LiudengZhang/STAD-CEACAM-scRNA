@@ -2,7 +2,7 @@
 """
 Restyle S8B and S8C - CEACAM5 versus CEACAM6 (Reviewer 1, point R1.5).
 
-Analysis: 02_New_Analyses/04_R1.5_CEACAM5_vs_CEACAM6/scripts/ceacam5_vs_ceacam6.py
+Analysis: 04_Revision_Analyses/04_R1.5_CEACAM5_vs_CEACAM6/scripts/ceacam5_vs_ceacam6.py
 
 NOTHING IS RECOMPUTED HERE. The driver imports that module for its constants
 (STATES, COLOR_R/COLOR_NR, SCALE) and for `mw`, and reads the three tables its

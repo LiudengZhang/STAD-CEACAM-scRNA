@@ -15,7 +15,7 @@ entitled to ask what happens if either call is wrong. This script answers that
 directly by repeating every pre-treatment comparison with each specimen
 reclassified or excluded.
 
-Outputs (02_New_Analyses/01_R1.3_Cohort_Pairing/outputs/)
+Outputs (04_Revision_Analyses/01_R1.3_Cohort_Pairing/outputs/)
   response_label_sensitivity.csv       one row per comparison per scenario
   response_label_sensitivity_report.txt
 """

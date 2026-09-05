@@ -10,9 +10,9 @@ import pandas as pd
 HERE = Path(__file__).resolve().parent
 OUT = HERE.parent / "outputs"
 ROOT = HERE.parents[2]
-PUB = {"sound13": ROOT / "02_New_Analyses" / "13_R1.8_Neutrophil_Rebuilt_Recompute"
+PUB = {"sound13": ROOT / "04_Revision_Analyses" / "13_R1.8_Neutrophil_Rebuilt_Recompute"
        / "outputs" / "nfkb_per_celltype_sound13.csv",
-       "live": ROOT / "02_New_Analyses" / "13_R1.8_Neutrophil_Rebuilt_Recompute"
+       "live": ROOT / "04_Revision_Analyses" / "13_R1.8_Neutrophil_Rebuilt_Recompute"
        / "outputs" / "nfkb_per_celltype_live.csv"}
 METRIC_ORDER = ["published", "signed_p", "logfc", "tstat"]
 

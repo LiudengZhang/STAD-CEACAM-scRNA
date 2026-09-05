@@ -2,7 +2,7 @@
 """
 Restyle S11A - affirmative spatial evidence (Reviewer 1, point R1.6).
 
-Analysis: 02_New_Analyses/05_R1.6_Spatial_Confounders/scripts/spatial_positive_evidence.py
+Analysis: 04_Revision_Analyses/05_R1.6_Spatial_Confounders/scripts/spatial_positive_evidence.py
 
 NOTHING IS RECOMPUTED HERE. `main()` (line 466) calls three functions and hands
 their return values straight to `_panel(med, t, g)` (line 504). Each of the

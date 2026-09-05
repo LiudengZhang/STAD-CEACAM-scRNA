@@ -2,7 +2,7 @@
 """
 Restyle S8A - metaprogram direction and pre/post contrasts (Reviewer 1, R1.4).
 
-Analysis: 02_New_Analyses/03_R1.4_MP_Direction_PrePost/scripts/mp_direction_and_prepost.py
+Analysis: 04_Revision_Analyses/03_R1.4_MP_Direction_PrePost/scripts/mp_direction_and_prepost.py
 
 This is the one analysis in the set whose panel is drawn inline in `main()`
 rather than in a `_panel*` function, so there was no plotting entry point to

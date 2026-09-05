@@ -2,7 +2,7 @@
 """
 Restyle S9C and S9D - monocyte versus macrophage lineage (Reviewer 1, R1.7).
 
-Analysis: 02_New_Analyses/06_R1.7_MoMac_Lineage_Markers/scripts/momac_lineage.py
+Analysis: 04_Revision_Analyses/06_R1.7_MoMac_Lineage_Markers/scripts/momac_lineage.py
 
 NOTHING IS RECOMPUTED HERE.
 

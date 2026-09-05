@@ -73,7 +73,7 @@ def main():
 
     head = f"""# NF-κB / TNFα-signalling claims, sentence by sentence
 
-**Module** `02_New_Analyses/17_NFkB_Claim_Ledger/`
+**Module** `04_Revision_Analyses/17_NFkB_Claim_Ledger/`
 **Date** 1 September 2026 · **Status** report only. Nothing is adopted, nothing is
 applied. No manuscript file, figure, panel script, `PROVENANCE.csv`, `verify_numbers.py`
 or sibling module's output was written; the only files created are this document, its
@@ -125,7 +125,7 @@ and this project has run them together before.
 **Axis 1 — does the number move when the input is sound?** Eight input h5ads carry a
 double normalisation from 2025-07-30 that left whole cell rows NaN
 (`00_Data_Audit/FINDINGS.md` §1 and §7). The recompute on sound per-cell-type inputs is
-`02_New_Analyses/13_R1.8_Neutrophil_Rebuilt_Recompute/`. Two variants exist:
+`04_Revision_Analyses/13_R1.8_Neutrophil_Rebuilt_Recompute/`. Two variants exist:
 
 - **`sound12`** — twelve cell types; neutrophils have no sound source anywhere. This is
   the variant behind the recorded headline **"14 of `verify_numbers.py`'s 152 checks
@@ -174,7 +174,7 @@ That is corrected in C07 and C41 below, and both are recommended for dropping.
 
 ### 2.2 MAST specification B is finished — and it is *not* for the manuscript
 
-`02_New_Analyses/14_MAST_Specification/FINDINGS.md` (647 lines) completes the
+`04_Revision_Analyses/14_MAST_Specification/FINDINGS.md` (647 lines) completes the
 specification `~ condition + cngeneson + (1 | sample_id)`, which converged for 26 of 26
 contrasts and 102,118 of 102,130 gene fits. Under it:
 
@@ -352,7 +352,7 @@ Unchanged from `FINDINGS.md` §10, and it bounds every row above.
 
 Read-only throughout: `04_Manuscript_R1/` (both .docx files, `edits.py`,
 `verify_numbers.py`, the response letter), `03_Final_Panels/` (`PROVENANCE.csv`,
-`SUPPLEMENTARY_AUDIT.md`), `02_New_Analyses/07_`, `08_`, `09_`, `12_`, `13_`, `14_`,
+`SUPPLEMENTARY_AUDIT.md`), `04_Revision_Analyses/07_`, `08_`, `09_`, `12_`, `13_`, `14_`,
 `15_`, `16_`, `00_Data_Audit/`, `00_GROUND_TRUTH/` and `Round_5/`. No GSEA, DEG or panel
 pipeline was run. No patient name, medical record number or specimen identifier appears
 in any file in this directory.

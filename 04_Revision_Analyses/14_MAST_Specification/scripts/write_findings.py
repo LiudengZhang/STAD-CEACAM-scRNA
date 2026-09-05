@@ -271,7 +271,7 @@ effect; it produces confident findings of the opposite sign.
 Every contrast where a corrected MAST and the t-test still differ in sign is
 one where neither finds anything (section 2.5).
 
-Everything below was produced in `02_New_Analyses/14_MAST_Specification/`.
+Everything below was produced in `04_Revision_Analyses/14_MAST_Specification/`.
 Nothing outside it was written or modified.
 
 ---

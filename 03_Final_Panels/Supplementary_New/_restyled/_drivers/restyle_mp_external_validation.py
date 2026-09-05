@@ -2,7 +2,7 @@
 """
 Restyle S8D - metaprogram external validation in PRJEB25780 (Reviewer 1, R1.4).
 
-Analysis: 02_New_Analyses/03_R1.4_MP_Direction_PrePost/scripts/mp_external_validation.py
+Analysis: 04_Revision_Analyses/03_R1.4_MP_Direction_PrePost/scripts/mp_external_validation.py
 
 This panel was blocked at the end of stage 2 and is now unblocked. `_panel`
 draws 45 per-sample points per programme out of `scores`, which `main()` built

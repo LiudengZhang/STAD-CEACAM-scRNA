@@ -12,7 +12,7 @@ Version A drew 26 x 12 cm at SCALE 4 and the assembler fitted it into a
 65 x 26 mm box at 0.2167, so its smallest type - the patient labels at
 4.5 * SCALE - printed at 3.90 pt.
 
-Input : 02_New_Analyses/10_R1.3_CrossCohort_Convergence/outputs/
+Input : 04_Revision_Analyses/10_R1.3_CrossCohort_Convergence/outputs/
 Output: S8_G_rna_protein_concordance.{svg,pdf,png}
 """
 

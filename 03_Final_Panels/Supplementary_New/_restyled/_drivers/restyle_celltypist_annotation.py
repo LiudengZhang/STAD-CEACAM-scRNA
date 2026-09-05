@@ -2,7 +2,7 @@
 """
 Restyle S11D - independent CellTypist annotation (Reviewer 1 point R1.7).
 
-Analysis: 02_New_Analyses/06_R1.7_MoMac_Lineage_Markers/scripts/celltypist_annotation.py
+Analysis: 04_Revision_Analyses/06_R1.7_MoMac_Lineage_Markers/scripts/celltypist_annotation.py
 
 NOTHING IS RECOMPUTED HERE. `celltypist` is never imported, no model is
 downloaded, and MoMac.h5ad is never opened. The driver reads the per-cell label

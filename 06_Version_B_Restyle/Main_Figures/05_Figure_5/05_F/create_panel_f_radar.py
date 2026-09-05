@@ -65,7 +65,7 @@ from paths import *  # noqa: E402,F403
 import panel_style_cns as style  # noqa: E402
 
 BASE_DIR = Path(__file__).parent
-SRC = (Path(__file__).resolve().parents[4] / "02_New_Analyses"
+SRC = (Path(__file__).resolve().parents[4] / "04_Revision_Analyses"
        / "07_R1.8_NFkB_Specificity" / "outputs" / "nfkb_per_celltype.csv")
 METHOD = "ttest"
 

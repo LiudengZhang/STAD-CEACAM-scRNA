@@ -7,7 +7,7 @@ set -e
 HERE="$(cd "$(dirname "$0")" && pwd)"
 MOD="$(dirname "$HERE")"
 ROOT="$(cd "$MOD/../.." && pwd)"
-SOUND12="$ROOT/07_Archive/2026-08-31_deg_recompute_on_sound_per_cell_type_inputs/02_New_Analyses/12_R1.8_DEG_Recompute/outputs/gsea"
+SOUND12="$ROOT/07_Archive/2026-08-31_deg_recompute_on_sound_per_cell_type_inputs/04_Revision_Analyses/12_R1.8_DEG_Recompute/outputs/gsea"
 OUT="$MOD/outputs/gsea_13types"
 
 rm -rf "$OUT"; mkdir -p "$OUT"

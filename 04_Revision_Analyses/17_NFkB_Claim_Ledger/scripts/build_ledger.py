@@ -23,15 +23,15 @@ import numpy as np
 import pandas as pd
 from gsea_common import ROOT, OUT
 
-NF = ROOT / "02_New_Analyses/07_R1.8_NFkB_Specificity/outputs/nfkb_per_celltype.csv"
-PP = ROOT / "02_New_Analyses/08_R2.1_PreTx_Inflammatory/outputs/nfkb_pre_vs_post.csv"
+NF = ROOT / "04_Revision_Analyses/07_R1.8_NFkB_Specificity/outputs/nfkb_per_celltype.csv"
+PP = ROOT / "04_Revision_Analyses/08_R2.1_PreTx_Inflammatory/outputs/nfkb_pre_vs_post.csv"
 MOMAC_A = (ROOT.parent / "Round_5" / "02_Preparation_for_Panels" / "GSEA"
            / "MoMac_mast_prerank_gsea.csv")
 G5 = (ROOT / "03_Final_Panels/05_Figure_5/05_GSEA_Summary/"
       "gsea_data/gsea_combined_5types.csv")
 GM = (ROOT / "03_Final_Panels/05_Figure_5/05_GSEA_Summary/"
       "gsea_data/gsea_momac.csv")
-AD = ROOT / "02_New_Analyses/09_R2.2_Adaptive_Immune/outputs/adaptive_hallmark_top.csv"
+AD = ROOT / "04_Revision_Analyses/09_R2.2_Adaptive_Immune/outputs/adaptive_hallmark_top.csv"
 
 nf = pd.read_csv(NF)
 nf = nf[nf["method"] == "ttest"]
@@ -230,7 +230,7 @@ add(claim_id="M21", where_printed="main text, Methods (clean.docx para 120)",
                   "Hallmark 2020 gene sets (min_size = 5, max_size = 500; 1,000 "
                   "permutations; seed = 42)",
     cell_type="all 13", contrast="pre and post", DE_set_it_is_counted_over=LIVE,
-    source_table_path="02_New_Analyses/12_R1.8_DEG_Recompute/scripts/recompute_deg.py:351",
+    source_table_path="04_Revision_Analyses/12_R1.8_DEG_Recompute/scripts/recompute_deg.py:351",
     source_column="gp.prerank(..., min_size=15, max_size=500, seed=42)",
     quoted_value="min_size = 5", value_in_source="min_size = 15",
     checked_by_verify_numbers="NOT CHECKED - verify_numbers.py checks values, not "

@@ -18,7 +18,7 @@ cohorts that share no patients give a combined P of 0.007 for CEACAM6. This
 panel shows every measurement on one standardised scale, grouped by whether it
 is independent of the discovery cohort, with the combined result stated.
 
-Input : 02_New_Analyses/10_R1.3_CrossCohort_Convergence/outputs/
+Input : 04_Revision_Analyses/10_R1.3_CrossCohort_Convergence/outputs/
 Output: S8_E_convergence_forest.{svg,pdf,png}
 """
 

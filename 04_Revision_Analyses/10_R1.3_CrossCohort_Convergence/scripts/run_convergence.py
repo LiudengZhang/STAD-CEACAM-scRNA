@@ -22,7 +22,7 @@ Four analyses, all from numbers already on disk:
   3. stability     leave-one-patient-out refits of the four-versus-four test
   4. concordance   per-patient transcript fraction against protein staining
 
-Outputs (02_New_Analyses/10_R1.3_CrossCohort_Convergence/outputs/)
+Outputs (04_Revision_Analyses/10_R1.3_CrossCohort_Convergence/outputs/)
   pretx_sample_means.csv        per-sample CEACAM5/6 means, the Fig. 2K quantity
   crosscohort_combination.csv   one row per gene per combination method
   forest_effect_sizes.csv       one row per measurement

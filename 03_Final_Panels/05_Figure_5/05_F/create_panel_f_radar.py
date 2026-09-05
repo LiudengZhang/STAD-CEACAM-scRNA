@@ -11,7 +11,7 @@ B cells after treatment (+1.01 there, -0.99 in the recompute) and
 monocytes/macrophages before treatment (-0.98 there, +1.06 in the recompute).
 
 The panel is therefore rebuilt from
-02_New_Analyses/12_R1.8_DEG_Recompute, by way of
+04_Revision_Analyses/12_R1.8_DEG_Recompute, by way of
 07_R1.8_NFkB_Specificity/outputs/nfkb_per_celltype.csv, which is the same
 table Fig. S9E and Fig. S10C read. The Welch t-test branch is used, matching
 the Methods; the MAST branch is the deposited sensitivity analysis.
@@ -33,7 +33,7 @@ from paths import *  # noqa: E402,F403
 from shared.figure_config import use_panel_style
 
 BASE_DIR = Path(__file__).parent
-SRC = (Path(__file__).resolve().parents[4] / "02_New_Analyses"
+SRC = (Path(__file__).resolve().parents[4] / "04_Revision_Analyses"
        / "07_R1.8_NFkB_Specificity" / "outputs" / "nfkb_per_celltype.csv")
 METHOD = "ttest"
 

@@ -314,7 +314,7 @@ def supplementary_rows():
                 note = "rebuilt from this script by assemble_new_supplementaries.py"
             else:
                 mod = MODULE_PANELS.get((fig, letter), "")
-                scripts = f"02_New_Analyses/{mod}" if mod else ""
+                scripts = f"04_Revision_Analyses/{mod}" if mod else ""
                 data = ""
                 note = ("written directly by the analysis module named in "
                         "source_script, then assembled by "

@@ -3,7 +3,7 @@
 Restyle S9E and S9F - NF-kB specificity and the epithelial compartment
 (Reviewer 1, point R1.8).
 
-Analysis: 02_New_Analyses/07_R1.8_NFkB_Specificity/scripts/nfkb_specificity.py
+Analysis: 04_Revision_Analyses/07_R1.8_NFkB_Specificity/scripts/nfkb_specificity.py
 
 NOTHING IS RECOMPUTED HERE. In particular the driver never reaches
 `nfkb_specificity.py:100`, the `RECOMPUTE_GSEA.glob("*_hallmark.csv")` that

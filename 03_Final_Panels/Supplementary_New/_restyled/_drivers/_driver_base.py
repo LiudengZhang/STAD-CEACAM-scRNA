@@ -3,7 +3,7 @@
 Shared support for the restyle drivers.
 
 Twenty-one of the twenty-six S7-S11 panels are drawn by fourteen analysis
-scripts under `02_New_Analyses/*/scripts/`, which in the same run compute the
+scripts under `04_Revision_Analyses/*/scripts/`, which in the same run compute the
 statistics and write the CSVs `verify_numbers.py` checks. A driver restyles
 those panels without the statistics being touched, duplicated or re-run:
 
@@ -39,7 +39,7 @@ import matplotlib.pyplot as plt
 
 ROOT = Path(__file__).resolve().parents[4]          # Round_7_major_revision
 RESTYLED = Path(__file__).resolve().parents[1]      # Supplementary_New/_restyled
-NEW_ANALYSES = ROOT / "02_New_Analyses"
+NEW_ANALYSES = ROOT / "04_Revision_Analyses"
 
 sys.path.insert(0, str(ROOT / "00_Config"))
 
@@ -73,7 +73,7 @@ def _compare_panel_content():
 def analysis(rel):
     """Import an analysis module by path without running its main().
 
-    `rel` is relative to 02_New_Analyses, e.g.
+    `rel` is relative to 04_Revision_Analyses, e.g.
     "09_R2.2_Adaptive_Immune/scripts/adaptive_immune_resource.py".
     """
     path = NEW_ANALYSES / rel

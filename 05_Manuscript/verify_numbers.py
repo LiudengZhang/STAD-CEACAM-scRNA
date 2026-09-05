@@ -3,7 +3,7 @@ Check that every number quoted in the revised manuscript and the response letter
 still matches the analysis output it came from.
 
 This exists because the response letter tells the reviewers that all figures
-trace to files under 02_New_Analyses/*/outputs/. If an analysis is re-run and a
+trace to files under 04_Revision_Analyses/*/outputs/. If an analysis is re-run and a
 value moves, this script fails and names the claim that has drifted, rather than
 letting a stale number reach the journal.
 
@@ -224,7 +224,7 @@ check("IL-1B cluster position on the lineage axis", pos, 0.41)
 # run, computed on the doubly-normalised .X that 00_Data_Audit/FINDINGS.md
 # sections 1 and 7 describe. The author has adopted the sound-input recompute,
 # and on 2026-09-03 ruled that the sixteen flagged rows of
-# 02_New_Analyses/17_NFkB_Claim_Ledger/outputs/claim_comparison.csv be applied
+# 04_Revision_Analyses/17_NFkB_Claim_Ledger/outputs/claim_comparison.csv be applied
 # as that file recommends. So every NF-kB number now printed in the Results and
 # in the response letter comes from ONE table:
 #

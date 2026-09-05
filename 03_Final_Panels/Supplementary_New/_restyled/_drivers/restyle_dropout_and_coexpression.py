@@ -2,7 +2,7 @@
 """
 Restyle S8H - dropout and CEACAM5/CEACAM6 co-expression (Reviewer 1, R1.5).
 
-Analysis: 02_New_Analyses/04_R1.5_CEACAM5_vs_CEACAM6/scripts/dropout_and_coexpression.py
+Analysis: 04_Revision_Analyses/04_R1.5_CEACAM5_vs_CEACAM6/scripts/dropout_and_coexpression.py
 
 NOTHING IS RECOMPUTED HERE. The driver imports that module for its constants
 (KS, the four colours, SCALE) and reads the three tables its `main()` already

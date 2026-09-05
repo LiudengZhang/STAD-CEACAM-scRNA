@@ -31,7 +31,7 @@ the same 1.615 so the panel keeps its proportions:
     L_B = L_A x 0.2167 x 1.615 = L_A x 0.35          (lengths: MARK)
     s_B = s_A x 0.35^2          = s_A x 0.1224       (areas:   AREA)
 
-Input : 02_New_Analyses/10_R1.3_CrossCohort_Convergence/outputs/loo_stability.csv
+Input : 04_Revision_Analyses/10_R1.3_CrossCohort_Convergence/outputs/loo_stability.csv
 Output: _restyled/S8_CEACAM_Metaprogram/S8_F/S8_F_leave_one_out.{svg,pdf,png}
 """
 

@@ -6,7 +6,7 @@ as the single-cell cohort, so it is not an independent cohort. It answers a
 different question instead: whether the single-cell measurement reflects protein
 abundance in the same tissue. It does.
 
-Input : 02_New_Analyses/10_R1.3_CrossCohort_Convergence/outputs/
+Input : 04_Revision_Analyses/10_R1.3_CrossCohort_Convergence/outputs/
 Output: S8_G_rna_protein_concordance.{svg,pdf,png}
 """
 

@@ -1,6 +1,6 @@
 """
 Shared readers for the claim ledger. Copied from
-02_New_Analyses/16_GSEA_Metric_Sensitivity/scripts/metric_sensitivity.py
+04_Revision_Analyses/16_GSEA_Metric_Sensitivity/scripts/metric_sensitivity.py
 (its `load_rank` / `run_one` / gmt reader) so that the numbers this module
 measures are produced by the same code path the sibling module used, and any
 difference between the two is a difference in what was asked, not in how it
@@ -28,19 +28,19 @@ HALLMARK = ROOT / "00_Reference" / "MSigDB_Hallmark_2020.gmt"
 #            tables verify_numbers.py checks the main text against.
 # `sound13`- the 2026-08-31 recompute on sound per-cell-type inputs: twelve
 #            types from the archive, neutrophils from module 13.
-LIVE = ROOT / "02_New_Analyses" / "12_R1.8_DEG_Recompute" / "outputs" / "deg"
+LIVE = ROOT / "04_Revision_Analyses" / "12_R1.8_DEG_Recompute" / "outputs" / "deg"
 SOUND12 = (ROOT / "07_Archive"
            / "2026-08-31_deg_recompute_on_sound_per_cell_type_inputs"
-           / "02_New_Analyses" / "12_R1.8_DEG_Recompute" / "outputs" / "deg")
-NEUT = (ROOT / "02_New_Analyses" / "13_R1.8_Neutrophil_Rebuilt_Recompute"
+           / "04_Revision_Analyses" / "12_R1.8_DEG_Recompute" / "outputs" / "deg")
+NEUT = (ROOT / "04_Revision_Analyses" / "13_R1.8_Neutrophil_Rebuilt_Recompute"
         / "outputs" / "deg")
 
-PUB_SOUND13 = (ROOT / "02_New_Analyses" / "13_R1.8_Neutrophil_Rebuilt_Recompute"
+PUB_SOUND13 = (ROOT / "04_Revision_Analyses" / "13_R1.8_Neutrophil_Rebuilt_Recompute"
                / "outputs" / "nfkb_per_celltype_sound13.csv")
-PUB_LIVE = (ROOT / "02_New_Analyses" / "13_R1.8_Neutrophil_Rebuilt_Recompute"
+PUB_LIVE = (ROOT / "04_Revision_Analyses" / "13_R1.8_Neutrophil_Rebuilt_Recompute"
             / "outputs" / "nfkb_per_celltype_live.csv")
 # the table verify_numbers.py actually reads
-PUB_MANUSCRIPT = (ROOT / "02_New_Analyses" / "07_R1.8_NFkB_Specificity"
+PUB_MANUSCRIPT = (ROOT / "04_Revision_Analyses" / "07_R1.8_NFkB_Specificity"
                   / "outputs" / "nfkb_per_celltype.csv")
 
 CELLS = ["B_cells", "DC_cells", "Endothelial_cells", "Epithelial", "Fibroblast",

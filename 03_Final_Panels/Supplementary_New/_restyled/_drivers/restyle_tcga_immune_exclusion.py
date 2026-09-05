@@ -2,7 +2,7 @@
 """
 Restyle S11B - TCGA-STAD immune exclusion (Reviewer 1, point R1.6).
 
-Analysis: 02_New_Analyses/05_R1.6_Spatial_Confounders/scripts/tcga_immune_exclusion.py
+Analysis: 04_Revision_Analyses/05_R1.6_Spatial_Confounders/scripts/tcga_immune_exclusion.py
 
 NOTHING IS RECOMPUTED HERE, and in particular ESTIMATE IS NOT RE-RUN. `main()`
 (line 103) builds three things and passes them to `_panel(d, t, purity_col)`

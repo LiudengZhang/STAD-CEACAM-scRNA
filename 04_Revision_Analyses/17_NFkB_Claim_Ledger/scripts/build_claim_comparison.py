@@ -2,19 +2,19 @@
 """Build CLAIM_COMPARISON.md and outputs/claim_comparison.csv from one row list.
 
 Read-only with respect to everything outside
-02_New_Analyses/17_NFkB_Claim_Ledger/. Every number in ROWS was read from a table
+04_Revision_Analyses/17_NFkB_Claim_Ledger/. Every number in ROWS was read from a table
 already on disk; nothing here re-runs GSEA, DEG or a panel.
 
 Sources, all read not written:
-  02_New_Analyses/13_R1.8_Neutrophil_Rebuilt_Recompute/outputs/
+  04_Revision_Analyses/13_R1.8_Neutrophil_Rebuilt_Recompute/outputs/
         nfkb_per_celltype_sound13.csv        the sound-input recompute (axis 1)
         nfkb_per_celltype_live.csv           the shipped table
         counted_claims.csv                   the counted claims on both
-  02_New_Analyses/17_NFkB_Claim_Ledger/outputs/
+  04_Revision_Analyses/17_NFkB_Claim_Ledger/outputs/
         signal.csv, signal_runs.csv          the gate and the seed sweeps (axis 2)
         stability.csv, counted_claims_by_seed.csv, ordinal_denominator.csv
         para70_summary.csv                   Fig. 5N / Results para 71
-  02_New_Analyses/14_MAST_Specification/outputs/nfkb_by_specification.csv  (reserve)
+  04_Revision_Analyses/14_MAST_Specification/outputs/nfkb_by_specification.csv  (reserve)
   03_Final_Panels/SUPPLEMENTARY_AUDIT.md   fault 1, the S10E measurement
   04_Manuscript_R1/verify_numbers.py         the guard column
   04_Manuscript_R1/01_Main_Text/Manuscript_R1_clean.docx
@@ -554,7 +554,7 @@ row(claim_id="C19", ledger_id="M15", source="main text",
     axis2_stability="NOT REPRODUCIBLE from any table on disk - 1.2796 at seed 42, "
                     "1.2796-1.2980 over 7 seeds; the band does not reach 1.30, so "
                     "the 0.020 gap is not a seed effect. Every CSV with an NES "
-                    "column under 03_Final_Panels, 02_New_Analyses "
+                    "column under 03_Final_Panels, 04_Revision_Analyses "
                     "and Round_5/02_Preparation_for_Panels was scanned; none gives "
                     "1.30. FDR q 0.676-0.932",
     gate="all 50 Hallmark sets tested",

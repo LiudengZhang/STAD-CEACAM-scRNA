@@ -2,7 +2,7 @@
 """
 Restyle S7C - design defence (Reviewer 1 points R1.0 and R1.3b).
 
-Analysis: 02_New_Analyses/01_R1.3_Cohort_Pairing/scripts/design_defence.py
+Analysis: 04_Revision_Analyses/01_R1.3_Cohort_Pairing/scripts/design_defence.py
 
 NOTHING IS RECOMPUTED HERE. The driver imports that module for its constants
 and reads the two tables its `main()` already wrote. It never opens MoMac.h5ad

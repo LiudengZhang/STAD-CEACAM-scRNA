@@ -30,19 +30,19 @@ Apre = A[A["phase"] == "pre"]
 SIG = pd.read_csv(OUT / "signal.csv", comment="#")
 SIGl = SIG[SIG["degset"] == "live"].set_index(["cell_type", "contrast"])
 
-M16 = ROOT / "02_New_Analyses/16_GSEA_Metric_Sensitivity/outputs"
+M16 = ROOT / "04_Revision_Analyses/16_GSEA_Metric_Sensitivity/outputs"
 B = pd.read_csv(M16 / "counted_claims_by_metric_live.csv").set_index("metric")
 BW = pd.read_csv(M16 / "nfkb_by_metric_wide_live.csv").set_index(["cell", "phase"])
 
-M15 = ROOT / "02_New_Analyses/15_Pseudobulk_Sample_Level/outputs"
+M15 = ROOT / "04_Revision_Analyses/15_Pseudobulk_Sample_Level/outputs"
 C = pd.read_csv(M15 / "counted_claims.csv").set_index("label")
 CW = pd.read_csv(M15 / "nfkb_comparison.csv").set_index(["cell_type", "phase"])
 
-M14 = ROOT / "02_New_Analyses/14_MAST_Specification/outputs/nfkb_by_specification.csv"
+M14 = ROOT / "04_Revision_Analyses/14_MAST_Specification/outputs/nfkb_by_specification.csv"
 D = pd.read_csv(M14)
 DA = D[D["spec"] == "A"].set_index(["cell", "phase"])
 
-M13 = ROOT / "02_New_Analyses/13_R1.8_Neutrophil_Rebuilt_Recompute/outputs"
+M13 = ROOT / "04_Revision_Analyses/13_R1.8_Neutrophil_Rebuilt_Recompute/outputs"
 E = pd.read_csv(M13 / "counted_claims.csv").set_index("label")
 EW = pd.read_csv(M13 / "nfkb_per_celltype_sound13.csv")
 EW = EW[EW["method"] == "ttest"].set_index(["cell_type", "phase"])

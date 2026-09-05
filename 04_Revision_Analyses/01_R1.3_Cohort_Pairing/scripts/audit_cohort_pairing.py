@@ -15,7 +15,7 @@ Sources
          does not appear in ST1, so it is joined on the clinical fingerprint
          Age + Sex + Differentiation + sampling procedure + treatment phase)
 
-Outputs (02_New_Analyses/01_R1.3_Cohort_Pairing/outputs/)
+Outputs (04_Revision_Analyses/01_R1.3_Cohort_Pairing/outputs/)
   cohort_audit.csv          one row per response-labelled stomach sample
   pairing_summary.csv       per-patient timepoint coverage
   cohort_audit_report.txt   plain-text answers for the response letter

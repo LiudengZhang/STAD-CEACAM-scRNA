@@ -3,7 +3,7 @@
 Restyle S11C - NF-kB regulon activity and the feedback programme
 (Reviewer 1, point R1.8, affirmative evidence).
 
-Analysis: 02_New_Analyses/07_R1.8_NFkB_Specificity/scripts/nfkb_regulon_activity.py
+Analysis: 04_Revision_Analyses/07_R1.8_NFkB_Specificity/scripts/nfkb_regulon_activity.py
 
 NOTHING IS RECOMPUTED HERE. The driver does not call `load_regulons()` and so
 never opens `02_Preparation_for_Panels/SCENIC/aucell_matrix.csv`. That matters

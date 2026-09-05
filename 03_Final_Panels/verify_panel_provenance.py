@@ -86,12 +86,12 @@ Eight checks.
                     an input repointed one step upstream - in a NicheNet or NMF
                     config, in a BayesPrism step script - passed it untouched.
                     That is the Figure 5A fault with one more link in the chain.
-                    Two roots are read: 02_Upstream/ (the five imported
+                    Two roots are read: 02_Preparation_for_Panels/ (the five imported
                     pipelines) and the Round_5 preparation tree whose configs
                     they reference.
 
                     Only the archive guard is applied here, never the existence
-                    check. 02_Upstream/ holds scripts and no outputs on purpose
+                    check. 02_Preparation_for_Panels/ holds scripts and no outputs on purpose
                     - import_pipelines.py says so in its own docstring, because
                     a second copy of an intermediate can drift from the one the
                     panels read - so every relative output path in it is
@@ -162,7 +162,7 @@ STALE_MARKERS = ("_archived", "_Archived", "99_Archive", "98_Temp_workspace",
                  "backup", "_BACKUP", "Backup", "_Old", "_old", "07_Archive",
                  "release_candidate")
 # Check 11. The upstream pipelines that produce what the panels read.
-UPSTREAM = ROOT / "02_Upstream"
+UPSTREAM = ROOT / "02_Preparation_for_Panels"
 # An absolute path written into a config or a non-Python pipeline step. The two
 # prefixes are the ones this project's storage actually uses; LOCAL_PATH in
 # verify_release_sync.py names the same pair.
@@ -236,7 +236,7 @@ def resolve(figure, rel):
         return None
     if rel.startswith("_panel_1A"):
         return HERE / "Main_Figures" / rel
-    if rel.startswith(("00_GROUND_TRUTH/", "02_New_Analyses/")):
+    if rel.startswith(("00_GROUND_TRUTH/", "04_Revision_Analyses/")):
         # Twenty-one supplementary panels are written by an analysis module
         # rather than by a script beside them.
         return ROOT / rel
@@ -882,8 +882,8 @@ def check_upstream_inputs():
     """
     consts = _path_constants()
     prep = consts.get("PREPARATION")
-    py_roots = [("02_Upstream", UPSTREAM)]
-    text_roots = [("02_Upstream", UPSTREAM),
+    py_roots = [("02_Preparation_for_Panels", UPSTREAM)]
+    text_roots = [("02_Preparation_for_Panels", UPSTREAM),
                   ("Round_5/02_Preparation_for_Panels", prep)]
 
     stale = archived = 0

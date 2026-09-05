@@ -20,8 +20,8 @@ INPUTS - read only, never regenerated
     The thirteen-cell-type "sound" Welch t-test tables, which are the same
     tables `nfkb_per_celltype_sound13.csv` was built from:
       twelve types   07_Archive/2026-08-31_deg_recompute_on_sound_per_cell_type_inputs/
-                     02_New_Analyses/12_R1.8_DEG_Recompute/outputs/deg/
-      neutrophils    02_New_Analyses/13_R1.8_Neutrophil_Rebuilt_Recompute/
+                     04_Revision_Analyses/12_R1.8_DEG_Recompute/outputs/deg/
+      neutrophils    04_Revision_Analyses/13_R1.8_Neutrophil_Rebuilt_Recompute/
                      outputs/deg/
     (13_.../outputs/deg/ holds neutrophils only; merge_thirteen.sh shows the
     other twelve come from the archive, so the archive is the honest door to
@@ -65,16 +65,16 @@ OUT.mkdir(parents=True, exist_ok=True)
 HALLMARK = ROOT / "00_Reference" / "MSigDB_Hallmark_2020.gmt"
 SOUND12 = (ROOT / "07_Archive"
            / "2026-08-31_deg_recompute_on_sound_per_cell_type_inputs"
-           / "02_New_Analyses" / "12_R1.8_DEG_Recompute" / "outputs" / "deg")
-NEUT = (ROOT / "02_New_Analyses" / "13_R1.8_Neutrophil_Rebuilt_Recompute"
+           / "04_Revision_Analyses" / "12_R1.8_DEG_Recompute" / "outputs" / "deg")
+NEUT = (ROOT / "04_Revision_Analyses" / "13_R1.8_Neutrophil_Rebuilt_Recompute"
         / "outputs" / "deg")
 # The `live` tables - module 12's own outputs/, from full_dataset.h5ad. These
 # are the ones verify_numbers.py checks the main text against, so the counted
 # claims ("12 of 13", "q < 0.05 in four", "6 of 13") are counts over these and
 # not over the sound thirteen. Both sets are swept, separately; within each the
 # differential expression is held completely fixed.
-LIVE = (ROOT / "02_New_Analyses" / "12_R1.8_DEG_Recompute" / "outputs" / "deg")
-PUBLISHED = (ROOT / "02_New_Analyses" / "13_R1.8_Neutrophil_Rebuilt_Recompute"
+LIVE = (ROOT / "04_Revision_Analyses" / "12_R1.8_DEG_Recompute" / "outputs" / "deg")
+PUBLISHED = (ROOT / "04_Revision_Analyses" / "13_R1.8_Neutrophil_Rebuilt_Recompute"
              / "outputs" / "nfkb_per_celltype_sound13.csv")
 
 CELLS = ["B_cells", "DC_cells", "Endothelial_cells", "Epithelial", "Fibroblast",

@@ -2,7 +2,7 @@
 """
 Restyle S9A and S9B - spatial confounder adjustment (Reviewer 1, point R1.6).
 
-Analysis: 02_New_Analyses/05_R1.6_Spatial_Confounders/scripts/spatial_confounders.py
+Analysis: 04_Revision_Analyses/05_R1.6_Spatial_Confounders/scripts/spatial_confounders.py
 
 NOTHING IS RECOMPUTED HERE. The analysis's `main()` fits six mixed models for
 the sequential adjustment, six more for the density strata and one OLS per

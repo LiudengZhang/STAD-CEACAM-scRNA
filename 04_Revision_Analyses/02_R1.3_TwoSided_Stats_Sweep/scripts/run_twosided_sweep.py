@@ -16,7 +16,7 @@ Effect sizes
   Wilcoxon signed-rank  -> matched-pairs rank-biserial correlation
   exact permutation     -> observed difference in group means
 
-Outputs (02_New_Analyses/02_R1.3_TwoSided_Stats_Sweep/outputs/)
+Outputs (04_Revision_Analyses/02_R1.3_TwoSided_Stats_Sweep/outputs/)
   twosided_sweep.csv        one row per comparison
   twosided_sweep_report.txt human-readable summary with the verdict per row
 """

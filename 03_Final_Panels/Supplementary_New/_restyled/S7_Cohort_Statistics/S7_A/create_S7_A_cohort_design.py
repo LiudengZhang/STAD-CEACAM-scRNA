@@ -19,7 +19,7 @@ pre- and post-treatment groups come from the same patients. This panel answers
 both visually: one row per patient, one column per timepoint, with the single
 paired patient joined by a line.
 
-Input : 02_New_Analyses/01_R1.3_Cohort_Pairing/outputs/cohort_audit.csv
+Input : 04_Revision_Analyses/01_R1.3_Cohort_Pairing/outputs/cohort_audit.csv
         Round_5/04_Manuscript/04_Tables/ST1_patient_sample_characteristics.csv
 Output: S7_A_cohort_design.{svg,pdf,png}
 """

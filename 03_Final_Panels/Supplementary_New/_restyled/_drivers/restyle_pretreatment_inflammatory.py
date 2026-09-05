@@ -3,7 +3,7 @@
 Restyle S10A, S10B and S10C - is the inflammatory programme already present
 before treatment? (Reviewer 2, point R2.1).
 
-Analysis: 02_New_Analyses/08_R2.1_PreTx_Inflammatory/scripts/pretreatment_inflammatory.py
+Analysis: 04_Revision_Analyses/08_R2.1_PreTx_Inflammatory/scripts/pretreatment_inflammatory.py
 
 NOTHING IS RECOMPUTED HERE. The driver never opens MoMac.h5ad, so
 `rank_genes_groups` and `score_genes` are not re-run and the IL-1b+ signature is

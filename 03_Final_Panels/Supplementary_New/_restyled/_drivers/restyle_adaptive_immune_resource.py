@@ -2,7 +2,7 @@
 """
 Restyle S10D and S10E - adaptive immune resource (Reviewer 2, point R2.2).
 
-Analysis: 02_New_Analyses/09_R2.2_Adaptive_Immune/scripts/adaptive_immune_resource.py
+Analysis: 04_Revision_Analyses/09_R2.2_Adaptive_Immune/scripts/adaptive_immune_resource.py
 
 NOTHING IS RECOMPUTED HERE. The driver imports that module for its constants
 and reads the three tables its `main()` already wrote. It never opens a h5ad and
