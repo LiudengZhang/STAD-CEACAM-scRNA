@@ -29,8 +29,14 @@ warnings.filterwarnings("ignore")
 sc.settings.verbosity = 0
 
 HERE = Path(__file__).resolve().parent
-DEFAULT = (HERE.parents[2] / "06_Clean_Data" / "02_Rebuilt"
-           / "Neutrophils_sound.h5ad")
+sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
+from paths import NEUTROPHILS_SOUND_H5AD                            # noqa: E402
+
+# Named through paths.py, never as a literal. The obvious literal here,
+# 06_Clean_Data/02_Rebuilt/Neutrophils_sound.h5ad, is a working-tree path: it
+# resolves to nothing in the deposit, where the object ships in 01_H5AD/ beside
+# the others, so a deposited copy of this script would die on a missing file.
+DEFAULT = NEUTROPHILS_SOUND_H5AD
 KEY = "minor_cell_state"
 N_TOP = 200
 

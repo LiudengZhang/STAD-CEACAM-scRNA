@@ -18,7 +18,7 @@ Produces the resource the reviewer asks for, at two levels:
      positive NES already means enriched in non-responders and no sign flip is
      applied here.
 
-Inputs : Round_5/01_Raw_Inputs/01_H5AD/{TCD4,TCD8,NK_cells,B_cells}.h5ad
+Inputs : submission-tree/01_Raw_Inputs/01_H5AD/{TCD4,TCD8,NK_cells,B_cells}.h5ad
          12_R1.8_DEG_Recompute/outputs/gsea/*_{pre,post}_ttest_hallmark.csv
 Outputs: adaptive_state_fractions.csv, adaptive_state_tests.csv,
          adaptive_hallmark_top.csv, adaptive_immune_report.txt,
@@ -37,8 +37,8 @@ from scipy import stats
 from statsmodels.stats.multitest import multipletests
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
-from paths import (TCD4_H5AD, TCD8_H5AD, NK_CELLS_H5AD, B_CELLS_H5AD,
-                   REVISED_PANELS)  # noqa: E402
+from paths import (  # noqa: E402
+    ANALYSIS_PANELS, B_CELLS_H5AD, NK_CELLS_H5AD, TCD4_H5AD, TCD8_H5AD)
 from shared.sample_ids import sample_id_map, to_study_ids  # noqa: E402
 
 RECOMPUTE_GSEA = (Path(__file__).resolve().parents[2]
@@ -49,7 +49,7 @@ sc.settings.verbosity = 0
 
 OUT = Path(__file__).resolve().parents[1] / "outputs"
 OUT.mkdir(parents=True, exist_ok=True)
-S10 = REVISED_PANELS / "Supplementary_New" / "S10_PreTx_and_Adaptive"
+S10 = ANALYSIS_PANELS / "S10_PreTx_and_Adaptive"
 
 SCALE, CM, DPI = 4, 1 / 2.54, 300
 MIN_CELLS = 20
@@ -149,12 +149,11 @@ def main():
         for phase in ("pre", "post"):
             # The prepared GSEA/{pre,post} tables are not used: they descend
             # from MAST runs on a matrix that was never log1p CP10K
-            # (00_Data_Audit/FINDINGS.md section 7). Repointed to module 12 on
-            # the author's ruling of 2026-09-03; the Welch t-test branch is the
-            # author's choice, consistent with the standing ruling that MAST is
-            # dropped and with pretreatment_inflammatory.py, which draws the
-            # other panels of this figure. Module 12 ranks non-responders
-            # against responders, so no sign flip.
+            # (00_Data_Audit/FINDINGS.md section 7). Module 12 is read instead,
+            # and its Welch t-test branch rather than its MAST branch: MAST is
+            # not used anywhere in the revision, and pretreatment_inflammatory.py
+            # draws the other panels of this figure from the same branch. Module
+            # 12 ranks non-responders against responders, so no sign flip.
             f = RECOMPUTE_GSEA / f"{gsea_name}_{phase}_ttest_hallmark.csv"
             if not f.exists():
                 continue
@@ -279,8 +278,14 @@ def _panel_hallmark(hallmark):
         # Hallmark names run to 34 characters; anything shorter than the
         # longest one here would cut "Interferon Gamma Response", which the
         # response letter quotes by name.
+        # Display label only. "Pperoxisome" is how the gene set is spelled in the
+        # pinned Enrichr library 00_Reference/MSigDB_Hallmark_2020.gmt (line 37),
+        # which is the input to every GSEA run in the paper and must not be
+        # corrected upstream. Nothing but the rendered string changes here.
+        DISPLAY_NAME = {"Pperoxisome": "Peroxisome"}
+        labels = [DISPLAY_NAME.get(t, t) for t in sub["term"]]
         ax.set_yticklabels([t if len(t) < 34 else t[:31] + "..."
-                            for t in sub["term"]], fontsize=4.5 * SCALE)
+                            for t in labels], fontsize=4.5 * SCALE)
         ax.set_title(lineage, fontsize=6.5 * SCALE)
         ax.tick_params(axis="x", labelsize=5 * SCALE, width=0.8, length=3)
         ax.tick_params(axis="y", length=0)

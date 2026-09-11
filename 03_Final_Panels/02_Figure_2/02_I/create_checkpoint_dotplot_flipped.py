@@ -1,9 +1,62 @@
 #!/usr/bin/env python3
 """
-Panel H: Flipped Checkpoint Dotplot
-- Genes on X-axis (horizontal)
-- Log2 FC (NR/R) on Y-axis
-- Wide format for Row 2 layout
+Figure 2 panel J - immune-checkpoint gene expression in pre-treatment stomach
+epithelium, non-responders against responders.
+
+Each dot is one checkpoint gene: its height is the log2 fold change of the
+sample-mean expression, its area the significance band of a two-sided
+Mann-Whitney U test over the samples, and its colour the same fold change.
+
+The panel is drawn at the millimetre rectangle it prints in, read from
+03_Final_Panels/panel_rects.csv through 00_Config/slots.py, so the type size
+set here is the type size printed.
+
+  printed panel  Figure 2 J       (PROVENANCE.csv; NOT inferred from "02_I")
+
+LAYOUT ORDER
+    The margins are set before the colour bar is made, because matplotlib sizes
+    the bar from the axes box it finds and takes its own share of it. They are
+    millimetres of paper, not fractions of the canvas, and they are not fitted
+    to the ink afterwards: moving the subplot parameters once the bar exists
+    would leave the bar behind.
+
+MARK
+    The earlier drawing used a canvas four times the printed size and set its
+    smallest body type - the legend - at 5 * SCALE. MARK carries the non-type
+    point sizes across to the 1:1 canvas:
+
+        MARK = style.tick_pt() / (SMALL_PT * SCALE)
+        AREA = MARK ** 2
+
+    The three significance dot areas take AREA; the dot edge width, the zero
+    rule, the grid rule and the legend frame take MARK. Tick widths and lengths
+    and spine widths do not: those are style, and cnsplots sets them.
+
+LEGEND KEYS
+    cnsplots sets `legend.markerscale = 0.5`, which a scatter handler applies
+    as an *area* factor of 0.25. Each key is therefore divided by
+    `markerscale ** 2`, so that after the legend applies its factor the key
+    prints at exactly the area of the dot it labels.
+
+THE GENE LABELS ARE SET UPRIGHT, NOT AT 45 DEGREES
+    Twenty-nine ticks across this plotting box stand 3.3 mm apart, and a label
+    set at an angle puts its own depth across its neighbour's: at 45 degrees
+    the twenty-eight adjacent pairs overlap by up to 4.6 mm2 and at 60 degrees
+    by up to 0.9 mm2, whatever their length, because the spacing is fixed by
+    the number of genes and the width of the slot. Upright they clear one
+    another entirely. Same genes, same order, same tick positions, same
+    strings; only the angle changes.
+
+    An upright label is deeper than a rotated one and the slot is fixed, so the
+    cost was measured on the rendered panel rather than assumed: the gene label
+    band is 9.30 mm deep at 45 degrees and 10.71 mm upright - 1.41 mm more -
+    with the deepest label, TNFRSF18, going from 9.29 to 10.70 mm. The band
+    still ends 0.23 mm inside the foot of the 54.4 mm slot, and the panel
+    leaves 2.37 mm unused at the top, so the extra depth is paid out of slack
+    the panel already had.
+
+Every gene, every filter, every fold change, every P value and every string is
+the earlier drawing's. The drawing code is the same code.
 """
 
 import scanpy as sc
@@ -19,19 +72,20 @@ warnings.filterwarnings('ignore')
 from pathlib import Path
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
-from paths import *
-from shared.figure_config import use_panel_style
+from paths import *                                       # noqa: E402,F403
+import panel_style_cns as style                           # noqa: E402
+import slots                                             # noqa: E402
 
-# Nature Cancer specifications
-DPI = 300
-SCALE = 4
-PANEL_WIDTH_CM = 11.5 * SCALE   # Wide format
-PANEL_HEIGHT_CM = 5.5 * SCALE   # Shorter
-CM_TO_INCH = 1 / 2.54
+SCALE = 4                           # the earlier canvas multiplier
+SMALL_PT = 5.0                      # the earlier smallest body type
+
+PANEL_LETTER = "J"
+PANEL_W_MM, PANEL_H_MM = slots.size_mm(2, PANEL_LETTER)
+LETTER_CELL = slots.letter_cell_mm(2, PANEL_LETTER)
+MARGIN = dict(left=6.5, right=0.8, top=2.5, bottom=12.0)
 
 # Paths
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-# DATA_PATH - now using EPITHELIAL_H5AD from central config
 OUTPUT_DIR = BASE_DIR
 
 # Checkpoint genes
@@ -105,10 +159,15 @@ def compute_checkpoint_statistics(adata):
 
 
 def main():
-    use_panel_style(font_pt=7)
+    family = style.apply(title_fontsize=7, fontsize_legend=6,
+                         legend_fontsize=6)
+    MARK = style.tick_pt() / (SMALL_PT * SCALE)
+    AREA = MARK ** 2
+    print(f"  type set in {family}; body {style.body_pt():g} pt, "
+          f"ticks/legend {style.tick_pt():g} pt; MARK {MARK:.5f}")
 
     print("Loading epithelial data...")
-    adata = sc.read_h5ad(EPITHELIAL_H5AD)
+    adata = sc.read_h5ad(EPITHELIAL_H5AD)                 # noqa: F405
     print(f"Loaded {adata.n_obs} cells")
 
     data = compute_checkpoint_statistics(adata)
@@ -118,69 +177,72 @@ def main():
     genes = data['Gene'].values
     fold_changes = data['Merged_Log2FC'].values
     p_values = data['Merged_P_Value'].values
-    sizes = [assign_dot_size(p) for p in p_values]
+    sizes = [assign_dot_size(p) * AREA for p in p_values]
 
     # FLIPPED: genes on X-axis, Log2FC on Y-axis
     x_positions = np.arange(len(genes))
 
-    fig_width = PANEL_WIDTH_CM * CM_TO_INCH
-    fig_height = PANEL_HEIGHT_CM * CM_TO_INCH
-    fig, ax = plt.subplots(figsize=(fig_width, fig_height))
+    fig, ax = style.subplots_mm(PANEL_W_MM, PANEL_H_MM)
+    # Before the colorbar - see LAYOUT ORDER in the header.
+    style.margins_mm(fig, **MARGIN)
 
     cmap = plt.cm.RdBu_r
 
     # FLIPPED scatter: x=gene positions, y=fold_changes
     scatter = ax.scatter(
         x_positions, fold_changes, s=sizes, c=fold_changes, cmap=cmap, alpha=0.8,
-        edgecolors='black', linewidths=0.5, vmin=-2, vmax=2
+        edgecolors='black', linewidths=0.5 * MARK, vmin=-2, vmax=2
     )
 
     # X-axis: genes
     ax.set_xticks(x_positions)
-    ax.set_xticklabels(genes, fontsize=5 * SCALE, rotation=45, ha='right', style='italic')
+    ax.set_xticklabels(genes, rotation=90, ha='right', style='italic')
     ax.set_xlim(-1, len(genes))
 
     # Y-axis: Log2FC
     y_min, y_max = fold_changes.min(), fold_changes.max()
     y_range = y_max - y_min
     ax.set_ylim(y_min - 0.15 * y_range, y_max + 0.15 * y_range)
-    ax.set_ylabel('Log2 FC (NR/R)', fontsize=7 * SCALE)
+    ax.set_ylabel('Log2 FC (NR/R)')
 
     # Horizontal reference line at 0
-    ax.axhline(y=0, color='gray', linestyle='--', linewidth=0.5, alpha=0.7)
-    ax.grid(True, axis='y', alpha=0.3, linestyle=':', linewidth=0.3)
+    ax.axhline(y=0, color='gray', linestyle='--', linewidth=0.5 * MARK, alpha=0.7)
+    ax.grid(True, axis='y', alpha=0.3, linestyle=':', linewidth=0.3 * MARK)
 
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
-    ax.spines['left'].set_linewidth(0.5)
-    ax.spines['bottom'].set_linewidth(0.5)
-    ax.tick_params(axis='both', labelsize=6 * SCALE, width=0.5, length=4)
 
-    # Legend for significance
+    # Legend for significance. See LEGEND KEYS in the header for the
+    # markerscale correction.
+    key = 1.0 / plt.rcParams["legend.markerscale"] ** 2
     legend_elements = [
-        plt.scatter([], [], s=150*SCALE, c='gray', alpha=0.6, edgecolors='black', linewidths=0.5, label='p ≤ 0.10'),
-        plt.scatter([], [], s=100*SCALE, c='gray', alpha=0.6, edgecolors='black', linewidths=0.5, label='p ≤ 0.15'),
-        plt.scatter([], [], s=60*SCALE, c='gray', alpha=0.6, edgecolors='black', linewidths=0.5, label='p > 0.15')
+        plt.scatter([], [], s=150*SCALE*AREA*key, c='gray', alpha=0.6, edgecolors='black', linewidths=0.5 * MARK, label='p ≤ 0.10'),
+        plt.scatter([], [], s=100*SCALE*AREA*key, c='gray', alpha=0.6, edgecolors='black', linewidths=0.5 * MARK, label='p ≤ 0.15'),
+        plt.scatter([], [], s=60*SCALE*AREA*key, c='gray', alpha=0.6, edgecolors='black', linewidths=0.5 * MARK, label='p > 0.15')
     ]
 
     legend = ax.legend(handles=legend_elements, title='Significance', loc='upper right',
-                       frameon=True, fontsize=5*SCALE, title_fontsize=6*SCALE,
-                       handletextpad=0.2, borderpad=0.4, edgecolor='black', framealpha=0.9)
-    legend.get_frame().set_linewidth(0.5)
+                       frameon=True, handletextpad=0.2, borderpad=0.4,
+                       edgecolor='black', framealpha=0.9)
+    legend.get_frame().set_linewidth(0.5 * MARK)
 
     # Colorbar
     cbar = plt.colorbar(scatter, ax=ax, shrink=0.6, pad=0.02)
-    cbar.set_label('Log2 FC', fontsize=6*SCALE)
-    cbar.ax.tick_params(labelsize=5*SCALE)
+    cbar.set_label('Log2 FC')
 
-    plt.tight_layout()
+    over = style.overflow_mm(fig)
+    if max(over) > 0:
+        raise RuntimeError(
+            f"ink outside the {PANEL_W_MM} x {PANEL_H_MM} mm canvas "
+            f"(l,r,b,t mm): {over}")
+    intruders = style.letter_clear(fig, LETTER_CELL)
+    if intruders:
+        raise RuntimeError(f"ink under the panel letter cell: {intruders}")
 
     os.makedirs(OUTPUT_DIR, exist_ok=True)
-    plt.savefig(os.path.join(OUTPUT_DIR, "checkpoint_dotplot_flipped.png"), dpi=DPI, facecolor='white', bbox_inches='tight')
-    plt.savefig(os.path.join(OUTPUT_DIR, "checkpoint_dotplot_flipped.svg"), format='svg', facecolor='white', bbox_inches='tight')
-    plt.savefig(os.path.join(OUTPUT_DIR, "checkpoint_dotplot_flipped.pdf"), dpi=DPI, facecolor='white', bbox_inches='tight')
-    print(f"\nSaved to {OUTPUT_DIR}")
-    plt.close()
+    style.save_panel(fig, Path(OUTPUT_DIR) / "checkpoint_dotplot_flipped")
+    print(f"\nSaved: {Path(OUTPUT_DIR) / 'checkpoint_dotplot_flipped'}"
+          f".[svg|pdf|png] at {PANEL_W_MM} x {PANEL_H_MM} mm")
 
 
 if __name__ == '__main__':

@@ -1,15 +1,54 @@
 #!/usr/bin/env python3
 """
-Figure 3 Row 2 (TCGA): CEACAM5/6 vs CD274 and Tex ssGSEA in TCGA-STAD.
-Two 1×2 panels matching Row 1 layout:
-  - tcga_ceacam_cd274.png: CEACAM5/6 vs CD274 (matches Panel A)
-  - tcga_ceacam_tex.png:   CEACAM5/6 vs Tex ssGSEA (matches Panel B)
+Figure 3 panel B - CEACAM5 and CEACAM6 against CD274 in TCGA-STAD, one point
+per tumour, open or filled by vital status.
 
-CD274: from BayesPrism deconvolved epithelial expression (log2+1)
-Tex: proper ssGSEA (weighted KS) on bulk FPKM with 18-gene Tex signature
-CEACAM: from BayesPrism deconvolved epithelial expression (log2+1)
+The panel is drawn at the millimetre rectangle it prints in, read from
+03_Final_Panels/panel_rects.csv through 00_Config/slots.py, so the type size
+set here is the type size printed. Margins are measured from the rendered ink
+rather than typed, and the panel-letter corner is left clear for the assembler.
 
-Uses tumor-only 407 samples and gene mapping from STAR raw files.
+  printed panel  Figure 3 B       (PROVENANCE.csv; the directory is 03_C, and
+                                   the letter was looked up, not inferred)
+
+  03_D/create_tcga_ceacam_scatter.py is a different file with the same
+  name drawing printed panel E; the two are not interchangeable.
+
+Every value read, every filter, every statistic and every string is the earlier
+drawing's: the deconvolved epithelial expression, the ssGSEA scoring, the
+per-subplot zero-expression filter, the Spearman test and the P-value
+formatting are untouched.
+
+MARK
+    The earlier drawing used a canvas four times the printed size and set its
+    smallest body type - the in-axes legend - at 4.5 * SCALE. MARK carries the
+    non-type point sizes across to the 1:1 canvas:
+
+        MARK = style.tick_pt() / (SMALL_PT * SCALE)
+
+    The marker area, the marker edge, the dashed regression line and the two
+    legend keys are scaled by it. Tick widths and lengths and spine widths are
+    not: those are style, and cnsplots sets them.
+
+    The legend keys are also divided by the legend's marker scale, which
+    cnsplots sets to a half and which the earlier drawing left at one, so that
+    each key prints at MARK times the size it had rather than half of that -
+    which would close the open ring of the unfilled key into a dot.
+
+THE COHORT LEAVES THE TITLE, AND THE AXIS LABELS ARE RE-WRAPPED
+    Both axes carry the same cohort name and its sample count. The cohort and
+    the two counts are named in the caption and each axes keeps its own
+    correlation and its own P value; on one line the pair sets about 24 mm
+    against a plotting box of about 10 mm, so they take a line each.
+
+    The x label carries the gene alone: at 7 pt the unit sets 11.0 mm and the
+    two plotting boxes are about 9 mm wide, so the two axes' units meet between
+    them. The y label is re-wrapped: it is rotated, so its length is vertical, and the full form sets
+    31.9 mm against a 22.9 mm panel. Both are declared in RENAMES_FIGURE_3.
+
+    The subscript of log2 is written out. Mathtext draws a subscript at 70% of
+    its base size, so it would print at 4.9 pt on a 7 pt label, below the floor
+    this figure set is set to.
 """
 
 import pandas as pd
@@ -27,18 +66,21 @@ warnings.filterwarnings('ignore')
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
 from paths import TCGA_BAYESPRISM_EPI, TCGA_BULK_TUMOR_ONLY, TCGA_RAW_DIR, TCGA_CLINICAL
-from shared.figure_config import use_panel_style
+import panel_style_cns as style  # noqa: E402
+import slots  # noqa: E402
 
 # ==============================================================================
 # Configuration
 # ==============================================================================
-SCALE = 4
-DPI = 300
-# 1×2 panels matching Panel A/B dimensions
-PANEL_WIDTH_CM = 8.0 * SCALE
-PANEL_HEIGHT_CM = 4.0 * SCALE
-CM_TO_INCH = 1 / 2.54
+SCALE = 4                       # the earlier canvas multiplier, for MARK only
+SMALL_PT = 4.5                  # the earlier smallest body type, before * SCALE
 
+MARK = style.tick_pt() / (SMALL_PT * SCALE)   # length multiplier
+AREA = MARK ** 2                              # area multiplier
+
+PANEL_LETTER = "B"
+PANEL_W_MM, PANEL_H_MM = slots.size_mm(3, PANEL_LETTER)
+LETTER_CELL = slots.letter_cell_mm(3, PANEL_LETTER)
 OUTPUT_DIR = Path(__file__).parent
 
 # Data paths (from paths.py)
@@ -106,9 +148,33 @@ def load_data():
     fpkm = fpkm[fpkm.index.str.startswith('ENSG')]
     print(f"  FPKM: {fpkm.shape[0]:,} genes × {fpkm.shape[1]} samples")
 
-    # Gene mapping from raw STAR annotation
-    raw_file = os.listdir(TCGA_RAW_DIR)[0]
-    ann = pd.read_csv(TCGA_RAW_DIR / raw_file, sep='\t', skiprows=1,
+    # Gene mapping from raw STAR annotation.
+    #
+    # This was `os.listdir(TCGA_RAW_DIR)[0]` - unfiltered and unsorted - until
+    # 2026-09-10. TCGA_RAW_DIR holds 443 STAR files and a .gitkeep, and in an
+    # extracted copy of the external tree the placeholder came back first, so
+    # the panel died with pandas EmptyDataError: No columns to parse from file.
+    # It was order-dependent, which is worse than simply broken: on the
+    # filesystem the published panels were built on the same expression
+    # returned a real file and the panel worked.
+    #
+    # Choosing differently cannot move a number, and that is measured rather
+    # than assumed. The file is read for one thing - the Ensembl-ID to
+    # gene-symbol map in `gene_id`/`gene_name`; the per-sample counts are in
+    # columns `usecols` discards. Across all 443 STAR files that map is
+    # byte-identical (md5 b41b583e25d0c49a5ba00c39702d857f of the sorted
+    # id\tsymbol pairs, 1 distinct map). So a filtered, sorted, deterministic
+    # choice reproduces the published panel whichever file the original run got.
+    #
+    # The glob is the one 04_Revision_Analyses/05_R1.6_Spatial_Confounders/
+    # scripts/tcga_immune_exclusion.py already uses on this same directory.
+    star = sorted(TCGA_RAW_DIR.glob('*.augmented_star_gene_counts.tsv'))
+    if not star:
+        raise SystemExit(
+            f"no *.augmented_star_gene_counts.tsv in {TCGA_RAW_DIR}. The "
+            f"Ensembl-to-symbol map is read from one of these; refusing to "
+            f"guess at another file in the directory.")
+    ann = pd.read_csv(star[0], sep='\t', skiprows=1,
                        usecols=['gene_id', 'gene_name']).dropna()
     ens2sym = dict(zip(ann['gene_id'], ann['gene_name']))
 
@@ -168,7 +234,7 @@ def plot_scatter(ax, x, y, vital, title, xlabel, ylabel, fontscale):
         if mask.sum() == 0:
             continue
         ax.scatter(x[mask], y[mask], facecolors=fc, edgecolors=ec,
-                   s=20*fontscale, alpha=0.85, linewidths=0.5*fontscale, zorder=3)
+                   s=20*fontscale*AREA, alpha=0.85, linewidths=0.5*fontscale*MARK, zorder=3)
 
     # Regression line (above dots)
     valid = np.isfinite(x) & np.isfinite(y)
@@ -176,7 +242,7 @@ def plot_scatter(ax, x, y, vital, title, xlabel, ylabel, fontscale):
     if len(xv) >= 3 and np.std(xv) > 0:
         slope, intercept = np.polyfit(xv, yv, 1)
         x_line = np.linspace(xv.min(), xv.max(), 100)
-        ax.plot(x_line, slope * x_line + intercept, 'k--', linewidth=0.8*fontscale, alpha=0.6, zorder=5)
+        ax.plot(x_line, slope * x_line + intercept, 'k--', linewidth=0.8*fontscale*MARK, alpha=0.6, zorder=5)
 
     # Stats — 1 sig digit (floor), scientific for very small P
     import math
@@ -184,52 +250,59 @@ def plot_scatter(ax, x, y, vital, title, xlabel, ylabel, fontscale):
     if _e >= -3:
         p_str = f'P = {_c * 10**_e:.{-_e}f}'
     else:
-        p_str = f'P = {_c}' + r'$\times 10^{' + str(_e) + r'}$'
+        p_str = f'P = {_c}e{_e}'
 
-    ax.set_title(f'{title}\nρ = {r_val:.2f}, {p_str}',
-                 fontsize=6.5 * fontscale, fontweight='normal', linespacing=1.4)
-    ax.set_xlabel(xlabel, fontsize=6 * fontscale)
-    ax.set_ylabel(ylabel, fontsize=6 * fontscale)
+    # The cohort and its sample count are named in the caption; see
+    # THE COHORT LEAVES THE TITLE.
+    print(f'    {title}: rho = {r_val:.2f}, {p_str}')
+    ax.set_title(f'ρ = {r_val:.2f}\n{p_str}', linespacing=1.4)
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
 
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     for spine in ['bottom', 'left']:
-        ax.spines[spine].set_linewidth(0.5*fontscale)
-    ax.tick_params(axis='both', labelsize=5 * fontscale, width=0.5*fontscale, length=3*fontscale)
+        ax.spines[spine].set_linewidth(0.5*fontscale*MARK)
+    ax.tick_params(axis='both', width=0.5*fontscale*MARK, length=3*fontscale*MARK)
     ax.set_box_aspect(1)
 
-    # Compact legend (Dead filled red, Alive open gray)
+    # Compact legend (Dead filled red, Alive open gray). `key` undoes cnsplots'
+    # legend.markerscale so each key prints at MARK times the size it had.
+    key = 1.0 / plt.rcParams['legend.markerscale']
     h_dead = mlines.Line2D([], [], marker='o', color='none', markerfacecolor=COLOR_DEAD,
-                           markeredgecolor=COLOR_DEAD, markersize=4*fontscale/SCALE,
+                           markeredgecolor=COLOR_DEAD,
+                           markersize=4*fontscale/SCALE*MARK*key,
                            label='Dead')
     h_alive = mlines.Line2D([], [], marker='o', color='none', markerfacecolor='none',
-                            markeredgecolor=COLOR_ALIVE, markersize=4*fontscale/SCALE,
-                            markeredgewidth=0.5, label='Alive')
-    ax.legend(handles=[h_dead, h_alive], fontsize=4.5*fontscale, loc='upper left',
+                            markeredgecolor=COLOR_ALIVE,
+                            markersize=4*fontscale/SCALE*MARK*key,
+                            markeredgewidth=0.5*MARK, label='Alive')
+    ax.legend(handles=[h_dead, h_alive], loc='upper left',
               frameon=False, handletextpad=0.3, borderpad=0.2)
 
     return r_val, p_val
 
 
 def main():
-    use_panel_style(font_pt=6)
+    family = style.apply(title_fontsize=7, fontsize_legend=6,
+                         legend_fontsize=6)
+    print(f"  type set in {family}; body {style.body_pt():g} pt, "
+          f"ticks/legend {style.tick_pt():g} pt; MARK {MARK:.3f}")
 
     df = load_data()
     n = len(df)
-    fig_w = PANEL_WIDTH_CM * CM_TO_INCH
-    fig_h = PANEL_HEIGHT_CM * CM_TO_INCH
 
-    # Panel C: CEACAM vs CD274 only (filter zero-expression samples per subplot)
+    # CEACAM vs CD274 only (filter zero-expression samples per subplot)
     panel = {
         'name': 'tcga_ceacam_cd274',
         'combos': [
-            ('CEACAM5', 'CD274', 'Epi. CEACAM5 (log$_2$+1)', 'Epi. PD-L1 (CD274) (log$_2$+1)'),
-            ('CEACAM6', 'CD274', 'Epi. CEACAM6 (log$_2$+1)', 'Epi. PD-L1 (CD274) (log$_2$+1)'),
+            ('CEACAM5', 'CD274', 'Epi. CEACAM5', 'Epi. PD-L1\n(CD274)'),
+            ('CEACAM6', 'CD274', 'Epi. CEACAM6', 'Epi. PD-L1\n(CD274)'),
         ],
     }
 
     results = []
-    fig, axes = plt.subplots(1, 2, figsize=(fig_w, fig_h))
+    fig, axes = style.subplots_mm(PANEL_W_MM, PANEL_H_MM, 1, 2)
     for col_idx, (xcol, ycol, xlabel, ylabel) in enumerate(panel['combos']):
         ax = axes[col_idx]
         # Remove samples with zero CEACAM or zero CD274 expression
@@ -242,13 +315,18 @@ def main():
                                     cohort_title, xlabel, ylabel, SCALE)
         results.append({'x': xcol, 'y': ycol, 'r': r_val, 'p': p_val, 'n': n_sub})
 
-    plt.tight_layout()
-
-    out = OUTPUT_DIR / f"{panel['name']}.png"
-    fig.savefig(out, dpi=DPI, bbox_inches='tight', facecolor='white')
-    fig.savefig(str(out).replace('.png', '.svg'), format='svg', bbox_inches='tight', facecolor='white')
-    print(f"Saved: {out}")
-    plt.close()
+    style.fit_margins(fig, pad_mm=0.6, cell_mm=LETTER_CELL)
+    over = style.overflow_mm(fig)
+    if max(over) > 0:
+        raise RuntimeError(
+            f"ink outside the {PANEL_W_MM} x {PANEL_H_MM} mm canvas "
+            f"(l,r,b,t mm): {over}")
+    intruders = style.letter_clear(fig, LETTER_CELL)
+    if intruders:
+        raise RuntimeError(f"ink under the panel letter cell: {intruders}")
+    style.save_panel(fig, OUTPUT_DIR / panel['name'])
+    print(f"Saved: {OUTPUT_DIR / panel['name']}.[svg|pdf|png] "
+          f"at {PANEL_W_MM} x {PANEL_H_MM} mm")
 
     # Summary
     print(f"\n{'='*65}")

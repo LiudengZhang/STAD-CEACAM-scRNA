@@ -17,7 +17,7 @@ Two things are settled here.
 
 2. The four requested group contrasts, all two-sided.
 
-Input : Round_5/02_Preparation_for_Panels/Metaprogram_Permutation/mp4_permutation_results.json
+Input : submission-tree/02_Preparation_for_Panels/Metaprogram_Permutation/mp4_permutation_results.json
 Output: mp_group_comparisons.csv, mp_direction_report.txt, and panel S8A.
 """
 
@@ -32,11 +32,11 @@ import pandas as pd
 from scipy import stats
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
-from paths import PREPARATION, REVISED_PANELS  # noqa: E402
+from paths import ANALYSIS_PANELS, PREPARATION  # noqa: E402
 
 OUT = Path(__file__).resolve().parents[1] / "outputs"
 OUT.mkdir(parents=True, exist_ok=True)
-PANEL_DIR = REVISED_PANELS / "Supplementary_New" / "S8_CEACAM_Metaprogram" / "S8_A"
+PANEL_DIR = ANALYSIS_PANELS / "S8_CEACAM_Metaprogram" / "S8_A"
 PANEL_DIR.mkdir(parents=True, exist_ok=True)
 
 SCALE, CM, DPI = 4, 1 / 2.54, 300

@@ -28,8 +28,8 @@ Neither replaces a Western blot, and the manuscript says so. Together they move
 the claim from "an inflammatory gene set is enriched" to "the NF-kB transcription
 factors are active and their feedback programme is running".
 
-Inputs : Round_5/02_Preparation_for_Panels/SCENIC/{aucell_matrix.csv,cell_metadata.csv}
-         Round_5/01_Raw_Inputs/01_H5AD/{MoMac,Epithelial,Fibroblast}.h5ad
+Inputs : submission-tree/02_Preparation_for_Panels/SCENIC/{aucell_matrix.csv,cell_metadata.csv}
+         submission-tree/01_Raw_Inputs/01_H5AD/{MoMac,Epithelial,Fibroblast}.h5ad
 Outputs: nfkb_regulon_activity.csv, nfkb_feedback_targets.csv,
          nfkb_sample_values.csv,
          nfkb_regulon_report.txt, panel S11_C
@@ -46,15 +46,16 @@ import scanpy as sc
 from scipy import stats
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
-from paths import (PREPARATION, MOMAC_H5AD, EPITHELIAL_H5AD, FIBROBLAST_H5AD,
-                   REVISED_PANELS)  # noqa: E402
+from paths import (  # noqa: E402
+    ANALYSIS_PANELS, EPITHELIAL_H5AD, FIBROBLAST_H5AD, MOMAC_H5AD,
+    PREPARATION)
 
 warnings.filterwarnings("ignore")
 sc.settings.verbosity = 0
 
 OUT = Path(__file__).resolve().parents[1] / "outputs"
 OUT.mkdir(parents=True, exist_ok=True)
-S11 = REVISED_PANELS / "Supplementary_New" / "S11_Affirmative_Analyses"
+S11 = ANALYSIS_PANELS / "S11_Affirmative_Analyses"
 
 SCALE, CM, DPI = 4, 1 / 2.54, 300
 MIN_CELLS = 20

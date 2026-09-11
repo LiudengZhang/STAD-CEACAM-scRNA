@@ -273,7 +273,7 @@ row("M21", "Methods declare min_size = 5",
 row("M22", "Fig 5A, nine bars",
     "untestable", "the MAST prerank table's seed sweep is not in scope here",
     "untestable", "", "untestable", "", "untestable", "",
-    "not applicable", "Round_5 MAST prerank, a third pipeline again",
+    "not applicable", "submission-tree MAST prerank, a third pipeline again",
     "n/a", "REPRODUCES the printed panel to 0.0001 NES (PROVENANCE, 2026-09-01)")
 
 row("M23", "Fig 5H, 26 NES values",

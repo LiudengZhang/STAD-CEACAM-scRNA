@@ -4,12 +4,48 @@
 # The one-tailed version this replaces is the one used in the preprint,
 # https://www.biorxiv.org/content/10.64898/2026.03.05.708917
 """
-Panel F: MP4 and MP5 Boxplots Side by Side (horizontal layout)
-- Pre-R vs Others (Post-R, Pre-NR, Post-NR) planned contrast
-- Exact permutation test (Fisher's exact permutation)
-- KW homogeneity test among the other 3 groups
+Figure 2 panels H and I - stomach metaprogram scores MP4 and MP5 by treatment
+phase and response.
+
+- Pre-R against the other three groups, as a planned contrast
+- Exact permutation test over all groupings of the samples
+- Kruskal-Wallis homogeneity test among the other three groups
 - Sample-level analysis
-- Two subplots side by side (MP4 left, MP5 right)
+
+ONE SCRIPT, TWO DRAWINGS, TWO PRINTED LETTERS
+    The page letters MP4 as panel H and MP5 as panel I, and gives each its own
+    printed footprint with a 2.4 mm gutter between them. A slot-preserving
+    assembler places one drawing in one slot, so each letter is drawn into its
+    own figure at its own sub-box, read from 03_Final_Panels/slot_subrects.csv
+    through 00_Config/slots.py. The two figures share this script's data, and
+    nothing else: the scores, the groups, the tests, the brackets and every
+    string are computed exactly as they were when the two axes sat side by side
+    in one figure.
+
+    Figures are built in printed order - H first, then I - so that the two
+    drawings line up with the two axes of the earlier single figure.
+
+  printed panels Figure 2 H (MP4) and Figure 2 I (MP5)
+                 (PROVENANCE.csv; NOT inferred from "02_G")
+
+The panels are drawn at the millimetre rectangles they print in, so the type
+size set here is the type size printed. Margins are measured from the rendered
+ink rather than typed, and each panel-letter corner is left clear for the
+assembler.
+
+MARK
+    The earlier drawing used a canvas four times the printed size and set its
+    smallest body type - the "ns" label - at 5 * SCALE. MARK carries the
+    non-type point sizes across to the 1:1 canvas:
+
+        MARK = style.tick_pt() / (SMALL_PT * SCALE)
+
+    Every non-type length - the box, whisker, cap, median and the two bracket
+    line widths, the flier marker and its edge - takes it. Tick widths and
+    lengths and spine widths do not: those are style, and cnsplots sets them.
+
+Every value read, every filter, every test and every string is the earlier
+drawing's. The drawing code is the same code.
 """
 
 import numpy as np
@@ -19,22 +55,22 @@ from scipy.stats import kruskal
 from itertools import combinations as comb
 import matplotlib
 matplotlib.use('Agg')
-import matplotlib.pyplot as plt
 from pathlib import Path
 from collections import Counter
 
 # Central config
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
-from paths import *
-from shared.figure_config import use_panel_style
+from paths import *                                       # noqa: E402,F403
+import panel_style_cns as style                           # noqa: E402
+import slots                                              # noqa: E402
 
 BASE_DIR = Path(__file__).parent
-INTERMEDIATE = NMF_INTERMEDIATE
-STOMACH_NMF_DIR = NMF_PER_SAMPLE
-H5AD_PATH = EPITHELIAL_H5AD
+INTERMEDIATE = NMF_INTERMEDIATE                           # noqa: F405
+STOMACH_NMF_DIR = NMF_PER_SAMPLE                          # noqa: F405
+H5AD_PATH = EPITHELIAL_H5AD                               # noqa: F405
 
-# Colors — standard 4-group palette
+# Colors - standard 4-group palette
 COLORS = {
     'Pre-R':   '#bde0fe',
     'Post-R':  '#ffcfd2',
@@ -42,12 +78,14 @@ COLORS = {
     'Post-NR': '#f1c0e8',
 }
 
-# Nature Cancer 4× scaling
-DPI = 300
-SCALE = 4
-CM_TO_INCH = 1 / 2.54
-PANEL_WIDTH_CM = 8.0 * SCALE    # wide for side-by-side
-PANEL_HEIGHT_CM = 3.5 * SCALE   # shorter row 2 height
+SCALE = 4                           # the earlier canvas multiplier
+SMALL_PT = 5.0                      # the earlier smallest body type
+
+# metaprogram -> (printed letter, output stem), in printed order
+PRINTED = {
+    'S-MP4': ('H', 'mp4_horizontal_boxplot'),
+    'S-MP5': ('I', 'mp5_horizontal_boxplot'),
+}
 
 
 def get_program_genes(program_id, nmf_dir):
@@ -122,7 +160,7 @@ def assign_group(row):
 
 
 def create_panel_F():
-    print("Creating Panel F: MP4, MP5 Horizontal Boxplots...")
+    print("Creating printed panels H and I: MP4, MP5 Horizontal Boxplots...")
 
     stomach_assign = pd.read_csv(INTERMEDIATE / 'panel_A2_stomach_all_mp_assignments.csv')
 
@@ -156,15 +194,16 @@ def create_panel_F():
         n = len(sample_data[sample_data['group'] == g])
         print(f"  {g}: n={n}")
 
-    use_panel_style(font_pt=7)
+    family = style.apply(title_fontsize=7, fontsize_legend=6,
+                         legend_fontsize=6)
+    MARK = style.tick_pt() / (SMALL_PT * SCALE)
+    print(f"  type set in {family}; body {style.body_pt():g} pt, "
+          f"ticks/legend {style.tick_pt():g} pt; MARK {MARK:.5f}")
 
-    # 1 row, 2 columns — side by side
-    fig, axes = plt.subplots(1, 2, figsize=(PANEL_WIDTH_CM * CM_TO_INCH, PANEL_HEIGHT_CM * CM_TO_INCH), sharey=False)
-
-    focus_mps = ['S-MP4', 'S-MP5']
-
-    for i, mp_name in enumerate(focus_mps):
-        ax = axes[i]
+    for mp_name, (letter, stem) in PRINTED.items():
+        panel_w, panel_h = slots.size_mm(2, letter, sub=1)
+        letter_cell = slots.letter_cell_mm(2, letter)
+        fig, ax = style.subplots_mm(panel_w, panel_h)
 
         data_list = []
         colors_list = []
@@ -173,17 +212,20 @@ def create_panel_F():
             data_list.append(scores if len(scores) > 0 else [np.nan])
             colors_list.append(COLORS[grp_name])
 
-        bp = ax.boxplot(data_list, positions=range(4), widths=0.6, patch_artist=True,
-                        boxprops=dict(linewidth=0.5),
-                        whiskerprops=dict(color='black', linewidth=0.5),
-                        capprops=dict(color='black', linewidth=0.5),
-                        flierprops=dict(marker='o', markerfacecolor='white', markersize=4,
-                                       markeredgecolor='black', markeredgewidth=0.5))
+        bp = ax.boxplot(data_list, positions=range(4), widths=0.6,
+                        patch_artist=True,
+                        boxprops=dict(linewidth=0.5 * MARK),
+                        whiskerprops=dict(color='black', linewidth=0.5 * MARK),
+                        capprops=dict(color='black', linewidth=0.5 * MARK),
+                        flierprops=dict(marker='o', markerfacecolor='white',
+                                        markersize=4 * MARK,
+                                        markeredgecolor='black',
+                                        markeredgewidth=0.5 * MARK))
 
         for patch, color in zip(bp['boxes'], colors_list):
             patch.set_facecolor(color)
         for median in bp['medians']:
-            median.set(color='black', linewidth=0.8)
+            median.set(color='black', linewidth=0.8 * MARK)
 
         # Stats: Exact permutation test (Pre-R < Others)
         pre_r_vals = sample_data[sample_data['group'] == 'Pre-R'][mp_name].values
@@ -205,36 +247,40 @@ def create_panel_F():
         y_max = np.max(y_all)
         bracket_y = y_max * 1.08
         ax.plot([0, 0, 2, 2], [bracket_y, bracket_y*1.03, bracket_y*1.03, bracket_y],
-                'k-', lw=0.5)
+                'k-', lw=0.5 * MARK)
         p_str = f'P = {perm_p:.3f}' if perm_p >= 0.001 else 'P < 0.001'
-        ax.text(1.0, bracket_y*1.04, p_str, ha='center', fontsize=6 * SCALE)
+        ax.text(1.0, bracket_y*1.04, p_str, ha='center',
+                fontsize=style.tick_pt())
 
         # ns bracket among others
         ns_y = y_max * 1.22
         ax.plot([1, 1, 3, 3], [ns_y, ns_y*1.02, ns_y*1.02, ns_y],
-                'k-', lw=0.5, alpha=0.6)
-        ax.text(2.0, ns_y*1.03, 'ns', ha='center', fontsize=5 * SCALE, color='#666666')
+                'k-', lw=0.5 * MARK, alpha=0.6)
+        ax.text(2.0, ns_y*1.03, 'ns', ha='center', fontsize=style.tick_pt(),
+                color='#666666')
 
-        ax.set_ylabel('MP Score', fontsize=6 * SCALE)
-        ax.set_title(mp_name, fontsize=7 * SCALE, color='black', fontweight='normal')
+        ax.set_ylabel('MP Score')
+        ax.set_title(mp_name, color='black')
         ax.set_xticks(range(4))
         ax.set_xticklabels(['Pre-R', 'Post-R', 'Pre-NR', 'Post-NR'],
-                           fontsize=6 * SCALE, rotation=45, ha='right')
+                           rotation=45, ha='right')
         ax.set_ylim(top=y_max * 1.45)
-        ax.tick_params(axis='both', labelsize=6 * SCALE, width=0.5, length=4)
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
-        ax.spines['left'].set_linewidth(0.5)
-        ax.spines['bottom'].set_linewidth(0.5)
 
-    plt.tight_layout()
+        style.fit_margins(fig, pad_mm=0.6, cell_mm=letter_cell)
+        over = style.overflow_mm(fig)
+        if max(over) > 0:
+            raise RuntimeError(
+                f"panel {letter}: ink outside the {panel_w} x {panel_h} mm "
+                f"canvas (l,r,b,t mm): {over}")
+        intruders = style.letter_clear(fig, letter_cell)
+        if intruders:
+            raise RuntimeError(f"panel {letter}: ink under the panel letter "
+                               f"cell: {intruders}")
 
-    output = BASE_DIR / 'mp45_horizontal_boxplot.png'
-    plt.savefig(output, dpi=300, bbox_inches='tight', facecolor='white')
-    plt.savefig(output.with_suffix('.svg'), dpi=300, bbox_inches='tight', facecolor='white')
-    plt.savefig(BASE_DIR / 'mp45_horizontal_boxplot.pdf', format='pdf', bbox_inches='tight', facecolor='white')
-    plt.close()
-    print(f"  Saved: {output}")
+        style.save_panel(fig, BASE_DIR / stem, close=False)
+        print(f"  Saved: {stem}.[svg|pdf|png] at {panel_w} x {panel_h} mm")
 
 
 if __name__ == '__main__':

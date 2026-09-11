@@ -7,6 +7,6 @@ HERE="$(cd "$(dirname "$0")" && pwd)"
 while pgrep -f "metric_sensitivity.py --stage" > /dev/null; do sleep 20; done
 for stage in metrics settings seeds; do
   echo "########## live $stage ##########"
-  PYTHONHASHSEED=0 conda run --no-capture-output -n Liudeng_Python_310 \
+  PYTHONHASHSEED=0 conda run --no-capture-output -n stad_ceacam \
       python "$HERE/metric_sensitivity.py" --stage "$stage" --degset live --threads 4
 done

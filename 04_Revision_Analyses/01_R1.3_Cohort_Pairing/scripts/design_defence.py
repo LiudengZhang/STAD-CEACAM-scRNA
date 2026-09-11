@@ -41,14 +41,15 @@ import scanpy as sc
 from scipy import stats
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
-from paths import MANUSCRIPT, MOMAC_H5AD, PREPARATION, REVISED_PANELS  # noqa: E402
+from paths import (  # noqa: E402
+    ANALYSIS_PANELS, MANUSCRIPT, MOMAC_H5AD, PREPARATION)
 
 warnings.filterwarnings("ignore")
 sc.settings.verbosity = 0
 
 OUT = Path(__file__).resolve().parents[1] / "outputs"
 OUT.mkdir(parents=True, exist_ok=True)
-S7 = REVISED_PANELS / "Supplementary_New" / "S7_Cohort_Statistics"
+S7 = ANALYSIS_PANELS / "S7_Cohort_Statistics"
 
 SCALE, CM, DPI = 4, 1 / 2.54, 300
 MIN_CELLS = 20

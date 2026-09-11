@@ -12,7 +12,7 @@ Both labels are as recorded by the treating team in Table S1 and are
 retained. This table shows what each pre-treatment comparison returns if
 either call is handled differently.
 
-scRNA CEACAM5/6 double-positive epithelial fraction (Fig. 2E, Fig. S8B)
+scRNA CEACAM5/6 double-positive epithelial fraction (Fig. 2E, Fig. S7B)
 ------------------------------------------------------------------------------------------------
    as published                               n = 4 vs 4   NR 0.3102    R 0.089     P = 0.0571  r = +0.875
    P26 reclassified as responder              n = 3 vs 5   NR 0.242     R 0.1742    P = 0.3929  r = +0.467
@@ -26,14 +26,14 @@ IHC CEACAM5 + CEACAM6, summed (Fig. 2N)
    P02 excluded (no evaluable response)       n = 3 vs 4   NR 86.4982   R 55.2968   P = 0.0571  r = +1.000
    P26 reclassified and P02 excluded          n = 2 vs 5   NR 88.4612   R 60.7519   P = 0.0952  r = +1.000
 
-IHC CEACAM5 alone (Fig. S8C)
+IHC CEACAM5 alone (Fig. S7C)
 ------------------------------------------------------------------------------------------------
    as published                               n = 4 vs 4   NR 35.0383   R 14.7061   P = 0.2     r = +0.625
    P26 reclassified as responder              n = 3 vs 5   NR 34.4911   R 19.1008   P = 0.3929  r = +0.467
    P02 excluded (no evaluable response)       n = 3 vs 4   NR 42.5092   R 14.7061   P = 0.0571  r = +1.000
    P26 reclassified and P02 excluded          n = 2 vs 5   NR 45.4239   R 19.1008   P = 0.0952  r = +1.000
 
-IHC CEACAM6 alone (Fig. S8C)
+IHC CEACAM6 alone (Fig. S7C)
 ------------------------------------------------------------------------------------------------
    as published                               n = 4 vs 4   NR 48.1227   R 40.5907   P = 0.2     r = +0.625
    P26 reclassified as responder              n = 3 vs 5   NR 48.8661   R 41.6511   P = 0.3929  r = +0.467

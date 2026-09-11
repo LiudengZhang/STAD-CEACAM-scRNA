@@ -14,7 +14,7 @@ The question is narrow: of the cells we call C3_Mac_Inflam_IL1B, what proportion
 does an external reference label as macrophage, and what proportion as monocyte,
 relative to the two reference states in the same object?
 
-Input : Round_5/01_Raw_Inputs/01_H5AD/MoMac.h5ad
+Input : submission-tree/01_Raw_Inputs/01_H5AD/MoMac.h5ad
 Output: celltypist_labels.csv, celltypist_report.txt, panel S11_D
 """
 
@@ -28,14 +28,14 @@ import pandas as pd
 import scanpy as sc
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
-from paths import MOMAC_H5AD, REVISED_PANELS  # noqa: E402
+from paths import ANALYSIS_PANELS, MOMAC_H5AD  # noqa: E402
 
 warnings.filterwarnings("ignore")
 sc.settings.verbosity = 0
 
 OUT = Path(__file__).resolve().parents[1] / "outputs"
 OUT.mkdir(parents=True, exist_ok=True)
-S11 = REVISED_PANELS / "Supplementary_New" / "S11_Affirmative_Analyses"
+S11 = ANALYSIS_PANELS / "S11_Affirmative_Analyses"
 
 SCALE, CM, DPI = 4, 1 / 2.54, 300
 MODEL = "Immune_All_Low.pkl"

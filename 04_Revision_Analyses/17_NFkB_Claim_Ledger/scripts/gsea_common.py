@@ -11,6 +11,7 @@ Everything here is read-only. Nothing outside 17_NFkB_Claim_Ledger/ is written.
 
 from pathlib import Path
 import os
+import sys
 
 import numpy as np
 import pandas as pd
@@ -22,16 +23,22 @@ MOD = HERE.parent
 ROOT = MOD.parents[1]
 OUT = MOD / "outputs"
 
-HALLMARK = ROOT / "00_Reference" / "MSigDB_Hallmark_2020.gmt"
+sys.path.insert(0, str(ROOT / "00_Config"))
+from paths import HALLMARK_GMT, SOUND_DEG_DIR                       # noqa: E402
+
+HALLMARK = HALLMARK_GMT
 
 # `live`   - module 12's own outputs, from full_dataset.h5ad. These are the
 #            tables verify_numbers.py checks the main text against.
-# `sound13`- the 2026-08-31 recompute on sound per-cell-type inputs: twelve
-#            types from the archive, neutrophils from module 13.
+# `sound13`- the recompute on sound per-cell-type inputs: twelve types from
+#            the archive, neutrophils from module 13.
 LIVE = ROOT / "04_Revision_Analyses" / "12_R1.8_DEG_Recompute" / "outputs" / "deg"
-SOUND12 = (ROOT / "07_Archive"
-           / "2026-08-31_deg_recompute_on_sound_per_cell_type_inputs"
-           / "04_Revision_Analyses" / "12_R1.8_DEG_Recompute" / "outputs" / "deg")
+# Named through paths.py, never as a literal into 07_Archive/: that would be a
+# live input read out of an archive, and a path that resolves to nothing in the
+# deposit - which is enough to kill ordinal_denominator.py, positive_control.py
+# and signal_scan.py on a missing file there. The record carries the tables as
+# 02_Preparation_for_Panels/DEG_Sound_Recompute/deg.
+SOUND12 = SOUND_DEG_DIR
 NEUT = (ROOT / "04_Revision_Analyses" / "13_R1.8_Neutrophil_Rebuilt_Recompute"
         / "outputs" / "deg")
 

@@ -12,7 +12,7 @@ SOURCES
 
        13_R1.8_Neutrophil_Rebuilt_Recompute/outputs/nfkb_per_celltype_sound13.csv
 
-   under the author's ruling of 2026-09-03, and NOT from this module's own
+   and NOT from this module's own
    outputs/nfkb_pre_vs_post.csv. That file is the live run on the doubly-
    normalised matrix of 00_Data_Audit/FINDINGS.md sections 1 and 7. It is
    unchanged and still sits beside this report; it is simply not the table

@@ -21,6 +21,18 @@
 # actually printed. 41 KB.
 !03_Final_Panels/PROVENANCE.csv
 
+# the printed geometry 00_Config/slots.py reads: one rect per printed panel, the
+# sub-boxes of the panels that print several plots under one letter, each panel
+# letter's size and box, and the three page sizes. 16 KB in total, measured off
+# the published pages. Every script that asks for its printed size through
+# slots.size_mm() raises FileNotFoundError without them, so an ignored copy
+# would put the release back where it was before ship_slot_geometry() existed.
+# Pure page coordinates in mm; no identifier and no expression value.
+!03_Final_Panels/panel_rects.csv
+!03_Final_Panels/slot_subrects.csv
+!03_Final_Panels/letter_spec.csv
+!03_Final_Panels/page_size.csv
+
 # the derived tables ship_panel_inputs() copies in for the panels that read a
 # small table sitting beside them: a correlation matrix, five Jaccard matrices,
 # two GSEA summaries, the MoMac marker summary, the two NF-kB ranking tables

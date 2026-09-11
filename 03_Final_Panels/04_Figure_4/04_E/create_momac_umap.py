@@ -1,10 +1,44 @@
 #!/usr/bin/env python3
 """
-Panel E: UMAP of MoMac cells colored by minor cell states.
-4× scaling method. Uses sc.pl.umap with right-margin legend (Figure 1 style).
+Figure 4 panel D - UMAP of the monocyte-macrophage compartment, coloured by
+minor cell state, with each state named at its own centroid.
+
+  printed panel  Figure 4 D       (PROVENANCE.csv - the directory is "04_E",
+                                   which also holds the drawing for panel E;
+                                   do NOT read the directory as the letter)
+
+The embedding, the seven states, the colour assignment, the short state names,
+the centroid positions and the point size expression are unchanged. Only the
+canvas and the type change: the panel is drawn at the millimetre rectangle it
+prints in and set in the figure's one type system.
+
+ONE STATE NAME IS RESTORED
+    The page names the C3 state MoMac_IL1B; the script still carried the
+    earlier Mac_IL1B. The cells, the centroid and the colour do not move.
+
+MARK
+    The earlier drawing used a canvas four times the printed size and set its
+    base type from `font.size = 5 * SCALE`, so SMALL_PT = 5 and
+
+        MARK = style.tick_pt() / (SMALL_PT * SCALE)
+        AREA = MARK ** 2
+
+    The scatter's point size is an area and is scaled by AREA.
+
+Judgement call, stated plainly:
+  - the centroid labels were set at `3.5 * SCALE`, which under MARK is 4.2 pt,
+    below the floor this figure is set to. They take their size from the system
+    instead, at tick_pt. Their weight is kept: these strings are drawn on top
+    of the point cloud, and the weight and the white background box behind them
+    are together what separates them from it.
+
+Input : MOMAC_H5AD (00_Config/paths.py)
+Output: this directory / momac_umap_minor_states.{svg,pdf,png}
 """
 
 import scanpy as sc
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
@@ -12,13 +46,16 @@ from pathlib import Path
 import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
-from paths import *
+from paths import *                       # noqa: E402,F401,F403
+import panel_style_cns as style           # noqa: E402
+import slots                              # noqa: E402
 
-SCALE = 4
-DPI = 300
-CM_TO_INCH = 1 / 2.54
+SCALE = 4                       # the earlier canvas multiplier, for MARK only
+SMALL_PT = 5.0                  # the earlier base type, before * SCALE
 
-PANEL_SIZE_CM = 7.0 * SCALE
+PANEL_LETTER = "D"
+PANEL_W_MM, PANEL_H_MM = slots.size_mm(4, PANEL_LETTER)
+LETTER_CELL = slots.letter_cell_mm(4, PANEL_LETTER)
 
 BASE_DIR = Path(__file__).parent
 
@@ -37,7 +74,7 @@ SHORT_NAMES = {
     'C0_Mac_Classic_TREM2':           'Mac_TREM2',
     'C1_Mono_Classic_CD14':           'Mono_CD14',
     'C2_MoMac_Intermediate_HLA-DRA':  'MoMac_Inter',
-    'C3_Mac_Inflam_IL1B':             'Mac_IL1B',
+    'C3_Mac_Inflam_IL1B':             'MoMac_IL1B',
     'C4_Mono_Alternative_CD16':       'Mono_CD16',
     'C5_Mac_Prolif_MKI67':            'Mac_Prolif',
     'C6_Mac_Metallothionein_MT1G':    'Mac_MT1G',
@@ -46,17 +83,15 @@ SHORT_NAMES = {
 
 def main():
     print("=" * 60)
-    print("Panel E: MoMac UMAP (4× scaling, right-margin legend)")
+    print("Panel D: MoMac UMAP")
     print("=" * 60)
 
-    plt.rcParams.update({
-        'font.family': 'sans-serif',
-        'font.sans-serif': ['Arial', 'Liberation Sans', 'Helvetica', 'DejaVu Sans'],
-        'font.size': 5 * SCALE,
-        'svg.fonttype': 'none',
-        'pdf.fonttype': 42,
-        'ps.fonttype': 42,
-    })
+    family = style.apply(title_fontsize=7, fontsize_legend=6,
+                         legend_fontsize=6)
+    MARK = style.tick_pt() / (SMALL_PT * SCALE)
+    AREA = MARK ** 2
+    print(f"  type set in {family}; body {style.body_pt():g} pt, "
+          f"ticks/legend {style.tick_pt():g} pt; MARK {MARK:.4f}")
 
     print("\nLoading data...")
     adata = sc.read_h5ad(MOMAC_H5AD)
@@ -72,8 +107,7 @@ def main():
     for cat, color in zip(adata.obs['minor_cell_state'].cat.categories, color_list):
         print(f"  {cat}: {color}")
 
-    fig_size = PANEL_SIZE_CM * CM_TO_INCH
-    fig, ax = plt.subplots(figsize=(fig_size, fig_size))
+    fig, ax = style.subplots_mm(PANEL_W_MM, PANEL_H_MM)
 
     sc.pl.umap(
         adata,
@@ -83,13 +117,22 @@ def main():
         legend_loc='none',
         title='',
         frameon=False,
-        size=4,
+        size=4 * AREA,
         alpha=0.6,
     )
 
     # Remove legend if scanpy created one anyway
     if ax.get_legend() is not None:
         ax.get_legend().remove()
+
+    # scanpy names the two embedding axes and then switches the axis off, so
+    # neither name has ever been drawn - the saved panel carries no such
+    # string. The Text artists survive the switch, though, and report an
+    # extent, which the 1:1 overflow check reads as ink 2.3 mm off two edges.
+    # Marking them invisible tells the measurement what the page already
+    # shows; the labels themselves are left in place, unchanged.
+    ax.xaxis.label.set_visible(False)
+    ax.yaxis.label.set_visible(False)
 
     # Add on-plot centroid labels
     coords = pd.DataFrame(adata.obsm['X_umap'], columns=['UMAP1', 'UMAP2'], index=adata.obs_names)
@@ -98,7 +141,7 @@ def main():
         mask = coords['cluster'] == cluster_name
         cx = coords.loc[mask, 'UMAP1'].median()
         cy = coords.loc[mask, 'UMAP2'].median()
-        ax.text(cx, cy, cluster_name, fontsize=3.5 * SCALE, fontweight='bold',
+        ax.text(cx, cy, cluster_name, fontsize=style.tick_pt(), fontweight='bold',
                 ha='center', va='center',
                 bbox=dict(boxstyle='round,pad=0.15', facecolor='white', alpha=0.7, edgecolor='none'))
 
@@ -106,12 +149,19 @@ def main():
     for coll in ax.collections:
         coll.set_rasterized(True)
 
-    output_path = BASE_DIR / 'momac_umap_minor_states.png'
-    plt.savefig(output_path, dpi=DPI, bbox_inches='tight', facecolor='white')
-    plt.savefig(output_path.with_suffix('.svg'), format='svg', dpi=DPI, bbox_inches='tight', facecolor='white')
-    print(f"\nSaved: {output_path}")
+    style.fit_margins(fig, pad_mm=0.6, cell_mm=LETTER_CELL)
+    over = style.overflow_mm(fig)
+    if max(over) > 0:
+        raise RuntimeError(
+            f"ink outside the {PANEL_W_MM} x {PANEL_H_MM} mm canvas "
+            f"(l,r,b,t mm): {over}")
+    intruders = style.letter_clear(fig, LETTER_CELL)
+    if intruders:
+        raise RuntimeError(f"ink under the panel letter cell: {intruders}")
 
-    plt.close()
+    stem = 'momac_umap_minor_states'
+    style.save_panel(fig, BASE_DIR / stem)
+    print(f"\nSaved: {stem}.[svg|pdf|png] at {PANEL_W_MM} x {PANEL_H_MM} mm")
 
 
 if __name__ == '__main__':

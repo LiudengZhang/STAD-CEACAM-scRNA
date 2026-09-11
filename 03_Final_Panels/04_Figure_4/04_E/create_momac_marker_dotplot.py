@@ -1,17 +1,63 @@
 #!/usr/bin/env python3
 """
-Panel E: MoMac Subset Marker Dotplot
-=====================================
+Figure 4 panel E - canonical markers of the seven MoMac states, three genes per
+state, twenty-one genes in the printed order.
 
-Generates a dotplot showing canonical markers for all 7 MoMac minor cell states.
-3 markers per state, 21 genes total.
+  printed panel  Figure 4 E       (PROVENANCE.csv - the directory is "04_E",
+                                   which also holds the drawing for panel D;
+                                   do NOT read the directory as the letter)
 
-Adapted from 01_Figure_1/01_D/create_major_celltype_dotplot.py
+The marker list, the state order, the short state names, the FCGR3A/CD16
+display name, `use_raw`, `cmap='Reds'`, `standard_scale='var'` and the marker
+summary table are unchanged. `sc.pl.dotplot` still computes and draws
+everything. Only the canvas and the type change.
+
+ONE STATE NAME AND ONE GENE SYMBOL ARE RESTORED
+    The page names the C3 state MoMac_IL1B and names the gene by its HGNC
+    symbol, FCGR3A. The script carried the earlier Mac_IL1B and displayed
+    FCGR3A as CD16. The same row and the same gene are plotted, in the same
+    order, from the same values; only the printed names change.
+
+MARK
+    The earlier drawing set no font size of its own, so every string it drew
+    came out at matplotlib's default 10 pt on a canvas scanpy sized itself.
+    That reads as SCALE = 1 and SMALL_PT = 10, so
+
+        MARK = style.tick_pt() / (SMALL_PT * SCALE)
+
+    and it is unused: the script specifies no marker area, line width or cap
+    size of its own - scanpy sizes the dots from the axes it is given. The
+    factor is stated anyway so the panel is auditable like the rest.
+
+Two deviations from the usual recipe, forced by scanpy drawing the figure:
+
+  1. `sc.pl.dotplot` builds its own figure, so the panel box is passed to it as
+     `figsize=` rather than through `style.subplots_mm`. scanpy's `figsize` is
+     the whole figure: asking for w x h mm gives a w x h mm canvas.
+  2. scanpy lays the dotplot out flush against the left edge and lets the y
+     tick labels hang outside the canvas. `style.fit_margins` moves scanpy's
+     gridspec inwards until the ink is inside the canvas and the panel-letter
+     corner is clear, and raises if it cannot. `tight_layout` did this job when
+     the save cropped to the ink, and a 1:1 save does not crop.
+
+The colour bar's heading is the only string on the panel set over more than one
+line. It is given a line spacing of 1.15 rather than matplotlib's 1.2, which is
+what the published page sets it at and what keeps the heading clear of its own
+scale.
+
+The dot-size key scanpy draws beside the colour bar is suppressed, because the
+published page does not carry one.
+
+Input : MOMAC_H5AD (00_Config/paths.py)
+Output: this directory / momac_marker_dotplot.{svg,pdf,png}
+        this directory / momac_marker_summary.csv
 """
 
 import scanpy as sc
 import pandas as pd
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from pathlib import Path
 from collections import OrderedDict
@@ -19,15 +65,25 @@ import sys
 
 # Central config
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
-from paths import MOMAC_H5AD
+from paths import MOMAC_H5AD                # noqa: E402
+import panel_style_cns as style             # noqa: E402
+import slots                                # noqa: E402
 
 # Output directory
 OUTPUT_DIR = Path(__file__).resolve().parent
 
+SCALE = 1                       # the earlier drawing had no SCALE: 1:1 at 10 pt
+SMALL_PT = 10.0                 # matplotlib's default font.size, left unchanged
+
+PANEL_LETTER = "E"
+PANEL_W_MM, PANEL_H_MM = slots.size_mm(4, PANEL_LETTER)
+LETTER_CELL = slots.letter_cell_mm(4, PANEL_LETTER)
+
+#: Matplotlib's own default is 1.2; the published headings are set tighter.
+LEGEND_LINESPACING = 1.15
+
 # Scanpy settings
 sc.settings.verbosity = 1
-sc.settings.set_figure_params(dpi=300, facecolor='white')
-plt.rcParams.update({'svg.fonttype': 'none', 'pdf.fonttype': 42, 'ps.fonttype': 42, 'font.family': 'sans-serif', 'font.sans-serif': ['Arial', 'Liberation Sans', 'Helvetica', 'DejaVu Sans']})
 
 # ============================================================================
 # CANONICAL MARKERS BY MOMAC SUBSET
@@ -38,7 +94,7 @@ SHORT_NAMES = OrderedDict([
     ('C0_Mac_Classic_TREM2',           'Mac_TREM2'),
     ('C1_Mono_Classic_CD14',           'Mono_CD14'),
     ('C2_MoMac_Intermediate_HLA-DRA',  'MoMac_Inter'),
-    ('C3_Mac_Inflam_IL1B',             'Mac_IL1B'),
+    ('C3_Mac_Inflam_IL1B',             'MoMac_IL1B'),
     ('C4_Mono_Alternative_CD16',       'Mono_CD16'),
     ('C5_Mac_Prolif_MKI67',            'Mac_Prolif'),
     ('C6_Mac_Metallothionein_MT1G',    'Mac_MT1G'),
@@ -48,8 +104,8 @@ CANONICAL_MARKERS = OrderedDict([
     ('Mac_TREM2',    ['TREM2', 'C1QA', 'APOE']),
     ('Mono_CD14',    ['CD14', 'S100A8', 'VCAN']),
     ('MoMac_Inter',  ['HLA-DRA', 'CST3', 'CLEC10A']),
-    ('Mac_IL1B',     ['IL1B', 'TNF', 'CXCL8']),
-    ('Mono_CD16',    ['CD16', 'CDKN1C', 'LST1']),
+    ('MoMac_IL1B',   ['IL1B', 'TNF', 'CXCL8']),
+    ('Mono_CD16',    ['FCGR3A', 'CDKN1C', 'LST1']),
     ('Mac_Prolif',   ['MKI67', 'TOP2A', 'STMN1']),
     ('Mac_MT1G',     ['MT1G', 'MT2A', 'MT1X']),
 ])
@@ -63,6 +119,12 @@ def main():
     print("MoMac Subset Marker Dotplot Generator")
     print("=" * 80)
 
+    family = style.apply(title_fontsize=7, fontsize_legend=6,
+                         legend_fontsize=6)
+    MARK = style.tick_pt() / (SMALL_PT * SCALE)
+    print(f"  type set in {family}; body {style.body_pt():g} pt, "
+          f"ticks/legend {style.tick_pt():g} pt; MARK {MARK:.3f} (unused here)")
+
     # 1. Load Data
     print("\n[1/4] Loading data...")
     print(f"  Path: {MOMAC_H5AD}")
@@ -75,14 +137,6 @@ def main():
 
     # Rename to short display names
     adata.obs['momac_short'] = adata.obs['minor_cell_state'].replace(SHORT_NAMES)
-
-    # Rename genes for display (FCGR3A → CD16)
-    GENE_DISPLAY = {'FCGR3A': 'CD16'}
-    adata.var_names = pd.Index([GENE_DISPLAY.get(g, g) for g in adata.var_names])
-    if adata.raw is not None:
-        raw_adata = adata.raw.to_adata()
-        raw_adata.var_names = pd.Index([GENE_DISPLAY.get(g, g) for g in raw_adata.var_names])
-        adata.raw = raw_adata
 
     # 2. Validate Markers
     print("\n[2/4] Validating marker genes...")
@@ -119,12 +173,7 @@ def main():
 
     # 4. Create Dotplot
     print("\n[4/4] Creating dotplot...")
-    fig_width = max(10, len(plot_genes) * 0.45)
-    fig_height = max(5, len(cell_type_order) * 0.6)
-
-    plt.figure(figsize=(fig_width, fig_height))
-
-    sc.pl.dotplot(
+    dotplot = sc.pl.dotplot(
         adata,
         var_names=plot_genes,
         groupby='momac_short',
@@ -134,24 +183,46 @@ def main():
         show=False,
         save=None,
         standard_scale='var',
+        return_fig=True,
+        figsize=style.figsize_mm(PANEL_W_MM, PANEL_H_MM),
     )
+    # The published page carries the colour bar and no dot-size key, so the key
+    # scanpy draws by default is suppressed: a legend the paper never printed
+    # would be new content, and this is a visualisation-only change.
+    dotplot.legend(show_size_legend=False)
+    dotplot.make_figure()
+    axes = dotplot.get_axes()
+
+    # scanpy asks matplotlib for the relative size 'small', which is 0.833 of
+    # the base size. The sizes are set explicitly instead, from the same two
+    # the rest of the figure uses.
+    for one in axes.values():
+        one.tick_params(labelsize=style.tick_pt())
+        if one.get_title():
+            one.set_title(one.get_title(), fontsize=style.body_pt(),
+                          linespacing=LEGEND_LINESPACING)
 
     # De-rasterize all axes (scanpy dotplot may rasterize internally)
-    for ax in plt.gcf().get_axes():
+    for ax in dotplot.fig.get_axes():
         for coll in ax.collections:
             coll.set_rasterized(False)
         for img in ax.images:
             img.set_rasterized(False)
 
-    plt.tight_layout()
+    fig = dotplot.fig
+    style.fit_margins(fig, pad_mm=0.6, cell_mm=LETTER_CELL)
+    over = style.overflow_mm(fig)
+    if max(over) > 0:
+        raise RuntimeError(
+            f"ink outside the {PANEL_W_MM} x {PANEL_H_MM} mm canvas "
+            f"(l,r,b,t mm): {over}")
+    intruders = style.letter_clear(fig, LETTER_CELL)
+    if intruders:
+        raise RuntimeError(f"ink under the panel letter cell: {intruders}")
 
-    output_path = OUTPUT_DIR / 'momac_marker_dotplot.png'
-    plt.savefig(output_path, dpi=300, bbox_inches='tight')
-    plt.savefig(output_path.with_suffix('.svg'), bbox_inches='tight')
-    plt.close()
-
-    print(f"  Saved: {output_path}")
-    print(f"  Saved: {output_path.with_suffix('.svg')}")
+    stem = 'momac_marker_dotplot'
+    style.save_panel(fig, OUTPUT_DIR / stem)
+    print(f"  Saved: {stem}.[svg|pdf|png] at {PANEL_W_MM} x {PANEL_H_MM} mm")
 
     # Summary table
     summary_data = []

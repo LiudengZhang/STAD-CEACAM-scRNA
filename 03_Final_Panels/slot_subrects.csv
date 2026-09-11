@@ -1,0 +1,18 @@
+figure,printed_panel,sub_index,rect_mm,note
+Figure 2,H,1,"97.1,62.3,132.2,91.1",one source SVG (02_G/mp45_horizontal_boxplot.svg) is printed as two lettered panels; each row is that letter's own printed footprint
+Figure 2,I,1,"134.6,62.3,168.0,91.2",one source SVG (02_G/mp45_horizontal_boxplot.svg) is printed as two lettered panels; each row is that letter's own printed footprint
+Figure 2,K,1,"120.5,104.0,138.2,123.3","two source SVGs (02_J ceacam6, 02_K ceacam5) under one printed letter; measured at dpi 200, closing radius 1.2 mm"
+Figure 2,K,2,"140.8,104.0,159.9,123.3","two source SVGs (02_J ceacam6, 02_K ceacam5) under one printed letter; measured at dpi 200, closing radius 1.2 mm"
+Figure 2,L,1,"116.3,127.8,138.4,148.0","two source SVGs (02_N ceacam6, 02_O ceacam5) under one printed letter; sub-box 1 carries the shared panel letter, which is fused to its y axis; measured at dpi 200, closing radius 0.6 mm"
+Figure 2,L,2,"139.8,128.1,161.9,148.0","two source SVGs (02_N ceacam6, 02_O ceacam5) under one printed letter; sub-box 1 carries the shared panel letter, which is fused to its y axis; measured at dpi 200, closing radius 0.6 mm"
+Figure 4,H,1,"139.8,147.7,163.7,170.9","two source SVGs (04_H linghua, 04_H kumar) stacked under one printed letter; measured at dpi 200, closing radius 1.2 mm"
+Figure 4,H,2,"139.1,174.9,162.9,198.1","two source SVGs (04_H linghua, 04_H kumar) stacked under one printed letter; measured at dpi 200, closing radius 1.2 mm"
+Figure 5,J,1,"3.2,117.1,21.3,143.3","four source SVGs (05_I MoMac, 05_J epithelial, 05_K fibroblast, 05_DC_CD274 DC) under one printed letter; measured at dpi 200, closing radius 0.9 mm"
+Figure 5,J,2,"22.1,117.3,42.8,143.3","four source SVGs (05_I MoMac, 05_J epithelial, 05_K fibroblast, 05_DC_CD274 DC) under one printed letter; measured at dpi 200, closing radius 0.9 mm"
+Figure 5,J,3,"43.3,117.3,64.1,143.3","four source SVGs (05_I MoMac, 05_J epithelial, 05_K fibroblast, 05_DC_CD274 DC) under one printed letter; measured at dpi 200, closing radius 0.9 mm"
+Figure 5,J,4,"67.3,117.6,85.6,143.3","four source SVGs (05_I MoMac, 05_J epithelial, 05_K fibroblast, 05_DC_CD274 DC) under one printed letter; measured at dpi 200, closing radius 0.9 mm"
+Figure 5,N,1,"3.6,148.5,36.8,175.3","four source SVGs (05_GSEA_Summary MoMac/epithelial/fibroblast/DC) plus the shared legend strip, all under one printed letter; measured at dpi 200, closing radius 0.9 mm"
+Figure 5,N,2,"39.2,148.5,72.5,175.3","four source SVGs (05_GSEA_Summary MoMac/epithelial/fibroblast/DC) plus the shared legend strip, all under one printed letter; measured at dpi 200, closing radius 0.9 mm"
+Figure 5,N,3,"74.9,148.5,108.2,175.3","four source SVGs (05_GSEA_Summary MoMac/epithelial/fibroblast/DC) plus the shared legend strip, all under one printed letter; measured at dpi 200, closing radius 0.9 mm"
+Figure 5,N,4,"110.6,148.5,143.9,175.3","four source SVGs (05_GSEA_Summary MoMac/epithelial/fibroblast/DC) plus the shared legend strip, all under one printed letter; measured at dpi 200, closing radius 0.9 mm"
+Figure 5,N,5,"146.8,149.7,158.8,175.3","four source SVGs (05_GSEA_Summary MoMac/epithelial/fibroblast/DC) plus the shared legend strip, all under one printed letter; measured at dpi 200, closing radius 0.9 mm"

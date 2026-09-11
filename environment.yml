@@ -66,13 +66,26 @@ dependencies:
   - rpy2=3.6.4           # MAST differential expression
   - anndata2ri=1.3.2
 
+  # 04_Revision_Analyses/11_R1.5_CEACAM_Family_and_
+  # Interactions/scripts/ceacam_family_and_interactions.py imports
+  # cellphonedb.src.core.methods on its first line, so leaving it unlisted
+  # kills that analysis with ModuleNotFoundError in every clean
+  # environment. 5.0.1 is the version it was run at here (the CellPhoneDB v5
+  # release the database zip in 02_External/CellPhoneDB/ belongs to). It goes
+  # in the pip block below, under the same --no-deps rule as cnsplots: it
+  # declares numpy, scanpy, anndata and scikit-learn without upper bounds and
+  # resolving them would move the versions every figure in the paper was
+  # produced at. geosketch and ktplotspy are the only two of its dependencies
+  # missing here and are listed beside it; numpy-groupies, requests and tqdm
+  # are already present.
+
   # celltypist and pydeseq2 are NOT in this environment. pydeseq2 0.5.4
   # requires numpy>=2.0.0, and the analysis stack above is pinned to numpy
   # 1.23.5, which is the version every figure in the paper was produced with.
   # Installing them here silently upgrades numpy and breaks scanpy and anndata
   # for every script. They live in their own environment; see the Dockerfile.
 
-  # Added 2026-09-01 for the figure restyle. cnsplots supplies the type system
+  # For the figure restyle: cnsplots supplies the type system
   # every restyled panel is set in, through 00_Config/panel_style_cns.py. It is
   # a PyPI package, so it goes in the pip block below.
   #
@@ -81,8 +94,8 @@ dependencies:
   # move the versions this analysis stack is pinned to, and every figure in the
   # paper was produced at those versions. Only three of its dependencies were
   # missing here - glasbey, num2tex and PyComplexHeatmap - and they are listed
-  # beside it. Installed this way on 2026-09-01, no existing package version
-  # moved: verified against the environment before and after.
+  # beside it. Installed this way, no existing package version moves; that is
+  # verified against the environment before and after, not assumed.
   - pip
   - pip:
       - --no-deps
@@ -90,3 +103,7 @@ dependencies:
       - glasbey==0.3.0
       - num2tex==0.8
       - PyComplexHeatmap==1.8.5
+      - cellphonedb==5.0.1
+      - geosketch==1.3
+      - ktplotspy==0.3.2
+      - fbpca==1.0        # geosketch's own dependency, and not here

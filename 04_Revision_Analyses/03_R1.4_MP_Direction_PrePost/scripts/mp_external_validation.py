@@ -30,13 +30,14 @@ import statsmodels.formula.api as smf
 from scipy import stats
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
-from paths import MANUSCRIPT, PREPARATION, TIGER_META, REVISED_PANELS  # noqa: E402
+from paths import (  # noqa: E402
+    ANALYSIS_PANELS, MANUSCRIPT, PREPARATION, TIGER_META)
 
 warnings.filterwarnings("ignore")
 
 OUT = Path(__file__).resolve().parents[1] / "outputs"
 OUT.mkdir(parents=True, exist_ok=True)
-S8 = REVISED_PANELS / "Supplementary_New" / "S8_CEACAM_Metaprogram"
+S8 = ANALYSIS_PANELS / "S8_CEACAM_Metaprogram"
 
 SCALE, CM, DPI = 4, 1 / 2.54, 300
 COLOR_R, COLOR_NR = "#2166AC", "#B2182B"
@@ -107,10 +108,9 @@ def main():
     v = pd.DataFrame(rows)
     v.to_csv(OUT / "mp_external_validation.csv", index=False)
     # The per-sample scores as well as the summary. _panel() draws these 45
-    # points per programme, and until 2026-09-01 they existed only inside this
-    # function, so the panel could not be redrawn without recomputing the score
-    # - which would have put the scoring code in two places. One file, no
-    # number changed.
+    # points per programme, so they are written out rather than kept inside this
+    # function: otherwise the panel cannot be redrawn without recomputing the
+    # score, which would put the scoring code in two places.
     pd.DataFrame(scores).rename_axis("sample").to_csv(
         OUT / "mp_external_sample_scores.csv")
 

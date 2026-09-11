@@ -4,11 +4,37 @@
 # The one-tailed version this replaces is the one used in the preprint,
 # https://www.biorxiv.org/content/10.64898/2026.03.05.708917
 """
-Panel 2L: CEACAM6 boxplot from PRJEB25780 (BayesPrism epithelial-deconvolved)
-Target-size approach: panel created at exact assembly slot dimensions.
+Figure 2 panel L, CEACAM6 box - BayesPrism epithelial-deconvolved CEACAM6
+expression in the PRJEB25780 bulk cohort, responders versus non-responders.
+
+Printed L is one letter over two drawings, 02_N (CEACAM6, this file) and 02_O
+(CEACAM5). Each is drawn at its own printed sub-box, read from
+03_Final_Panels/slot_subrects.csv through 00_Config/slots.py, so the type
+size set here is the type size printed. Margins are measured from the rendered
+ink rather than typed. The printed letter L sits inside this box, so its corner
+is left clear for the assembler.
+
+  printed panel  Figure 2 L, box 1   (PROVENANCE.csv; NOT inferred from "02_N")
+
+MARK
+    This is the one Figure 2 panel that was not drawn on a canvas four times
+    the printed size: the earlier drawing set its type at print size on a
+    27.0 x 24.5 mm canvas, so SCALE = 1, and its smallest body type is the
+    bracket P value at 4 pt. MARK carries the non-type point sizes across:
+
+        MARK = style.tick_pt() / (SMALL_PT * SCALE)
+
+    It is above 1 here for the reason it is below 1 elsewhere - this panel's
+    type was already near print size, so holding the marks' size relative to
+    the type makes them grow rather than shrink. The violin, box, whisker, cap,
+    median and bracket line widths and the jittered point areas take it. Tick
+    widths and lengths and spine widths do not: those are style, and cnsplots
+    sets them.
+
+Every value read, every filter, every statistic and every string is the earlier
+drawing's. The drawing code is the same code.
 """
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from scipy import stats
@@ -16,15 +42,9 @@ from pathlib import Path
 import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
-from paths import TIGER_BAYESPRISM_EPI, TIGER_META
-from shared.figure_config import use_panel_style
-
-# Target slot from assembly layout (mm)
-# Row 3 stacked L/M: w = 180 * 0.15 = 27mm, h = (50 - 1) / 2 = 24.5mm
-PANEL_W_MM = 27.0
-PANEL_H_MM = 24.5
-MM_TO_INCH = 1 / 25.4
-DPI = 300
+from paths import TIGER_BAYESPRISM_EPI, TIGER_META       # noqa: E402
+import panel_style_cns as style                          # noqa: E402
+import slots                                             # noqa: E402
 
 OUTPUT_DIR = Path(__file__).parent
 
@@ -32,9 +52,21 @@ OUTPUT_DIR = Path(__file__).parent
 COLOR_R = '#2166AC'
 COLOR_NR = '#B2182B'
 
+PANEL_LETTER = "L"
+PANEL_W_MM, PANEL_H_MM = slots.size_mm(2, PANEL_LETTER, sub=1)
+LETTER_CELL = slots.letter_cell_mm(2, PANEL_LETTER)
+
+SCALE = 1                           # the earlier canvas multiplier
+SMALL_PT = 4.0                      # the earlier smallest body type
+
 
 def main():
-    use_panel_style(font_pt=6, scale=1, **{'axes.labelsize': 6, 'xtick.labelsize': 5, 'ytick.labelsize': 5, 'axes.linewidth': 0.5, 'xtick.major.width': 0.5, 'ytick.major.width': 0.5, 'xtick.major.size': 2, 'ytick.major.size': 2, 'axes.spines.top': False, 'axes.spines.right': False})
+    family = style.apply(title_fontsize=7, fontsize_legend=6,
+                         legend_fontsize=6)
+    MARK = style.tick_pt() / (SMALL_PT * SCALE)
+    AREA = MARK ** 2
+    print(f"  type set in {family}; body {style.body_pt():g} pt, "
+          f"ticks/legend {style.tick_pt():g} pt; MARK {MARK:.5f}")
 
     # Load BayesPrism deconvolved epithelial expression
     print("Loading BayesPrism epithelial expression...")
@@ -58,7 +90,7 @@ def main():
     print(f"Mann-Whitney U (two-sided): U={stat:.0f}, P={pval:.4f}")
 
     # Plot
-    fig, ax = plt.subplots(figsize=(PANEL_W_MM * MM_TO_INCH, PANEL_H_MM * MM_TO_INCH))
+    fig, ax = style.subplots_mm(PANEL_W_MM, PANEL_H_MM)
 
     data = [r_vals, nr_vals]
     positions = [1, 2]
@@ -70,48 +102,62 @@ def main():
     for i, body in enumerate(vp['bodies']):
         body.set_facecolor(colors[i])
         body.set_edgecolor('black')
-        body.set_linewidth(0.5)
+        body.set_linewidth(0.5 * MARK)
         body.set_alpha(0.7)
 
     # Boxplot
     bp = ax.boxplot(data, positions=positions, widths=0.15, patch_artist=True,
                     showfliers=False,
-                    boxprops=dict(facecolor='white', linewidth=0.5),
-                    whiskerprops=dict(color='black', linewidth=0.5),
-                    capprops=dict(color='black', linewidth=0.5),
-                    medianprops=dict(color='black', linewidth=0.8))
+                    boxprops=dict(facecolor='white', linewidth=0.5 * MARK),
+                    whiskerprops=dict(color='black', linewidth=0.5 * MARK),
+                    capprops=dict(color='black', linewidth=0.5 * MARK),
+                    medianprops=dict(color='black', linewidth=0.8 * MARK))
 
     # Jittered points
     np.random.seed(42)
     for i, (pos, vals, color) in enumerate(zip(positions, data, colors)):
         jitter = np.random.uniform(-0.08, 0.08, len(vals))
-        ax.scatter(pos + jitter, vals, c=color, s=6, alpha=0.8,
-                   edgecolors='white', linewidths=0.3, zorder=3)
+        ax.scatter(pos + jitter, vals, c=color, s=6 * AREA, alpha=0.8,
+                   edgecolors='white', linewidths=0.3 * MARK, zorder=3)
 
     # Significance bracket
     y_max = max(np.max(r_vals), np.max(nr_vals))
     y_bracket = y_max * 1.1
     ax.plot([1, 1, 2, 2],
             [y_bracket, y_bracket * 1.03, y_bracket * 1.03, y_bracket],
-            'k-', linewidth=0.5)
+            'k-', linewidth=0.5 * MARK)
     p_text = f'P = {pval:.3f}' if pval >= 0.001 else 'P < 0.001'
-    ax.text(1.5, y_bracket * 1.05, p_text, ha='center', va='bottom', fontsize=4)
+    ax.text(1.5, y_bracket * 1.05, p_text, ha='center', va='bottom',
+            fontsize=style.tick_pt())
 
     # Labels
-    ax.set_title(r'$\it{CEACAM6}$ (Epi)', fontsize=5, pad=2)
-    ax.set_ylabel('Expression (log2)', fontsize=5)
+    ax.set_title('$\\it{CEACAM6}$')
+    ax.set_ylabel('Expression\n(log2)')
     ax.set_xticks([1, 2])
-    ax.set_xticklabels(['R', 'NR'], fontsize=5)
+    # The two response labels stand 5.5 mm apart on this box and set 5.52 and
+    # 7.05 mm at 6 pt, so drawn horizontally they run into one another - by
+    # 1.08 mm on the narrowest of the four boxes of panels K and L. They are
+    # set at 45 degrees instead, which is what the printed page's own narrow
+    # panels do: the same two strings, the same tick positions, a different
+    # angle.
+    ax.set_xticklabels(['Pre-R', 'Pre-NR'],
+                       rotation=45, ha='right')
     ax.set_ylim(0, y_max * 1.35)
 
-    plt.tight_layout(pad=0.3)
+    style.fit_margins(fig, pad_mm=0.6, cell_mm=LETTER_CELL)
+    over = style.overflow_mm(fig)
+    if max(over) > 0:
+        raise RuntimeError(
+            f"ink outside the {PANEL_W_MM} x {PANEL_H_MM} mm canvas "
+            f"(l,r,b,t mm): {over}")
+    intruders = style.letter_clear(fig, LETTER_CELL)
+    if intruders:
+        raise RuntimeError(
+            f"ink under the panel letter cell: {intruders}")
 
-    # Save
-    for ext in ['svg', 'png', 'pdf']:
-        out = OUTPUT_DIR / f"ceacam6_prjeb25780_boxplot.{ext}"
-        fig.savefig(out, dpi=DPI, bbox_inches='tight', facecolor='white')
-        print(f"Saved: {out}")
-    plt.close()
+    style.save_panel(fig, OUTPUT_DIR / "ceacam6_prjeb25780_boxplot")
+    print(f"Saved: {OUTPUT_DIR / 'ceacam6_prjeb25780_boxplot'}.[svg|pdf|png] "
+          f"at {PANEL_W_MM} x {PANEL_H_MM} mm")
 
 
 if __name__ == '__main__':

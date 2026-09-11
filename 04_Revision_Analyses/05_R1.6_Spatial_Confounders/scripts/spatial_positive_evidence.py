@@ -34,7 +34,8 @@ That is an argument, not evidence, so three things are done here to test it:
 
 Outputs: spatial_mediation.csv, spatial_compositionality.csv,
          tiger_immune_exclusion.csv, gse246011_replication.csv,
-         spatial_positive_report.txt, panel S11_A
+         spatial_positive_report.txt, panel S11_A (A and C only; the B
+         coefficients are computed and tabulated, but deliberately not drawn)
 """
 
 from pathlib import Path
@@ -49,14 +50,14 @@ from scipy import stats
 from scipy.spatial import cKDTree
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
-from paths import (SPATIAL_SPOT_DATA, PREPARATION, TIGER_META, RAW_INPUTS,
-                   REVISED_PANELS)  # noqa: E402
+from paths import (  # noqa: E402
+    ANALYSIS_PANELS, PREPARATION, RAW_INPUTS, SPATIAL_SPOT_DATA, TIGER_META)
 
 warnings.filterwarnings("ignore")
 
 OUT = Path(__file__).resolve().parents[1] / "outputs"
 OUT.mkdir(parents=True, exist_ok=True)
-S11 = REVISED_PANELS / "Supplementary_New" / "S11_Affirmative_Analyses"
+S11 = ANALYSIS_PANELS / "S11_Affirmative_Analyses"
 GSE246011 = RAW_INPUTS / "02_External" / "Spatial" / "GSE246011" / "05_Spatial_Analysis"
 
 SCALE, CM, DPI = 4, 1 / 2.54, 300
@@ -502,8 +503,14 @@ def main():
 
 
 def _panel(med, t, g):
+    # Two axes, not three: the PRJEB25780 purity-adjusted cell-fraction
+    # coefficients (section B) are computed above and written to
+    # tiger_immune_exclusion.csv, but are not shown. Each remaining axis keeps
+    # the width it had in the three-axis layout - the figure is narrower, not
+    # stretched - and the assembler places it at the same rectangle, so panels
+    # B-D of S11 do not move.
     d = (S11 / "S11_A"); d.mkdir(parents=True, exist_ok=True)
-    fig, axes = plt.subplots(1, 3, figsize=(12.0 * SCALE * CM, 4.0 * SCALE * CM))
+    fig, axes = plt.subplots(1, 2, figsize=(8.0 * SCALE * CM, 4.0 * SCALE * CM))
 
     ax = axes[0]
     x = np.arange(len(med))
@@ -524,22 +531,6 @@ def _panel(med, t, g):
     ax.legend(frameon=False, fontsize=5 * SCALE)
 
     ax = axes[1]
-    if t is not None:
-        s = t.sort_values("beta_purity_adjusted")
-        y = np.arange(len(s))
-        cols = ["#B2182B" if v < 0 else "#2166AC" for v in s["beta_purity_adjusted"]]
-        ax.barh(y, s["beta_purity_adjusted"], color=cols, edgecolor="#333",
-                linewidth=0.4, height=0.7)
-        ax.set_yticks(y)
-        ax.set_yticklabels([c.replace("Monocytes Macrophages",
-                                      "Mono/Mac") for c in s["cell_type"]],
-                           fontsize=4.5 * SCALE)
-        ax.axvline(0, color="#666", linewidth=0.8)
-        ax.set_xlabel("Fraction change per log2 CEACAM\n(purity-adjusted)",
-                      fontsize=5.5 * SCALE)
-        ax.set_title(f"PRJEB25780, n = {int(s['n'].iloc[0])}", fontsize=6 * SCALE)
-
-    ax = axes[2]
     if g is not None:
         y = np.arange(len(g))
         ax.barh(y, g["ceacam_coef"], color="#7B3294", edgecolor="#333",
@@ -558,7 +549,7 @@ def _panel(med, t, g):
         ax.tick_params(axis="both", labelsize=5 * SCALE, width=0.8, length=3)
         for s_ in ("top", "right"):
             ax.spines[s_].set_visible(False)
-    fig.subplots_adjust(left=0.09, right=0.98, top=0.86, bottom=0.22, wspace=0.85)
+    fig.subplots_adjust(left=0.135, right=0.97, top=0.86, bottom=0.22, wspace=0.85)
     stem = d / "S11_A_spatial_positive_evidence"
     for ext in ("svg", "pdf", "png"):
         fig.savefig(f"{stem}.{ext}", dpi=DPI, facecolor="white")

@@ -1,9 +1,44 @@
 #!/usr/bin/env python3
 """
-Panel B: 2×2 Pathway Score UMAPs for MoMac cells.
-4× scaling method for Nature Cancer.
-"""
+Figure 5 panel B - 2x2 pathway-score UMAPs for MoMac cells.
 
+The panel is drawn at the millimetre rectangle it prints in, read from
+03_Final_Panels/panel_rects.csv through 00_Config/slots.py, so the type size
+set here is the type size printed.
+
+  printed panel  Figure 5 B       (PROVENANCE.csv; the directory name agrees,
+                                   but the letter was looked up, not inferred)
+
+The four Hallmark pathways, the pinned GMT, the `highly_variable` gene
+selection that reproduces the published scoring, `sc.tl.score_genes` and the
+2nd/98th percentile colour limits are unchanged, and so is the comment
+explaining the `highly_variable` selection: it records a real trap, not a
+preference.
+
+MARK
+    The earlier drawing used a canvas four times the printed size and set its
+    smallest body type - the colorbar tick labels - at 5 * SCALE, so
+
+        MARK = style.tick_pt() / (SMALL_PT * SCALE)
+        AREA = MARK ** 2
+
+    The only non-type size the script sets is the scatter marker area, `s=1`,
+    which becomes `1 * AREA`: the same fraction of the type size it was before.
+    Colorbar tick widths and lengths and the colorbar outline width are not
+    rescaled - those are style, and cnsplots sets them.
+
+The point layer is rasterised and the labels are not. One glyph per cell would
+make the panel tens of megabytes and push the assembled page past the size at
+which the assembler stops compositing vector and flattens whole panels, taking
+their text with them.
+
+Layout: the four colorbars are made by `plt.colorbar(ax=...)`, which creates
+axes outside the figure's gridspec, so `subplots_adjust` - and with it
+`style.fit_margins` - moves the maps and leaves the colorbars behind.
+`tight_layout` is a layout algorithm rather than a canvas rescale, so the 1:1
+relationship is untouched, and `style.overflow_mm` and `style.letter_clear`
+still have the last word.
+"""
 import scanpy as sc
 import numpy as np
 import matplotlib
@@ -16,16 +51,17 @@ warnings.filterwarnings('ignore')
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
 from paths import *
-from shared.figure_config import use_panel_style
+import panel_style_cns as style
+import slots
 
 BASE_DIR = Path(__file__).parent
 
-# 4× scaling
-DPI = 300
-SCALE = 4
-CM_TO_INCH = 1 / 2.54
-PANEL_WIDTH_CM = 4.5 * SCALE
-PANEL_HEIGHT_CM = 4.2 * SCALE
+SCALE = 4                       # the earlier canvas multiplier, for MARK only
+SMALL_PT = 5.0                  # the earlier smallest body type, before * SCALE
+
+PANEL_LETTER = "B"
+PANEL_W_MM, PANEL_H_MM = slots.size_mm(5, PANEL_LETTER)
+LETTER_CELL = slots.letter_cell_mm(5, PANEL_LETTER)
 
 PATHWAYS = [
     ('TNF-alpha Signaling via NF-kB', 'TNFα/NF-κB'),
@@ -47,7 +83,12 @@ def _read_gmt(path):
 
 
 def main():
-    use_panel_style(font_pt=7)
+    family = style.apply(title_fontsize=7, fontsize_legend=6,
+                         legend_fontsize=6)
+    MARK = style.tick_pt() / (SMALL_PT * SCALE)
+    AREA = MARK ** 2
+    print(f"  type set in {family}; body {style.body_pt():g} pt, "
+          f"ticks/legend {style.tick_pt():g} pt; MARK {MARK:.3f}")
 
     print("Loading MoMac data...")
     adata = sc.read_h5ad(MOMAC_H5AD)
@@ -88,7 +129,7 @@ def main():
         sc.tl.score_genes(adata, genes_in_data, score_name=score_name)
         print(f"  {pathway_name}: {len(genes_in_data)} genes")
 
-    fig, axes = plt.subplots(2, 2, figsize=(PANEL_WIDTH_CM * CM_TO_INCH, PANEL_HEIGHT_CM * CM_TO_INCH))
+    fig, axes = style.subplots_mm(PANEL_W_MM, PANEL_H_MM, 2, 2)
     axes = axes.flatten()
 
     for idx, (pathway_name, display_name) in enumerate(PATHWAYS):
@@ -103,24 +144,31 @@ def main():
         umap = adata.obsm['X_umap']
         scores = adata.obs[score_name].values
         scatter = ax.scatter(umap[:, 0], umap[:, 1], c=scores, cmap='Purples',
-                             s=1, alpha=0.8, rasterized=True,
+                             s=1 * AREA, alpha=0.8, rasterized=True,
                              vmin=np.percentile(scores, 2), vmax=np.percentile(scores, 98))
-        ax.set_title(display_name, fontsize=7 * SCALE)
+        ax.set_title(display_name)
         ax.set_xticks([]); ax.set_yticks([])
         ax.set_xlabel(''); ax.set_ylabel('')
 
         cbar = plt.colorbar(scatter, ax=ax, shrink=0.8, pad=0.02)
-        cbar.ax.tick_params(labelsize=5 * SCALE, width=1.0, length=3)
-        cbar.outline.set_linewidth(1.0)
 
-    plt.tight_layout()
+    # The panel letter is drawn over the panel's top-left corner by the
+    # assembler, so that corner is kept free. Reserving a left band of the
+    # letter cell's width costs less paper here than a top band of its height,
+    # which is the choice `style.fit_margins` makes for a panel it can move.
+    plt.tight_layout(rect=(LETTER_CELL[0] / PANEL_W_MM, 0.0, 1.0, 1.0))
 
-    output = BASE_DIR / 'momac_4pathway_umap.png'
-    plt.savefig(output, dpi=DPI, bbox_inches='tight', facecolor='white')
-    plt.savefig(output.with_suffix('.svg'), dpi=DPI, bbox_inches='tight', facecolor='white')
-    plt.savefig(output.with_suffix('.pdf'), format='pdf', dpi=DPI, bbox_inches='tight', facecolor='white')
-    plt.close()
-    print(f"Saved: {output}")
+    over = style.overflow_mm(fig)
+    if max(over) > 0:
+        raise RuntimeError(
+            f"ink outside the {PANEL_W_MM} x {PANEL_H_MM} mm canvas "
+            f"(l,r,b,t mm): {over}")
+    intruders = style.letter_clear(fig, LETTER_CELL)
+    if intruders:
+        raise RuntimeError(f"ink under the panel letter cell: {intruders}")
+    style.save_panel(fig, BASE_DIR / 'momac_4pathway_umap')
+    print(f"Saved: momac_4pathway_umap.[svg|pdf|png] "
+          f"at {PANEL_W_MM} x {PANEL_H_MM} mm")
 
 
 if __name__ == "__main__":

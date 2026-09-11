@@ -17,7 +17,7 @@ macrophage pole).
 Note on the published figure: the marker dotplot in Figure 4E lists "CD16",
 which is not a valid HGNC symbol. The gene is FCGR3A and is used here.
 
-Input : Round_5/01_Raw_Inputs/01_H5AD/MoMac.h5ad
+Input : submission-tree/01_Raw_Inputs/01_H5AD/MoMac.h5ad
 Output: momac_lineage_scores.csv, momac_lineage_tests.csv,
         momac_lineage_report.txt, panels S9_C and S9_D
 """
@@ -33,14 +33,14 @@ import scanpy as sc
 from scipy import stats
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
-from paths import MOMAC_H5AD, REVISED_PANELS  # noqa: E402
+from paths import ANALYSIS_PANELS, MOMAC_H5AD  # noqa: E402
 
 warnings.filterwarnings("ignore")
 sc.settings.verbosity = 0
 
 OUT = Path(__file__).resolve().parents[1] / "outputs"
 OUT.mkdir(parents=True, exist_ok=True)
-S9 = REVISED_PANELS / "Supplementary_New" / "S9_Mechanism_Specificity"
+S9 = ANALYSIS_PANELS / "S9_Mechanism_Specificity"
 
 SCALE, CM, DPI = 4, 1 / 2.54, 300
 

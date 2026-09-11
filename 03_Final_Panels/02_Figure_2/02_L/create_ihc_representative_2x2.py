@@ -1,8 +1,47 @@
 #!/usr/bin/env python3
 """
-Panel 2L: 1x6 representative IHC images
-NR (P01): H&E, CEACAM5, CEACAM6  |  R (P22): H&E, CEACAM5, CEACAM6
-Auto-crops to largest tissue fragment via connected component analysis.
+Figure 2 panel M - representative immunohistochemistry, one row of six.
+
+Non-responder: H&E, CEACAM5, CEACAM6.  Responder: H&E, CEACAM5, CEACAM6.
+Each image is auto-cropped to its largest tissue fragment by connected
+component analysis.
+
+The panel is drawn at the millimetre rectangle it prints in, read from
+03_Final_Panels/panel_rects.csv through 00_Config/slots.py, so the type size
+set here is the type size printed. The margins are millimetres of paper; they
+are not fitted to the ink, because six axes holding images of equal aspect are
+resized by matplotlib at draw time and the subplot parameters do not describe
+where their ink ends up.
+
+  printed panel  Figure 2 M       (PROVENANCE.csv; NOT inferred from "02_L")
+
+  The output stem is ihc_representative_1x6, which is what this script has
+  always written and what the printed panel is: one row of six images, aspect
+  3.7. The name ihc_representative_2x3 belongs to a different, two-row drawing
+  that is aspect 1.4 and is not the panel on the page.
+
+MARK
+    The earlier drawing used a canvas four times the printed size and set the
+    body type it actually draws - the six column titles and the two group
+    labels - at 7 * SCALE. MARK carries the non-type point sizes across to the
+    1:1 canvas:
+
+        MARK = style.tick_pt() / (SMALL_PT * SCALE)
+
+    The title pad and the group-label labelpad, both lengths in points rather
+    than type, take it. The spine width the earlier drawing set is not carried
+    over: a spine is axes furniture and cnsplots sets axes.linewidth.
+
+THE IMAGE BORDERS
+    cnsplots turns the top and right spines off, which is the right default for
+    a data axes and the wrong one for a photograph: it would leave each of the
+    six micrographs framed on two sides only. The earlier drawing's own loop
+    runs over all four spines and colours them, so its border is four-sided.
+    `set_visible(True)` inside that loop restores it.
+
+Every image file, every crop, every rotation, every margin fraction inside the
+image processing and every string is the earlier drawing's. The drawing code is
+the same code.
 """
 
 import matplotlib.pyplot as plt
@@ -14,17 +53,17 @@ import sys
 
 # Central config
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
-from paths import IHC_THUMBNAILS
-from shared.figure_config import use_panel_style
+from paths import IHC_THUMBNAILS                          # noqa: E402
+import panel_style_cns as style                           # noqa: E402
+import slots                                              # noqa: E402
 
-# 4x scaling
-SCALE = 4
-DPI = 300
-CM_TO_INCH = 1 / 2.54
+SCALE = 4                           # the earlier canvas multiplier
+SMALL_PT = 7.0                      # the earlier smallest drawn body type
 
-# Panel: 1 row x 6 cols — wide and short
-PANEL_W_CM = 12.0 * SCALE
-PANEL_H_CM = 2.5 * SCALE
+PANEL_LETTER = "M"
+PANEL_W_MM, PANEL_H_MM = slots.size_mm(2, PANEL_LETTER)
+LETTER_CELL = slots.letter_cell_mm(2, PANEL_LETTER)
+MARGIN = dict(left=0.6, right=0.6, top=5.3, bottom=5.3, wspace=0.08)
 
 # Paths
 THUMB_DIR = IHC_THUMBNAILS
@@ -98,14 +137,15 @@ def make_square_crop(img_array):
 
 
 def main():
-    use_panel_style(font_pt=7)
+    family = style.apply(title_fontsize=7, fontsize_legend=6,
+                         legend_fontsize=6)
+    MARK = style.tick_pt() / (SMALL_PT * SCALE)
+    print(f"  type set in {family}; body {style.body_pt():g} pt, "
+          f"ticks/legend {style.tick_pt():g} pt; MARK {MARK:.5f}")
 
-    fig, axes = plt.subplots(
-        1, 6,
-        figsize=(PANEL_W_CM * CM_TO_INCH, PANEL_H_CM * CM_TO_INCH),
-    )
+    fig, axes = style.subplots_mm(PANEL_W_MM, PANEL_H_MM, 1, 6)
 
-    # Layout: 1 row x 6 cols — NR(H&E, CEACAM5, CEACAM6), R(H&E, CEACAM5, CEACAM6)
+    # Layout: 1 row x 6 cols - NR(H&E, CEACAM5, CEACAM6), R(H&E, CEACAM5, CEACAM6)
     layout = [
         ("HE", "NR", axes[0]),
         ("CEACAM5", "NR", axes[1]),
@@ -125,7 +165,7 @@ def main():
             img_cropped = crop_to_largest_fragment(img, pad_frac=pad)
             img_cropped = make_square_crop(img_cropped)
             if marker == "HE":
-                # Rotate 45° CCW for tissue orientation
+                # Rotate 45 deg CCW for tissue orientation
                 from scipy.ndimage import rotate as ndi_rotate
                 img_cropped = ndi_rotate(img_cropped, 45, reshape=True,
                                          order=1, cval=255)
@@ -134,10 +174,10 @@ def main():
                 img_cropped = img_cropped[margin:h-margin, margin:w-margin]
                 img_cropped = make_square_crop(img_cropped)
             if marker == "CEACAM6":
-                # Rot 180° to match CEACAM5 orientation
+                # Rot 180 deg to match CEACAM5 orientation
                 img_cropped = np.rot90(img_cropped, k=2)
                 if response == "R":
-                    # Additional 45° CCW rotation + zoom in
+                    # Additional 45 deg CCW rotation + zoom in
                     from scipy.ndimage import rotate as ndi_rotate
                     img_cropped = ndi_rotate(img_cropped, 45, reshape=True,
                                              order=1, cval=255)
@@ -150,34 +190,42 @@ def main():
             ax.imshow(img_cropped)
         else:
             ax.text(0.5, 0.5, "Image not found", transform=ax.transAxes,
-                    ha='center', va='center', fontsize=6 * SCALE)
+                    ha='center', va='center', fontsize=style.tick_pt())
 
         ax.set_xticks([])
         ax.set_yticks([])
         for spine in ax.spines.values():
-            spine.set_linewidth(0.5)
+            # The loop colours all four spines, so the border round each
+            # photograph is four-sided; cnsplots turns the top and right
+            # spines off, which is right for a data axes and wrong for an
+            # image frame. See THE IMAGE BORDERS in the header.
+            spine.set_visible(True)
             spine.set_color('black')
 
-    # Column titles — marker names above each image
+    # Column titles - marker names above each image
     marker_titles = ["H&E", "CEACAM5", "CEACAM6", "H&E", "CEACAM5", "CEACAM6"]
     marker_styles = ["normal", "italic", "italic", "normal", "italic", "italic"]
-    for i, (title, style) in enumerate(zip(marker_titles, marker_styles)):
-        axes[i].set_title(title, fontsize=7 * SCALE, fontweight='regular',
-                          fontstyle=style, pad=8 * SCALE)
+    for i, (title, style_) in enumerate(zip(marker_titles, marker_styles)):
+        axes[i].set_title(title, fontstyle=style_, pad=8 * SCALE * MARK)
 
-    # Group labels — NR / R below each triplet
-    # Use xlabel on the middle column of each group
-    axes[1].set_xlabel("NR", fontsize=7 * SCALE, labelpad=8 * SCALE)
-    axes[4].set_xlabel("R", fontsize=7 * SCALE, labelpad=8 * SCALE)
+    # Group labels below each triplet, on the middle column of each, as the
+    # shipped page prints them.
+    axes[1].set_xlabel("Pre-NR", labelpad=8 * SCALE * MARK)
+    axes[4].set_xlabel("Pre-R", labelpad=8 * SCALE * MARK)
 
-    plt.subplots_adjust(wspace=0.08)
+    style.margins_mm(fig, **MARGIN)
+    over = style.overflow_mm(fig)
+    if max(over) > 0:
+        raise RuntimeError(
+            f"ink outside the {PANEL_W_MM} x {PANEL_H_MM} mm canvas "
+            f"(l,r,b,t mm): {over}")
+    intruders = style.letter_clear(fig, LETTER_CELL)
+    if intruders:
+        raise RuntimeError(f"ink under the panel letter cell: {intruders}")
 
-    # Save PNG and SVG
-    for ext in ['png', 'svg']:
-        out_path = OUTPUT_DIR / f"ihc_representative_1x6.{ext}"
-        fig.savefig(out_path, dpi=DPI, bbox_inches='tight', facecolor='white')
-    plt.close()
-    print(f"\nSaved to {OUTPUT_DIR}")
+    style.save_panel(fig, OUTPUT_DIR / "ihc_representative_1x6")
+    print(f"\nSaved: {OUTPUT_DIR / 'ihc_representative_1x6'}.[svg|pdf|png] "
+          f"at {PANEL_W_MM} x {PANEL_H_MM} mm")
 
 
 if __name__ == "__main__":

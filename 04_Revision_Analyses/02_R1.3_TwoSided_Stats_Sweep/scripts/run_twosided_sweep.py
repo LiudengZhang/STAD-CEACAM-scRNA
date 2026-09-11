@@ -16,6 +16,17 @@ Effect sizes
   Wilcoxon signed-rank  -> matched-pairs rank-biserial correlation
   exact permutation     -> observed difference in group means
 
+The row for Supplementary Figure S2D (the tumor-content-adjusted CEACAM5/6+
+proportion) is computed last, after every other row, so that adding it leaves
+each earlier row's bootstrap draws exactly where they were. Order matters here:
+the draws come from one shared stream.
+
+Units
+  Every row is in the units of its own source, and the label says so where a
+  unit exists. The two spatial distance rows are in micrometres as of
+  2026-09-10, converted here from the array units of spot_data.csv by the one
+  factor 00_Config/spatial_scale.py derives; see the comment at section 5.
+
 Outputs (04_Revision_Analyses/02_R1.3_TwoSided_Stats_Sweep/outputs/)
   twosided_sweep.csv        one row per comparison
   twosided_sweep_report.txt human-readable summary with the verdict per row
@@ -35,9 +46,12 @@ from statsmodels.stats.multitest import multipletests
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
 from paths import (  # noqa: E402
-    EPITHELIAL_H5AD, MOMAC_H5AD, FIBROBLAST_H5AD, DC_CELLS_H5AD, TCD4_H5AD,
-    TIGER_BAYESPRISM_EPI, TIGER_META, SPATIAL_SPOT_DATA, PREPARATION,
+    EPITHELIAL_H5AD, EPITHELIAL_DEPOSIT_H5AD, MOMAC_H5AD, FIBROBLAST_H5AD,
+    DC_CELLS_H5AD, TCD4_H5AD, TIGER_BAYESPRISM_EPI, TIGER_META, SPATIAL_SPOT_DATA,
+    PREPARATION,
 )
+from spatial_scale import cohort_um_per_unit  # noqa: E402
+from shared.expression import expression_source  # noqa: E402
 
 warnings.filterwarnings("ignore")
 sc.settings.verbosity = 0
@@ -235,7 +249,7 @@ def sample_means_from_h5ad(path, gene, phase, group_col, min_cells=MIN_CELLS,
 
 
 # =========================================================== 1. CEACAM scRNA
-print("[1/8] CEACAM5/6 in pre-treatment epithelium ...")
+print("[1/9] CEACAM5/6 in pre-treatment epithelium ...")
 for gene in ("CEACAM6", "CEACAM5"):
     nr, r = sample_means_from_h5ad(
         EPITHELIAL_H5AD, gene, "Pre", "stomach_pre_grouping")
@@ -244,7 +258,7 @@ for gene in ("CEACAM6", "CEACAM5"):
            nr, r, "NR", "R")
 
 # ================================================ 2. CEACAM external (TIGER)
-print("[2/8] CEACAM5/6 in PRJEB25780 (TIGER) deconvolved epithelium ...")
+print("[2/9] CEACAM5/6 in PRJEB25780 (TIGER) deconvolved epithelium ...")
 epi = pd.read_csv(TIGER_BAYESPRISM_EPI, sep="\t", index_col=0)
 meta = pd.read_csv(TIGER_META, sep="\t")
 meta = meta[meta["Treatment"] != "Normal"]
@@ -259,7 +273,7 @@ for gene in ("CEACAM6", "CEACAM5"):
            nr, r, "NR", "R")
 
 # ============================================================ 3. IHC protein
-print("[3/8] CEACAM5/6 immunohistochemistry ...")
+print("[3/9] CEACAM5/6 immunohistochemistry ...")
 ihc = pd.read_csv(PREPARATION / "IHC" / "ceacam_ihc_color_deconv_results.csv")
 piv = ihc.pivot_table(index=["patient", "group"], columns="marker",
                       values="staining_pct").reset_index()
@@ -272,7 +286,7 @@ for col, name in (("CEACAM5", "CEACAM5 only"),
     add_mw(f"IHC staining, {name}", "CEACAM", "Fig 2 (Q)", nr, r, "NR", "R")
 
 # ======================================================= 4. NMF metaprograms
-print("[4/8] NMF metaprograms MP4 / MP5 ...")
+print("[4/9] NMF metaprograms MP4 / MP5 ...")
 mp = json.loads((PREPARATION / "Metaprogram_Permutation" / "mp4_permutation_results.json")
                 .read_text())
 for prog in ("S-MP4", "S-MP5"):
@@ -285,7 +299,7 @@ for prog in ("S-MP4", "S-MP5"):
                     "Pre-R", "All others", direction="less")
 
 # ============================================================== 5. Spatial
-print("[5/8] Spatial CEACAM-high vs CEACAM-low regions ...")
+print("[5/9] Spatial CEACAM-high vs CEACAM-low regions ...")
 spot = pd.read_csv(SPATIAL_SPOT_DATA)
 sample_col = "Sample" if "Sample" in spot.columns else "sample"
 agg = (spot[spot["CEACAM_group"].isin(["CEACAM-high", "CEACAM-low"])]
@@ -293,10 +307,34 @@ agg = (spot[spot["CEACAM_group"].isin(["CEACAM-high", "CEACAM-low"])]
        [["neighborhood_epi_density", "distance_to_stroma", "distance_to_immune"]]
        .mean().reset_index())
 wide = agg.pivot(index=sample_col, columns="CEACAM_group").dropna()
+
+# The two distance columns are raw Euclidean distances in the x and y of
+# spot_data.csv - full-resolution image pixels - and nothing anywhere in that
+# path converts them. Until 2026-09-10 this table reported them in those units
+# while the Results called the same two numbers micrometres. Author's ruling
+# that day: convert both sides, using the project's one derivation of the
+# factor, 00_Config/spatial_scale.py (RULES.md rule 5). Fig 3 (H) is a
+# proportion and is not touched.
+#
+# One cohort factor, so this is a pure linear rescale and not a re-weighting:
+# the Wilcoxon statistic, both P values, the matched-pairs rank-biserial r,
+# Hedges' g and its bootstrap interval are all scale-free and cannot move, and
+# the percentile bootstrap interval of the difference of means is the old
+# interval times the factor, because boot_ci() resamples INDEX arrays drawn
+# from the shared RNG stream and those do not depend on the values. Every other
+# row of this table is therefore byte-identical across the change.
+# 10_Reproduction/verify_distance_units.py is the check, and it carries the
+# mutation that makes it fail.
+UM_PER_UNIT = cohort_um_per_unit(spot)
+print(f"      distances -> micrometres at {UM_PER_UNIT:.9f} um per array unit")
+for _col in ("distance_to_stroma", "distance_to_immune"):
+    for _grp in ("CEACAM-high", "CEACAM-low"):
+        wide[(_col, _grp)] = wide[(_col, _grp)] * UM_PER_UNIT
+
 for col, label, panel in (
     ("neighborhood_epi_density", "Neighbourhood epithelial density", "Fig 3 (H)"),
-    ("distance_to_stroma", "Distance to stroma", "Fig 3 (I)"),
-    ("distance_to_immune", "Distance to immune-rich regions", "Fig 3 (J)"),
+    ("distance_to_stroma", "Distance to stroma (µm)", "Fig 3 (I)"),
+    ("distance_to_immune", "Distance to immune-rich regions (µm)", "Fig 3 (J)"),
 ):
     add_wilcoxon(f"{label}, CEACAM-high vs CEACAM-low spots",
                  "Spatial", panel,
@@ -305,7 +343,7 @@ for col, label, panel in (
                  "CEACAM-high", "CEACAM-low")
 
 # ============================================================== 6. PD-L1
-print("[6/8] CD274 (PD-L1) in post-treatment samples ...")
+print("[6/9] CD274 (PD-L1) in post-treatment samples ...")
 for path, name, panel in (
     (MOMAC_H5AD, "monocytes/macrophages", "Fig 5 (J)"),
     (EPITHELIAL_H5AD, "epithelial cells", "Fig 5 (K)"),
@@ -365,10 +403,27 @@ def sample_scores(adata, genes, min_cells=MIN_CELLS, use_raw=True, ctrl_size=Non
     and therefore a different P value. The cytokine panel caps it at 50, the
     regulon panels use the full gene list.
     """
-    src = adata.raw.var_names if (use_raw and adata.raw is not None) else adata.var_names
-    present = [g for g in genes if g in set(src)]
+    # Which matrix is the expression is asked once, of shared/expression.py.
+    #
+    # The line below used to read `adata.raw.var_names if (use_raw and
+    # adata.raw is not None) else adata.var_names`, which is guarded - but the
+    # score_genes call underneath it was not: it took `use_raw=use_raw`, which
+    # defaults to True, and scanpy then dereferences `adata.raw.var_names`
+    # itself (scanpy/tools/_score_genes.py:196). Twelve of the thirteen
+    # deposited objects carry no .raw, so a reviewer running the capsule
+    # against the Zenodo record got an AttributeError here instead of
+    # Supplementary Table 6's source table.
+    #
+    # expression_source() returns .raw where there is one and .X only where the
+    # object proves it is the promoted deposit; it raises otherwise, so this is
+    # not a fallback. `use_raw` for scanpy is then resolved from that same
+    # answer rather than assumed, which is what keeps the two in step: with a
+    # .raw present both read .raw, and the numbers do not move.
+    src = expression_source(adata) if use_raw else adata
+    present = [g for g in genes if g in set(src.var_names)]
     sc.tl.score_genes(adata, gene_list=present, score_name="value",
-                      ctrl_size=ctrl_size or min(50, len(present)), use_raw=use_raw)
+                      ctrl_size=ctrl_size or min(50, len(present)),
+                      use_raw=use_raw and adata.raw is not None)
     df = pd.DataFrame({"sample": adata.obs["sample"].astype(str).values,
                        "group": adata.obs["group"].astype(str).values,
                        "value": adata.obs["value"].values})
@@ -380,7 +435,7 @@ def sample_scores(adata, genes, min_cells=MIN_CELLS, use_raw=True, ctrl_size=Non
 # ======================================= 7. IL-6/JAK/STAT3 in CD4+ T cells
 # Figure 5L. Converted to two-sided with the rest but missing from the first
 # version of this sweep, so Table S6 did not list it.
-print("[7/8] IL-6/JAK/STAT3 module score in post-treatment CD4+ T cells ...")
+print("[7/9] IL-6/JAK/STAT3 module score in post-treatment CD4+ T cells ...")
 ad = sc.read_h5ad(TCD4_H5AD)
 ad = ad[ad.obs["Sample site"] == "Stomach"]
 ad = ad[ad.obs["Treatment phase"] == "Post"].copy()
@@ -395,7 +450,7 @@ add_mw("IL-6/JAK/STAT3 module score, post-treatment CD4+ T cells",
 
 # ==================================== 8. NF-kB regulon activity in IL-1b+ Mac
 # Figures 5D and 5E, same omission.
-print("[8/8] BACH1 and NFKB1 regulon activity in IL-1beta+ macrophages ...")
+print("[8/9] BACH1 and NFKB1 regulon activity in IL-1beta+ macrophages ...")
 ad = sc.read_h5ad(MOMAC_H5AD)
 if ad.raw is not None:
     ad = ad.raw.to_adata()
@@ -420,6 +475,40 @@ for tf, genes in REGULONS.items():
     add_permutation(f"{tf} regulon activity, post-treatment R vs all other groups",
                     "Regulon", f"Fig 5 (regulon-{tf})",
                     post_r, others, "Post-R", "All others", direction="less")
+
+
+# ================================ 9. CEACAM5/6+ proportion, tumor-content adjusted
+# Supplementary Figure S2D. The submitted panel printed the one-sided exact
+# value (P = 0.03) and was missed by the first version of this sweep, so Table
+# S6 did not list it. Computed exactly as
+# 03_Final_Panels/02_Figure_2/02_E2/create_c2_proportion_adjusted.py
+# does: the per-sample percentage of C2_Epi_CEACAM6 cells among pre-treatment
+# gastric epithelial cells of the response-classified samples, regressed by
+# ordinary least squares on the sample's mean tumor score, and the residuals
+# compared NR vs R. It comes last so that the shared bootstrap stream seeded
+# above reaches every earlier row exactly as it did before this one existed.
+# The tumour score is an obs column of the epithelial object, beside the
+# cell-state and grouping columns the proportion is taken over, so one read
+# supplies the whole frame.
+print("[9/9] CEACAM5/6+ proportion adjusted for tumor content (Fig. S2D) ...")
+obs = sc.read_h5ad(EPITHELIAL_DEPOSIT_H5AD, backed="r").obs.copy()
+keep = ((obs["Treatment phase"] == "Pre")
+        & obs["stomach_pre_grouping"].isin(["Responsed", "No-response"]))
+sub = obs[keep].copy()
+sub["is_C2"] = (sub["minor_cell_state"] == "C2_Epi_CEACAM6").astype(int)
+per = sub.groupby("sample", observed=True).agg(
+    C2_proportion=("is_C2", lambda x: x.mean() * 100),
+    mean_tumor_score=("tumor_score", "mean"),
+    group=("stomach_pre_grouping", "first"),
+).reset_index().dropna()
+slope, intercept, _, _, _ = stats.linregress(per["mean_tumor_score"].values,
+                                             per["C2_proportion"].values)
+per["residual"] = (per["C2_proportion"].values
+                   - (slope * per["mean_tumor_score"].values + intercept))
+add_mw("CEACAM5/6+ proportion, tumor-content adjusted (Fig. S2D)",
+       "CEACAM", "Fig S2 (D)",
+       per.loc[per["group"] == "No-response", "residual"].values,
+       per.loc[per["group"] == "Responsed", "residual"].values, "NR", "R")
 
 
 # ---------------------------------------------------------------- assemble

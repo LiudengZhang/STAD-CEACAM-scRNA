@@ -15,8 +15,8 @@ Checked:
   3. every name imported from paths.py is defined there
   4. no machine-specific absolute paths, and no /path/to/ placeholder
      outside the scripts that say why they carry one - the ones that document
-     the upstream pipeline, and, since 2026-09-04, the ones whose interpreter
-     and library paths under a home directory were delocalised
+     the upstream pipeline, and the ones whose interpreter and library paths
+     under a home directory were delocalised
   5. no symlink, and no two-group comparison left one-tailed in a panel
   6. the figure driver understands every target the entry point invokes
   7. which declared input directories are present, and which are not
@@ -44,21 +44,21 @@ ABSOLUTE = re.compile(
 # a script the driver calls is a script that cannot run, which is how
 # Figure 1C shipped broken.
 PLACEHOLDER = re.compile(r"/path/to/")
-UPSTREAM_MARK = "upstream Round_4 processing pipeline"
-# The second reason a file may legitimately carry a placeholder, added
-# 2026-09-04 with the home-directory rewrite. update_release.py prepends
+UPSTREAM_MARK = "upstream processing pipeline"
+# The second reason a file may legitimately carry a placeholder: the
+# home-directory rewrite. update_release.py prepends
 # LOCAL_HOME_NOTE, which contains this phrase, wherever that rewrite fires and
 # a '#' comment line is legal. It is a separate mark from UPSTREAM_MARK on
 # purpose: the four shell drivers it applies to are the revision analyses' own
-# drivers, and claiming they document the Round_4 pipeline to buy a pass here
+# drivers, and claiming they document the upstream pipeline to buy a pass here
 # would be a false statement in a deposited file. Kept in step with
 # update_release.py:LOCAL_HOME_MARK.
 LOCAL_HOME_MARK = "paths under the author's home directory"
-# The third reason, added 2026-09-04 with the upstream pipelines. Those ran on
+# The third reason: the upstream pipelines. Those ran on
 # two named filers and on a cluster login node, and update_release.py's
 # MACHINE_ROOT_NOTE says so. It is separate from the other two marks for the
 # same reason they are separate from each other: each has to be true of the file
-# it is prepended to, and neither "documents the Round_4 pipeline" nor "paths
+# it is prepended to, and neither "documents the upstream pipeline" nor "paths
 # under the author's home directory" describes /path/to/machine or /path/to/machine. Kept in
 # step with update_release.py:MACHINE_ROOT_MARK.
 MACHINE_ROOT_MARK = "specific to the machines this pipeline"
@@ -101,6 +101,89 @@ def main():
             if not target.exists():
                 problems.append(f"00_Config depth wrong: "
                                 f"{f.relative_to(ROOT)} parents[{n}]")
+
+    # 2b. every MODULE-LEVEL import resolves to something the release carries.
+    #
+    # This exists because of what it would have caught and did not. Seven
+    # shipped drivers began with
+    #     sys.path.insert(0, str(ROOT / "10_Reproduction"))
+    #     import compare_panel_content
+    # and 10_Reproduction/ is a verification tree the release deliberately does
+    # not ship. Every one of them died at that import on every capsule run,
+    # while this file reported "every import resolves" and exited 0 - because
+    # nothing here looked at imports other than `from paths import ...`, and
+    # check 2 skips any file whose name begins with "_" on the reasoning that
+    # nothing runs them. _driver_base.py is imported by eight scripts on every
+    # run, so that reasoning was false and the "_" exemption does not apply
+    # here.
+    #
+    # A name is accepted if it is the standard library, or a module the release
+    # itself carries, or a dependency environment.yml DECLARES. Declared, not
+    # installed: the check must give the same answer on a machine that happens
+    # to have a package as on one that does not, or it measures the host
+    # instead of the record.
+    #
+    # Scope is the code a reviewer runs. upstream/ ships as a record of what
+    # produced the deposited intermediates and the entry point never calls it.
+    import sysconfig                                            # noqa: PLC0415
+
+    def _declared_dependencies():
+        names = set()
+        for y in ROOT.rglob("environment.yml"):
+            for line in y.read_text(encoding="utf-8",
+                                    errors="replace").splitlines():
+                line = line.strip().lstrip("-").strip()
+                if not line or line.startswith("#") or line.endswith(":"):
+                    continue
+                pkg = re.split(r"[=<>!\[ ]", line, 1)[0].strip()
+                if pkg:
+                    names.add(pkg.lower().replace("-", "_"))
+        # Import name differs from distribution name for these.
+        # Import name differs from distribution name for these; kept
+        # lowercase because every comparison below is lowercased.
+        names.update({"sklearn", "skimage", "yaml", "pil", "cv2", "fitz",
+                      "dateutil", "pkg_resources", "setuptools", "attr",
+                      "mpl_toolkits", "importlib_metadata",
+                      "typing_extensions", "pertpy"})
+        return names
+
+    RUNNABLE = ("03_Final_Panels", "04_Revision_Analyses", "00_Config")
+    declared = _declared_dependencies()
+    shipped_mods = {f.stem for f in files} | {
+        d.name for d in ROOT.rglob("*") if d.is_dir()
+        and (d / "__init__.py").exists()}
+    stdlib = set(getattr(sys, "stdlib_module_names", ())) | set(
+        sysconfig.get_config_vars().get("TZPATH", "").split(":"))
+    for f, tree in trees.items():
+        rel = f.relative_to(ROOT)
+        if not rel.parts or rel.parts[0] not in RUNNABLE:
+            continue
+        # `work/` is a record of how an output was produced, like upstream/.
+        # _run_all_panels.sh globs 04_Revision_Analyses/*/scripts/*.py and
+        # never reaches it, so an import there cannot break a reviewer's run.
+        # Measured while writing this check: work/build_pseudobulk.py imports
+        # h5py, which environment.yml does not declare - it arrives
+        # transitively with anndata. Reported, not silently accepted: if that
+        # script ever moves under scripts/, this check will say so.
+        if "work" in rel.parts:
+            continue
+        for node in tree.body:                        # module level only
+            if isinstance(node, ast.Import):
+                tops = [a.name.split(".")[0] for a in node.names]
+            elif isinstance(node, ast.ImportFrom):
+                tops = ([node.module.split(".")[0]]
+                        if node.level == 0 and node.module else [])
+            else:
+                continue
+            for t in tops:
+                low = t.lower().replace("-", "_")
+                if (t in stdlib or low in declared or t in shipped_mods
+                        or low in {m.lower() for m in shipped_mods}):
+                    continue
+                problems.append(
+                    f"module-level `import {t}` resolves to nothing the "
+                    f"release ships and environment.yml does not declare it: "
+                    f"{rel}")
 
     # 3. names imported from paths.py exist
     sys.dont_write_bytecode = True

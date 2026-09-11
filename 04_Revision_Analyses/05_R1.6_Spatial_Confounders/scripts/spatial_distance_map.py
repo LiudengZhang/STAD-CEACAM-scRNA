@@ -19,7 +19,7 @@ within-high-density coefficient is closest to the cohort median is used.
 The figure is for the response letter, not for the paper, so it is written to
 this module's outputs rather than into the supplementary figure tree.
 
-Inputs : Round_5/02_Preparation_for_Panels/Spatial/CEACAM_Deconvolution/spot_data.csv
+Inputs : submission-tree/02_Preparation_for_Panels/Spatial/CEACAM_Deconvolution/spot_data.csv
 Outputs: spatial_distance_map.csv, R_distance_map.[svg|pdf|png]
 """
 
@@ -36,6 +36,14 @@ from scipy.spatial import cKDTree
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
 from paths import SPATIAL_SPOT_DATA  # noqa: E402
+# The array-unit -> micron factor has one owner, 00_Config/spatial_scale.py
+# (RULES.md rule 5). It was derived here first and lived here alone until
+# 2026-09-10, when the same conversion was needed by Figure 3I/3J and the
+# two-sided sweep; it moved there rather than being copied. Nothing about
+# the derivation changed - SPOT_PITCH_UM is still 100 um and the factor is
+# still the pitch over the median nearest-neighbour spacing of THIS panel's
+# own section, which is what this panel wants and is not the cohort factor.
+from spatial_scale import microns_per_pixel  # noqa: E402
 
 warnings.filterwarnings("ignore")
 
@@ -50,7 +58,6 @@ SEED = 0
 MAX_ORIGINS = 90
 K_IMMUNE = 5          # the statistic averages the five nearest, so five are drawn
 IMMUNE_THRESHOLD = 0.15
-SPOT_PITCH_UM = 100.0  # Visium centre-to-centre, used to put the axes in microns
 
 IMMUNE_TYPES = ["B cells", "CD4+ T cells", "CD8+ T cells", "DC cells",
                 "Mast cells", "Monocytes/Macrophages", "NK cells",
@@ -99,12 +106,6 @@ def upright(xy):
     a = np.arctan2(v[1], v[0])
     r = np.array([[np.cos(-a), -np.sin(-a)], [np.sin(-a), np.cos(-a)]])
     return c @ r.T
-
-
-def microns_per_pixel(xy):
-    """Derived from the array geometry rather than a per-slide scale factor."""
-    d, _ = cKDTree(xy).query(xy, k=2)
-    return SPOT_PITCH_UM / float(np.median(d[:, 1]))
 
 
 def nearest_immune(tree, xy, k=K_IMMUNE):

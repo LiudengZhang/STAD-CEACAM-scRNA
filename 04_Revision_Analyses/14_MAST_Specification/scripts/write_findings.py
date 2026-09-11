@@ -444,11 +444,11 @@ deposited script's, unchanged.
 
 Inputs are the rebuilt singly-normalised objects: `06_Clean_Data/01_H5AD/` for
 the eleven shared-pipeline types, `06_Clean_Data/02_Rebuilt/Neutrophils_sound.h5ad`
-for neutrophils, and the two Round_4 objects for mast and plasma cells.
+for neutrophils, and the two upstream-pipeline objects for mast and plasma cells.
 `full_dataset.h5ad` is not used. Every matrix passes the integer-ladder
 `assert_log1p_cp10k` test before it is read. (`06_Clean_Data/01_H5AD/` carries no
 `.raw` - `build_clean_h5ad.py` promoted `.raw.X` to `.X` - and that `.X` is
-bit-identical to the Round_5 `.raw.X` the archived sound run used: max absolute
+bit-identical to the submission-tree `.raw.X` the archived sound run used: max absolute
 difference 0.0 on Pericyte, same cells and genes in the same order.)
 
 ### 2.1 Does spec B converge?

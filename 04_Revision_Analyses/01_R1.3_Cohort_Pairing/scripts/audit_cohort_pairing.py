@@ -8,8 +8,10 @@ Answers three questions the reviewer asked directly:
   3. What is the exact composition of the two response-labelled cohorts?
 
 Sources
-  ST1  : Round_5/04_Manuscript/04_Tables/ST1_patient_sample_characteristics.csv
-  CLIN : Experimental_Data/00_Clinic/石蜡标本待染色 2(1).xlsx
+  ST1  : submission-tree/04_Manuscript/04_Tables/ST1_patient_sample_characteristics.csv
+  CLIN : the hospital's paraffin-block worksheet, reached through the
+         STAD_CLINICAL_XLSX environment variable. It carries patient
+         identifiers and is not deposited.
          (holds the RECIST 1.1 trajectory column, e.g. "PR-SD", "SD-PD", and the
          treatment regimen with cycle counts; keyed by an internal scRNA ID that
          does not appear in ST1, so it is joined on the clinical fingerprint
@@ -118,11 +120,18 @@ labelled["procedure_key"] = labelled["Biopsy method"].map(norm_procedure)
 
 # ------------------------------------------------- load the clinical table
 if CLIN is None or not CLIN.exists():
-    raise SystemExit(
-        "The RECIST trajectory table is not available.\n"
+    # A designed skip, not a failure. The table is deliberately not deposited,
+    # so every reviewer running the capsule reaches this line; exiting 1 made
+    # the driver record the deposit as having a broken script and made the
+    # whole run non-zero for something that is working as intended. The message
+    # is unchanged and still goes to stderr; only the status changes.
+    print(
+        "SKIPPED: the RECIST trajectory table is not available.\n"
         "It carries patient identifiers and is not part of the deposited data.\n"
         "Set STAD_CLINICAL_XLSX to a copy to re-run this audit; its results are\n"
-        "reported in Supplementary Table 1 and in Supplementary Figure S7A.")
+        "reported in Supplementary Table 1.",
+        file=sys.stderr)
+    sys.exit(0)
 clin = pd.read_excel(CLIN)
 clin.columns = [str(c).strip() for c in clin.columns]
 clin = clin.rename(

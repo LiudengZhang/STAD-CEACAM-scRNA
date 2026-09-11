@@ -9,13 +9,13 @@ Panel H already uses the study IDs; the box-plot panels never did.
 The figure is patched, not rebuilt. Re-running assemble_S1.py does not
 reproduce the submitted page - it comes out 1187 pt tall against the submitted
 877 pt and loses seven of the eight panel letters - so a rebuild would replace
-the published figure rather than de-identify it (CLAUDE.md rules 1 and 3).
+the published figure rather than de-identify it (the project's standing rules rules 1 and 3).
 Redacting the tick glyphs and redrawing the study ID on the same anchor leaves
 every box, whisker, axis, legend and statistic exactly as submitted; the tick
 text is the only thing that changes.
 
 Which panels those are is read out of the page, never inferred from a name
-(CLAUDE.md rule 2): the panel letters are located by position and a panel is
+(the rule that a directory's letter is not the printed panel letter): the panel letters are located by position and a panel is
 patched because it contains rotated tick labels that are specimen identifiers,
 not because of what it is called. The panels found are printed at the end of
 the run.

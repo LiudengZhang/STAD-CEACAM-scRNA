@@ -1,5 +1,5 @@
 """
-Central path configuration for Round_5 project.
+Central path configuration for this project.
 All scripts should import paths from this module.
 
 Usage:
@@ -23,7 +23,9 @@ RAW_INPUTS = Path(os.environ.get(
     "STAD_RAW_INPUTS", PROJECT_ROOT / "01_Raw_Inputs"))
 # Intermediate results are deposited with the data, not with the code.
 # STAD_PREPARED_INPUTS points at them; the default is the in-repository
-# directory, which holds the scripts that produce them.
+# directory, which holds placeholders and a few small tables only. The
+# scripts that produced the intermediates are kept under upstream/ as a
+# record and are not run by the figure driver.
 PREPARATION = Path(os.environ.get(
     "STAD_PREPARED_INPUTS", PROJECT_ROOT / "02_Preparation_for_Panels"))
 FINAL_PANELS = PROJECT_ROOT / "03_Final_Panels"
@@ -50,9 +52,6 @@ TCD8_H5AD = H5AD_DIR / "TCD8.h5ad"
 # Full dataset (all cells)
 FULL_DATASET_H5AD = H5AD_DIR / "full_dataset.h5ad"
 
-# Specialized h5ad variants
-EPITHELIAL_TUMOR_SCORED_H5AD = H5AD_DIR / "Epithelial_tumor_scored.h5ad"
-EPITHELIAL_RAW_COUNTS_H5AD = H5AD_DIR / "epithelial_raw_counts_full.h5ad"
 
 # =============================================================================
 # Raw Inputs - External Data
@@ -208,9 +207,31 @@ NEW_ANALYSES = PROJECT_ROOT / "04_Revision_Analyses"
 # the supplementary figures added in revision live under Supplementary_New/.
 REVISED_PANELS = FINAL_PANELS
 
-# Supplementary tables ST1-ST9, shipped with the code because several revision
+# The working tree keeps the main-figure panels one level down, under
+# Main_Figures/; the release drops that level, so here the two are the same
+# directory. Scripts import this name rather than spelling the level out,
+# because a Path(__file__)-relative "Main_Figures" is invisible to
+# rewrite_figure_tree() and shipped broken.
+MAIN_FIGURES = REVISED_PANELS
+
+# Where the revision analyses draw their own copies of the panels they compute.
+# The published supplementary panels are built from these analyses by the
+# drivers under Supplementary_New/_drivers/; what an analysis draws for itself
+# is a working copy and is kept out of the published set.
+ANALYSIS_PANELS = REVISED_PANELS / "Supplementary_New" / "_analysis_panels"
+
+# Supplementary tables ST1-ST10, shipped with the code because several revision
 # analyses read the cohort and signature definitions out of them.
 MANUSCRIPT = PROJECT_ROOT / "05_Manuscript"
+
+# The clean manuscript travels with the number check, so the reference-list
+# integrity block resolves in the deposit instead of failing on a working-tree
+# path. RESPONSE_DIR has no deposited counterpart - the release ships one clean
+# letter and no editing scripts, so the two stray-letter guards that read it are
+# working-tree invariants and verify_numbers.py skips them here by name rather
+# than counting a check that read nothing.
+CLEAN_MANUSCRIPT_DOCX = MANUSCRIPT / "Manuscript_R1_clean.docx"
+RESPONSE_DIR = MANUSCRIPT / "05_Response_to_Reviewers"
 
 # Public reference data that are not part of the Zenodo record and are fetched
 # from their own sources; see the README in that directory.
@@ -230,15 +251,14 @@ IHC_COLOR_DECONV_CSV = PREPARATION / "IHC" / "ceacam_ihc_color_deconv_results.cs
 CPDB_DB_ZIP = RAW_INPUTS / "02_External" / "CellPhoneDB" / "cellphonedb.zip"
 
 # MP4/MP5 permutation results, produced by
-# 02_Preparation_for_Panels/Metaprogram_Permutation/mp4_pre_r_permutation_analysis.py
+# upstream/Metaprogram_Permutation/mp4_pre_r_permutation_analysis.py
 # and read by the two-sided sweep and the MP direction analysis.
 MP_PERMUTATION_DIR = PREPARATION / "Metaprogram_Permutation"
 
-# The NicheNet prior models. Declared in the Round_7 working tree's paths.py on
-# 2026-09-03, when they were migrated out of _archived_NicheNet_v2/ - but this
-# file is rebuilt from ROUND_5's paths.py, which has never carried the name, so
-# the release deposited config.yaml pointing at 00_Databases/ with no path
-# constant that resolves it. Download the priors from
+# The NicheNet prior models. This file is rebuilt from the original paths
+# module, which has never carried the name, so the release once deposited a
+# config.yaml pointing at 00_Databases/ with no path constant that resolves it.
+# Download the priors from
 # https://zenodo.org/records/7074291 (nichenetr v1 human) and place them here.
 NICHENET_DB_DIR = NICHENET_DIR / "00_Databases"
 NICHENET_LIGAND_TARGET_MATRIX = NICHENET_DB_DIR / "ligand_target_matrix.rds"
@@ -253,3 +273,37 @@ BAYESPRISM_TCGA_DIR = PREPARATION / "BayesPrism_TCGA"
 
 # The NMF pipeline's own root, for the same reason.
 NMF_DIR = PREPARATION / "NMF"
+
+# The rebuilt, singly normalised neutrophil object. Three deposited scripts
+# read it and none could find it: they named it by a Path(__file__) literal
+# into 06_Clean_Data/02_Rebuilt/, which is a working-tree directory and is in
+# no record. It ships in the record's 01_H5AD/ beside the other objects, cut to
+# the same obs by 06_Clean_Data/build_deposit_neutrophils_sound.py.
+NEUTROPHILS_SOUND_H5AD = H5AD_DIR / "Neutrophils_sound.h5ad"
+
+# The epithelial object that carries the counts and the tumour score. The
+# working tree reads it out of the deposit build directory, because the input
+# set it works from spreads the matrix, the counts and the score over three
+# files of one shape. The record carries one object with all three, and it is
+# EPITHELIAL_H5AD.
+EPITHELIAL_DEPOSIT_H5AD = EPITHELIAL_H5AD
+
+# The full atlas object that carries the counts. Figure 5F reads its counts
+# layer under the author's ruling of 2026-09-09, because the working tree's
+# FULL_DATASET_H5AD resolves into the submission-tree input tree, to a file with no
+# counts layer and a `.raw` normalised twice (00_Data_Audit/FINDINGS.md
+# 12.11-12.12). The record carries one full_dataset.h5ad with the sound matrix
+# in `.X` and the integer counts in layers['counts'], and it is
+# FULL_DATASET_H5AD - same shape as EPITHELIAL_DEPOSIT_H5AD above.
+FULL_DATASET_DEPOSIT_H5AD = FULL_DATASET_H5AD
+
+# The differential-expression recompute on the sound per-cell-type inputs -
+# twelve populations; neutrophils come from the rebuilt object. These
+# are an intermediate, not a working record: nfkb_per_celltype_sound13.csv
+# descends from them and claims.csv rows C061-C096 are checked against it.
+# Three scripts reached them inside 07_Archive/ in the working tree, which is
+# both a live input read out of an archive and a path that is in no record; the
+# deposit carries them under 02_Preparation_for_Panels/.
+SOUND_DEG_RECOMPUTE = PREPARATION / "DEG_Sound_Recompute"
+SOUND_DEG_DIR = SOUND_DEG_RECOMPUTE / "deg"
+SOUND_GSEA_DIR = SOUND_DEG_RECOMPUTE / "gsea"

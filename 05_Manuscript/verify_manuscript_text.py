@@ -177,7 +177,7 @@ claim("cross-cohort combination, Results",
       "combined two-sided P = {:.3f} for CEACAM6 and P = {:.3f} for CEACAM5 "
       "(unweighted Stouffer's method; the sqrt(n)-weighted and Fisher "
       "combinations agree, at P = {:.3f} and {:.3f} for CEACAM6 and "
-      "P = {:.3f} and {:.3f} for CEACAM5; Fig. S8E, Table S9)",
+      "P = {:.3f} and {:.3f} for CEACAM5; Table S9)",
       combined_p("CEACAM6"), combined_p("CEACAM5"),
       combined_p("CEACAM6", "Stouffer, weighted by sqrt(n)"),
       combined_p("CEACAM6", "Fisher"),
@@ -185,14 +185,14 @@ claim("cross-cohort combination, Results",
       combined_p("CEACAM5", "Fisher"))
 claim("transcript-protein concordance, Results",
       "(summed, Spearman \u03c1 = {:.2f}, P = 0.004; CEACAM5, \u03c1 = {:.2f}, "
-      "P = 0.007; CEACAM6, \u03c1 = {:.2f}, P = 0.10; Fig. S8G, Table S9)",
+      "P = 0.007; CEACAM6, \u03c1 = {:.2f}, P = 0.10; Table S9)",
       concordance_rho("Summed"), concordance_rho("CEACAM5"),
       concordance_rho("CEACAM6"))
 _lo_p, _hi_p = loo_range("CEACAM6", "P, two-sided") or (None, None)
 _lo_g, _hi_g = loo_range("CEACAM6", "Value") or (None, None)
 claim("leave-one-out stability, Limitations",
       "(CEACAM6, P between {:.3f} and {:.3f}, Hedges' g between {:.2f} and "
-      "{:.2f}; Fig. S8F, Table S9)", _lo_p, _hi_p, _lo_g, _hi_g)
+      "{:.2f}; Table S9)", _lo_p, _hi_p, _lo_g, _hi_g)
 
 # The immunohistochemistry is not an independent cohort, and the Results must
 # not say it is; ST1 and ST5 list the same eight patients.
@@ -228,10 +228,10 @@ cited_figs = {int(m) for m in re.findall(r"Fig(?:s?\.|ure)? ?S(\d+)", TEXT)}
 cited_tabs = {int(m) for m in re.findall(r"Table S(\d+)", TEXT)}
 
 for label, have, want in (
-        ("supplementary figure legends", legends, set(range(1, 12))),
-        ("supplementary table legends", tab_legends, set(range(1, 10))),
-        ("supplementary figures cited", cited_figs, set(range(1, 12))),
-        ("supplementary tables cited", cited_tabs, set(range(1, 10)))):
+        ("supplementary figure legends", legends, set(range(1, 10))),
+        ("supplementary table legends", tab_legends, set(range(1, 11))),
+        ("supplementary figures cited", cited_figs, set(range(1, 10))),
+        ("supplementary tables cited", cited_tabs, set(range(1, 11)))):
     checks += 1
     missing = sorted(want - have)
     if missing:
@@ -243,8 +243,8 @@ for label, have, want in (
 # ------------------------- every panel cited by its own label, not "S9C, D"
 # A compound citation reads correctly but is invisible to any tool, editorial or
 # otherwise, that searches for the panel label. Each panel gets its full label.
-PANELS = ("S2F S7A S7B S7C S8A S8B S8C S8D S8E S8F S8G S9A S9B S9C S9D S9E S9F "
-          "S10A S10B S10C S10D S10E S11A S11B S11C S11D").split()
+PANELS = ("S2D S2E S2H S3E S7A S7B S7C S8A S8B "
+          "S9A S9B S9C S9D S9E").split()
 first_legend = next(i for i, par in enumerate(docx.Document(CLEAN).paragraphs)
                     if re.match(r"Figure S1\.", par.text))
 BODY = "\n".join(par.text for par in

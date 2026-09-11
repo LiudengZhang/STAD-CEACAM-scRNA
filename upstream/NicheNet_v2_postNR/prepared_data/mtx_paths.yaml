@@ -1,0 +1,18 @@
+# Paths below refer to the upstream processing pipeline that produced the
+# deposited intermediates; it is not part of this release's run path. This
+# file is included as a record of how the input was produced; it is not
+# called by _run_all_panels.sh or ./run.
+B cells: /path/to/submission-tree/02_Preparation_for_Panels/NicheNet_v2_postNR/prepared_data/mtx_B_cells
+C3_Mac_Inflam_IL1B: /path/to/submission-tree/02_Preparation_for_Panels/NicheNet_v2_postNR/prepared_data/mtx_C3_Mac_Inflam_IL1B
+CD4+ T cells: /path/to/submission-tree/02_Preparation_for_Panels/NicheNet_v2_postNR/prepared_data/mtx_CD4plus_T_cells
+CD8+ T cells: /path/to/submission-tree/02_Preparation_for_Panels/NicheNet_v2_postNR/prepared_data/mtx_CD8plus_T_cells
+DC cells: /path/to/submission-tree/02_Preparation_for_Panels/NicheNet_v2_postNR/prepared_data/mtx_DC_cells
+Endothelial cells: /path/to/submission-tree/02_Preparation_for_Panels/NicheNet_v2_postNR/prepared_data/mtx_Endothelial_cells
+Epithelial cells: /path/to/submission-tree/02_Preparation_for_Panels/NicheNet_v2_postNR/prepared_data/mtx_Epithelial_cells
+Fibroblast: /path/to/submission-tree/02_Preparation_for_Panels/NicheNet_v2_postNR/prepared_data/mtx_Fibroblast
+Mast cells: /path/to/submission-tree/02_Preparation_for_Panels/NicheNet_v2_postNR/prepared_data/mtx_Mast_cells
+Monocytes/Macrophages: /path/to/submission-tree/02_Preparation_for_Panels/NicheNet_v2_postNR/prepared_data/mtx_Monocytes_Macrophages
+NK cells: /path/to/submission-tree/02_Preparation_for_Panels/NicheNet_v2_postNR/prepared_data/mtx_NK_cells
+Neutrophils: /path/to/submission-tree/02_Preparation_for_Panels/NicheNet_v2_postNR/prepared_data/mtx_Neutrophils
+Pericyte: /path/to/submission-tree/02_Preparation_for_Panels/NicheNet_v2_postNR/prepared_data/mtx_Pericyte
+Plasma cells: /path/to/submission-tree/02_Preparation_for_Panels/NicheNet_v2_postNR/prepared_data/mtx_Plasma_cells

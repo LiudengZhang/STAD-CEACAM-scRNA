@@ -2,11 +2,11 @@
 Rescore the existing MAST differential-expression tables against the pinned
 Hallmark gene sets, so the whole gsea/ directory comes from one library.
 
-Why this is a separate script. MAST needs rpy2 to open R, which fails on this
-machine under the driver's inherited LD_LIBRARY_PATH, so recompute_deg.py
-records mast_status and moves on. Its MAST *differential-expression* tables from
-the 2026-08-28 run are still valid - nothing about them depends on the gene sets
-- but their enrichment scores were computed with the library fetched from
+Why this is a separate script. MAST needs rpy2 to open R, which fails under the
+driver's inherited LD_LIBRARY_PATH, so recompute_deg.py records mast_status and
+moves on. Its MAST *differential-expression* tables are still valid - nothing
+about them depends on the gene sets - but their enrichment scores were
+computed with the library fetched from
 Enrichr rather than from the pinned copy. The two are content-identical, so
 this rescoring is bookkeeping: it makes every file in gsea/ trace to the same
 declared input.
@@ -24,6 +24,12 @@ import sys
 import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
+# recompute_deg.py lives in ../work/, not in scripts/: it cannot exit 0 by design
+# (neutrophils fail its integer-ladder test, deliberately and loudly) and
+# running it overwrites the outputs/ tables verify_numbers.py checks the
+# manuscript against, so it is not a step the figure driver may launch. It is
+# still the definition of OUT and of the ranking metric used here.
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "work"))
 
 from recompute_deg import OUT, gsea  # noqa: E402
 

@@ -121,7 +121,7 @@ LADDER = re.compile(
 HEADER = (
     "# REVISED FOR CIR-26-0753-ET, reviewer 1 point R1.3c:\n"
     "# the test is two-sided and the annotation reports the exact P value.\n"
-    "# Original one-tailed version: Round_5/03_Final_Panels/{rel}\n")
+    "# Original one-tailed version: submission-tree/03_Final_Panels/{rel}\n")
 
 
 def patch_text(text, rel):

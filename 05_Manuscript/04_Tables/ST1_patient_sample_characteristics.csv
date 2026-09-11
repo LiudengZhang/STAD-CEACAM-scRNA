@@ -1,4 +1,4 @@
-Patient ID,Sample,Age,Sex,cTNM stage,Differentiation,Stomach site,Anatomical site,Tumor type,Biopsy method,Treatment phase,R/NR Grouping,Other Notes,Treatment regimen and cycles,RECIST 1.1 trajectory,Best response,Change after best response,Sampled at both timepoints
+Patient ID,Sample,Age,Sex,cTNM stage,Differentiation,Stomach site,Anatomical site,Tumor type,Biopsy method,Treatment phase,R/NR Grouping,Other Notes,Treatment regimen and cycles,RECIST 1.1 trajectory,Best response,Change after best response,Patient sampled at both timepoints (any site)
 P1,P01-M1,70,M,T4aN3M1,,,Liver,Metastatic,Ultrasound guided percutaneous liver biopsy,Pre,,,,,,,Yes
 P1,P01-P1,70,M,T4aN3M1,Poor,Antrum,Stomach,Primary,Gastroscopic biopsy,Pre,NR,,Neoadjuvant (mFOLFOX6+ICIs),SD  ,SD,No documented change,Yes
 P1,P01-P2,70,M,T4aN3M1,Poor,Antrum,Stomach,Primary,Gastroscopic biopsy,Post,NR,,Neoadjuvant (mFOLFOX6+ICIs)*4,SD,SD,No documented change,Yes

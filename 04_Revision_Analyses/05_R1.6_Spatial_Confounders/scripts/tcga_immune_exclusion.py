@@ -39,7 +39,8 @@ import statsmodels.formula.api as smf
 from scipy import stats
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
-from paths import PREPARATION, RAW_INPUTS, REVIEWER_MATERIALS, REVISED_PANELS  # noqa: E402
+from paths import (  # noqa: E402
+    ANALYSIS_PANELS, PREPARATION, RAW_INPUTS, REVIEWER_MATERIALS)
 
 ABSOLUTE_PURITY = (REVIEWER_MATERIALS / "public_data"
                    / "TCGA_mastercalls.abs_tables_JSedit.fixed.txt")
@@ -48,7 +49,7 @@ warnings.filterwarnings("ignore")
 
 OUT = Path(__file__).resolve().parents[1] / "outputs"
 OUT.mkdir(parents=True, exist_ok=True)
-S11 = REVISED_PANELS / "Supplementary_New" / "S11_Affirmative_Analyses"
+S11 = ANALYSIS_PANELS / "S11_Affirmative_Analyses"
 
 TCGA = PREPARATION / "BayesPrism_TCGA"
 RAWDIR = (RAW_INPUTS / "02_External" / "Bulk" / "TCGA_STAD" / "02_Raw_Data"
@@ -88,7 +89,7 @@ def run_estimate(expr_symbols):
         rs = td / "run.R"
         rs.write_text(R_SCRIPT)
         p = subprocess.run(
-            ["conda", "run", "-n", "r_demo", "Rscript", str(rs), str(infile), str(td)],
+            ["conda", "run", "-n", "r_bayesprism", "Rscript", str(rs), str(infile), str(td)],
             capture_output=True, text=True)
         out = td / "estimate_scores.gct"
         if not out.exists():

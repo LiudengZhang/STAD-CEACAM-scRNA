@@ -1,30 +1,79 @@
 #!/usr/bin/env python3
 """
-Create Merged Cell Interaction Networks (Figure 04 Panel B)
+Figure 4 panel B - the five module networks, one above the other, each drawn
+from its own Jaccard similarity matrix.
 
-Generates a 1x5 merged network visualization showing all 5 module networks.
+  printed panel  Figure 4 B       (PROVENANCE.csv - the directory is "04_B";
+                                   do NOT read the directory as the letter)
+
+The five matrices, the similarity threshold, the node selection, the circular
+layout, the cell-type colouring, the edge weights and the short node names are
+unchanged. Only the canvas and the type change: the panel is drawn at the
+millimetre rectangle it prints in and set in the figure's one type system.
+
+THE NODE NAMES ARE AN EXEMPTION
+    Eight node names are set around a circle in a row 18.9 mm tall, five rows
+    in a column 21.8 mm wide. At the figure's 6 pt floor they collide: five
+    overlapping pairs, the worst 4.92 mm2, and five names with glyphs running
+    off the drawing. The footprint is the published one and cannot grow -
+    measured by redrawing at a range of canvas sizes, the collisions clear only
+    at 1.55x it, 33.8 x 146.2 mm - and no abbreviation helps, because dropping
+    the cluster prefix leaves four nodes of one module reading Mac and two
+    reading Mono. So the size is measured rather than chosen: the panel was
+    redrawn from 6.00 pt down in 0.25 pt steps and then refined in 0.05 pt
+    steps, and NODE_LABEL_PT is the largest size at which no two names overlap
+    and no glyph is clipped or painted over. It is 2.1x the size the published
+    page sets these names at. The five module titles are at the figure's own
+    body size and are not part of the exemption.
+
+MARK
+    The earlier drawing set no SCALE. It drew a 70 x 120 mm canvas of five
+    stacked axes, each of which `set_aspect('equal')` reduced to the height of
+    its own row - 24 mm, the smaller of the two. The panel prints 94.3 mm tall,
+    so a row is 18.9 mm and
+
+        MARK = PANEL_H_MM / EARLIER_CANVAS_H_MM
+        AREA = MARK ** 2
+
+    The node marker is an area and is scaled by AREA; the node border, the edge
+    widths and the title pad are lengths in points and are scaled by MARK. The
+    layout scale and the axis limits are dimensionless and are unchanged, so
+    every node sits where it sat.
+
+Input : Module_{1..5}_jaccard_matrix.csv (beside this script)
+Output: this directory / merged_networks_k5.{svg,pdf,png}
 """
 
 import pandas as pd
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import networkx as nx
 from pathlib import Path
+import sys
 
-plt.rcParams.update({'svg.fonttype': 'none', 'pdf.fonttype': 42, 'ps.fonttype': 42, 'font.family': 'sans-serif', 'font.sans-serif': ['Arial', 'Liberation Sans', 'Helvetica', 'DejaVu Sans']})
+sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
+import panel_style_cns as style           # noqa: E402
+import slots                              # noqa: E402
 
-# Parameters - Target: 7cm × 12cm at 300 DPI
-FIGURE_WIDTH = 7 / 2.54  # Convert cm to inches
-FIGURE_HEIGHT = 12 / 2.54  # Increased height for better spacing
-DPI = 600
+PANEL_LETTER = "B"
+PANEL_W_MM, PANEL_H_MM = slots.size_mm(4, PANEL_LETTER)
+LETTER_CELL = slots.letter_cell_mm(4, PANEL_LETTER)
+
+EARLIER_CANVAS_H_MM = 120.0     # the earlier canvas height, for MARK only
+
+#: The size the eight node names are set at. This is Figure 4's second author
+#: exemption and the number is a measurement, not a choice: see THE NODE NAMES
+#: ARE AN EXEMPTION in the module docstring.
+NODE_LABEL_PT = 3.55
+
+# Parameters
 SIMILARITY_THRESHOLD = 0.01
 NODE_SIZE = 150  # Smaller nodes
-NODE_FONT_SIZE = 2  # Smaller font
 EDGE_WIDTH_MULTIPLIER = 2
 EDGE_ALPHA = 0.7
 EDGE_LABEL_THRESHOLD = 1.1  # Effectively disables edge labels (max Jaccard is 1.0)
-EDGE_FONT_SIZE = 5
-TITLE_FONT_SIZE = 4  # For module titles (half size, no bold)
 
 # Module display names
 MODULE_DISPLAY = {1: 'IM-T/NK/DC', 2: 'IM-MoMac', 3: 'IM-Mixed', 4: 'IM-Neutrophil', 5: 'IM-B/Plasma'}
@@ -91,6 +140,26 @@ def get_short_label(cell_state):
     return label_mappings.get(short, short)
 
 
+def induced(G, nodes):
+    """The subgraph on `nodes`, in the order `G` itself holds them.
+
+    `Graph.subgraph` keeps its node filter in a set, and a set of strings
+    orders by a hash Python randomises per process, so the copy comes back in a
+    different order on every run. `circular_layout` seats nodes in that order,
+    so the same eight names took a different seat on the circle each time the
+    panel was drawn - and a figure that redraws differently on every run cannot
+    be reproduced from its deposited code. The nodes, the edges and the weights
+    are identical either way; only the seating moved. It is pinned here to the
+    order the module's similarity matrix lists them in.
+    """
+    keep = set(nodes)
+    sub = G.subgraph(keep)
+    H = nx.Graph()
+    H.add_nodes_from((n, dict(sub.nodes[n])) for n in G.nodes() if n in keep)
+    H.add_edges_from(sub.edges(data=True))
+    return H
+
+
 def create_network_graph(jaccard_df, similarity_threshold):
     """Create NetworkX graph from Jaccard similarity matrix."""
     G = nx.Graph()
@@ -110,17 +179,17 @@ def create_network_graph(jaccard_df, similarity_threshold):
     return G
 
 
-def plot_single_network(ax, G, module_id):
+def plot_single_network(ax, G, module_id, mark, area):
     """Plot a single network on a given axis."""
     # Limit nodes if needed
     if len(G.nodes()) > MAX_NODES:
         degrees = dict(G.degree())
         top_nodes = sorted(degrees, key=degrees.get, reverse=True)[:MAX_NODES]
-        G = G.subgraph(top_nodes).copy()
+        G = induced(G, top_nodes)
 
     if len(G.nodes()) == 0:
         ax.text(0.5, 0.5, f'{MODULE_DISPLAY[module_id]}\n(No nodes)',
-                ha='center', va='center', fontsize=TITLE_FONT_SIZE)
+                ha='center', va='center', fontsize=style.body_pt())
         ax.axis('off')
         return
 
@@ -137,10 +206,10 @@ def plot_single_network(ax, G, module_id):
     nx.draw_networkx_nodes(
         G, pos,
         node_color=node_colors,
-        node_size=NODE_SIZE,
+        node_size=NODE_SIZE * area,
         alpha=0.9,
         edgecolors='black',
-        linewidths=0.5,  # Half width border
+        linewidths=0.5 * mark,  # Half width border
         ax=ax
     )
 
@@ -148,7 +217,7 @@ def plot_single_network(ax, G, module_id):
     edges = G.edges()
     if len(edges) > 0:
         weights = [G[u][v]['weight'] for u, v in edges]
-        edge_widths = [w * EDGE_WIDTH_MULTIPLIER for w in weights]
+        edge_widths = [w * EDGE_WIDTH_MULTIPLIER * mark for w in weights]
 
         nx.draw_networkx_edges(
             G, pos,
@@ -169,7 +238,7 @@ def plot_single_network(ax, G, module_id):
             nx.draw_networkx_edge_labels(
                 G, pos,
                 edge_labels=edge_labels,
-                font_size=EDGE_FONT_SIZE,
+                font_size=style.tick_pt(),
                 ax=ax
             )
 
@@ -178,13 +247,13 @@ def plot_single_network(ax, G, module_id):
     nx.draw_networkx_labels(
         G, pos,
         labels=labels,
-        font_size=NODE_FONT_SIZE,
+        font_size=NODE_LABEL_PT,
         font_weight='bold',
         ax=ax
     )
 
     # Add module title
-    ax.set_title(MODULE_DISPLAY[module_id], fontsize=TITLE_FONT_SIZE, pad=3)
+    ax.set_title(MODULE_DISPLAY[module_id], pad=3 * mark)
 
     # Set axis limits to prevent label clipping
     ax.set_xlim(-1.4, 1.4)
@@ -202,9 +271,16 @@ def main():
     # Get script directory
     script_dir = Path(__file__).parent
 
+    family = style.apply(title_fontsize=7, fontsize_legend=6,
+                         legend_fontsize=6)
+    MARK = PANEL_H_MM / EARLIER_CANVAS_H_MM
+    AREA = MARK ** 2
+    print(f"  type set in {family}; body {style.body_pt():g} pt, "
+          f"ticks/legend {style.tick_pt():g} pt; MARK {MARK:.4f}")
+
     # Create figure with 5x1 subplots
     print("\nCreating figure...")
-    fig, axes = plt.subplots(5, 1, figsize=(FIGURE_WIDTH, FIGURE_HEIGHT))
+    fig, axes = style.subplots_mm(PANEL_W_MM, PANEL_H_MM, 5, 1)
 
     # Process each module
     for module_id in range(1, 6):
@@ -221,21 +297,22 @@ def main():
 
         # Plot on corresponding axis
         ax = axes[module_id - 1]
-        plot_single_network(ax, G, module_id)
+        plot_single_network(ax, G, module_id, MARK, AREA)
 
-    plt.tight_layout()
+    style.fit_margins(fig, pad_mm=0.6, cell_mm=LETTER_CELL)
+    over = style.overflow_mm(fig)
+    if max(over) > 0:
+        raise RuntimeError(
+            f"ink outside the {PANEL_W_MM} x {PANEL_H_MM} mm canvas "
+            f"(l,r,b,t mm): {over}")
+    intruders = style.letter_clear(fig, LETTER_CELL)
+    if intruders:
+        raise RuntimeError(f"ink under the panel letter cell: {intruders}")
 
-    # Save
-    output_path = script_dir / 'merged_networks_k5.png'
-    fig.savefig(output_path, dpi=DPI, bbox_inches='tight')
-    fig.savefig(output_path.with_suffix('.svg'), dpi=DPI, bbox_inches='tight')
-
-    file_size = output_path.stat().st_size / 1024
-    print(f"\n✓ Saved: {output_path.name}")
-    print(f"  Size: {file_size:.1f} KB")
+    stem = 'merged_networks_k5'
+    style.save_panel(fig, script_dir / stem)
+    print(f"\nSaved: {stem}.[svg|pdf|png] at {PANEL_W_MM} x {PANEL_H_MM} mm")
     print("=" * 60)
-
-    plt.close()
 
 
 if __name__ == "__main__":

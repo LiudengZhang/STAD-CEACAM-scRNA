@@ -17,8 +17,8 @@ answered here, all on data already in hand.
      double-negative senders, so the two single-positive populations can be
      compared directly against each other.
 
-Inputs : Round_5/01_Raw_Inputs/01_H5AD/*.h5ad  (pre-treatment gastric cells)
-         Round_4 CellPhoneDB v5 database zip
+Inputs : submission-tree/01_Raw_Inputs/01_H5AD/*.h5ad  (pre-treatment gastric cells)
+         upstream-pipeline CellPhoneDB v5 database zip
 Outputs: ceacam_family_expression.csv, ceacam_coexpression.csv,
          cpdb_ceacam_interactions.csv, interaction_target_overlap.csv,
          family_interactions_report.txt, R_family_and_interactions.png

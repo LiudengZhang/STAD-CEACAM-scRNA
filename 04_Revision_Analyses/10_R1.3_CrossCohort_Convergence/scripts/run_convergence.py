@@ -185,7 +185,21 @@ def main():
 
     # ------------------------------------------------------------ 2. forest
     print("[2/4] assembling the effect-size forest ...")
-    forest = sweep[sweep.family == "CEACAM"].reset_index()[
+    # The forest contrasts the CEACAM measurements that come from different
+    # patient sets: transcript expression in the discovery epithelium, the same
+    # in the PRJEB25780 cohort, and the immunohistochemistry on the discovery
+    # patients themselves. The tumour-content-adjusted proportion added to the
+    # sweep for Fig. S2D is not one of those: it is the same four-versus-four
+    # discovery patients the expression rows already contribute, so it would
+    # enter the forest as a second helping of the same evidence - and, under
+    # the string rule below, would be filed as independent of the very cohort
+    # it comes from. It belongs in Table S6, which is where it is.
+    PROPORTION_ROWS = ("CEACAM5/6+ proportion, tumor-content adjusted",)
+    ceacam = sweep[sweep.family == "CEACAM"]
+    ceacam = ceacam[~ceacam.index.to_series().astype(str).str.startswith(PROPORTION_ROWS)
+                    ] if ceacam.index.name == "analysis" else ceacam[
+        ~ceacam["analysis"].astype(str).str.startswith(PROPORTION_ROWS)]
+    forest = ceacam.reset_index()[
         ["analysis", "n_hi", "n_lo", "p_two_tailed", "effect_size",
          "hedges_g", "g_ci95_lo", "g_ci95_hi"]]
     forest.columns = ["Measurement", "n (NR)", "n (R)", "P, two-sided",

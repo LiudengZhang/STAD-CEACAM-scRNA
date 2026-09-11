@@ -7,7 +7,7 @@ Simple sc.pl.dotplot style matching S1_F.
 import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[4] / "00_Config"))
-from paths import EPITHELIAL_TUMOR_SCORED_H5AD
+from paths import EPITHELIAL_H5AD
 
 import scanpy as sc
 import matplotlib.pyplot as plt
@@ -52,7 +52,7 @@ label_map = {
 # Load data
 # =============================================================================
 print("Loading Epithelial data...")
-adata = sc.read_h5ad(EPITHELIAL_TUMOR_SCORED_H5AD)
+adata = sc.read_h5ad(EPITHELIAL_H5AD)
 adata = adata[adata.obs['Sample site'] == 'Stomach'].copy()
 print(f"Stomach epithelial: {adata.n_obs} cells")
 

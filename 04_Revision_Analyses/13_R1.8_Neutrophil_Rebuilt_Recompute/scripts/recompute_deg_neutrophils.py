@@ -6,7 +6,7 @@ The original is copied rather than edited, and exactly two things differ:
 
   1. `CELL_SOURCES["Neutrophils"]` points at
      06_Clean_Data/02_Rebuilt/Neutrophils_sound.h5ad instead of the shipped
-     Round_5 file. Nothing else about the source changes: the rebuilt object
+     submission-tree file. Nothing else about the source changes: the rebuilt object
      holds the same 61,167 cells and the same 20,060 genes, in the same order,
      with the same obs. Only the values in `.raw` differ, because they are
      normalised once instead of twice.
@@ -47,9 +47,10 @@ Three things are deliberately different from the original:
   3. Every cell type is read from its own per-cell-type object, and the matrix
      is tested before it is used.
 
-Point 3 is a correction, made on 2026-08-31. Until then every cell type was
-taken from one object, `full_dataset.h5ad`, on the belief that its `.raw` was
-clean. FINDINGS.md section 12.11 measured it and it is not: it holds the
+Point 3 is not a detail. Taking every cell type from one pooled object,
+`full_dataset.h5ad`, on the belief that its `.raw` is clean, is the obvious way
+to write this and it is wrong: FINDINGS.md section 12.11 measured that matrix
+and it is not clean. It holds the
 log-normalised values put through normalisation and log1p a second time. The
 damage is monotone within a cell and still sums to 1e4, so the docstring claim
 "log1p CP10K" survived a year unchallenged - the only guard here checked for
@@ -88,8 +89,8 @@ the input either agree, in which case the enrichment is not an artefact of
 either, or they do not, in which case we would rather know. The concordance is
 tabulated in deg_method_concordance.csv.
 
-Inputs : Round_5/01_Raw_Inputs/01_H5AD/<cell type>.h5ad     (.raw only), and
-         Round_4/04_Final_Panels/00_Set_Ups/00_Data/01_Major_Cell_Types/
+Inputs : submission-tree/01_Raw_Inputs/01_H5AD/<cell type>.h5ad     (.raw only), and
+         upstream-pipeline/04_Final_Panels/00_Set_Ups/00_Data/01_Major_Cell_Types/
          {mast,plasma}_cell_integrated.h5ad for the two populations that have
          no file in 01_H5AD
 Outputs: per cell type and timepoint,
@@ -101,7 +102,7 @@ Outputs: per cell type and timepoint,
 The tables in outputs/ are NOT the output of this script as it now stands. They
 were produced from full_dataset.h5ad, they are what verify_numbers.py checks the
 manuscript against, and they were left in place deliberately. This script was run
-on the sound inputs on 2026-08-31 and the result is archived under
+on the sound inputs and the result is archived under
 07_Archive/2026-08-31_deg_recompute_on_sound_per_cell_type_inputs/: it moves
 fourteen checked numbers, including MoMac's pre-treatment NES from +1.06 to
 -1.00, so adopting it is an author's decision and not a re-run. Running this
@@ -114,7 +115,7 @@ MAST needs the environment's own libstdc++ ahead of the system one, or rpy2
 cannot open libR.so and every MAST job is recorded as unavailable while the
 t-test half still runs:
 
-    LD_LIBRARY_PATH=$CONDA_PREFIX/lib conda run -n Liudeng_Python_310 python ...
+    LD_LIBRARY_PATH=$CONDA_PREFIX/lib conda run -n stad_ceacam python ...
 """
 
 from pathlib import Path
@@ -130,7 +131,8 @@ import scanpy as sc
 from scipy import sparse, stats
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
-from paths import CELL_TYPE_H5AD, HALLMARK_GMT, PROJECT_ROOT  # noqa: E402
+from paths import (CELL_TYPE_H5AD, HALLMARK_GMT,  # noqa: E402
+                   NEUTROPHILS_SOUND_H5AD, PROJECT_ROOT)
 
 warnings.filterwarnings("ignore")
 
@@ -150,12 +152,12 @@ HALLMARK = str(HALLMARK_GMT)
 NFKB_TERM = "TNF-alpha Signaling via NF-kB"
 
 # Mast and plasma cells are the two populations with no file in 01_H5AD. These
-# two Round_4 objects hold them, their .raw carries the same 57,058 genes as
+# two upstream-pipeline objects hold them, their .raw carries the same 57,058 genes as
 # the other eleven, and both pass audit_raw_normalisation.py. The sibling
 # directory 01.1_Major_Cell_Types_Raw_Counts is NOT used: those files have no
 # .raw at all, and the raw_counts layer beside them is broken - two nonzero
 # genes and a library of three in a typical cell.
-ROUND_4_MAJOR = (PROJECT_ROOT.parent / "Round_4" / "04_Final_Panels"
+ROUND_4_MAJOR = (PROJECT_ROOT.parent / "upstream-pipeline" / "04_Final_Panels"
                  / "00_Set_Ups" / "00_Data" / "01_Major_Cell_Types")
 
 # The thirteen populations the manuscript reports, and the object each is read
@@ -176,9 +178,12 @@ CELL_SOURCES = {
     "MoMac": CELL_TYPE_H5AD["MoMac"],
     # The rebuilt object: the shipped cell set and gene set, counts recovered
     # from the 70 per-sample aligner-era files on Ensembl ID, normalised once.
-    # Built by 06_Clean_Data/rebuild_neutrophils_sound.py.
-    "Neutrophils": (PROJECT_ROOT / "06_Clean_Data" / "02_Rebuilt"
-                    / "Neutrophils_sound.h5ad"),
+    # Built by 06_Clean_Data/rebuild_neutrophils_sound.py, cut to the deposit
+    # obs by 06_Clean_Data/build_deposit_neutrophils_sound.py. Named through
+    # paths.py rather than as a literal: a working-tree path
+    # (06_Clean_Data/02_Rebuilt/) resolves to nothing in the deposit, so this
+    # script would not run there at all.
+    "Neutrophils": NEUTROPHILS_SOUND_H5AD,
     "NK_cells": CELL_TYPE_H5AD["NK_cells"],
     "Pericyte": CELL_TYPE_H5AD["Pericyte"],
     "Plasma_cells": ROUND_4_MAJOR / "plasma_cell_integrated.h5ad",
@@ -398,10 +403,10 @@ def one(cell, phase):
     samples = raw.obs["sample"].astype(str).values
 
     # MAST is the sensitivity analysis; the Welch t-test is what the paper
-    # reports. Running MAST first meant that an R that would not load - which is
-    # how this machine stood on 2026-08-29, rpy2 unable to open libR.so - killed
-    # the job before the primary analysis ran, and the whole module still exited
-    # 0. MAST is now isolated, and its failure is recorded rather than fatal.
+    # reports. Run MAST first and an R that will not load - rpy2 unable to open
+    # libR.so, which is the ordinary case without the LD_LIBRARY_PATH above -
+    # kills the job before the primary analysis runs, while the module still
+    # exits 0. MAST is isolated here, and its failure recorded rather than fatal.
     mast, mast_status = None, "ok"
     try:
         mast = run_mast(expr, g.values, samples, genes, cfg["ref"], cfg["test"])
@@ -434,11 +439,20 @@ def one(cell, phase):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--cell", default=None)
+    # Neutrophils by default, both phases: exactly what scripts/run.sh runs,
+    # and exactly what outputs/ holds. This module exists for that one
+    # population; the other twelve are module 12's, and their sound-input
+    # tables are the archived sound recompute rather than anything this script
+    # produces. With no arguments it used to start all thirteen, which needs
+    # two upstream-pipeline objects that are not deposited - so the figure driver, which
+    # launches every scripts/*.py with no arguments, killed it on a missing
+    # file before it reached the population it is named after.
+    ap.add_argument("--cell", default="Neutrophils",
+                    choices=sorted(CELL_SOURCES) + ["ALL"])
     ap.add_argument("--phase", default=None, choices=list(PHASES))
     args = ap.parse_args()
 
-    cells = [args.cell] if args.cell else list(CELL_SOURCES)
+    cells = list(CELL_SOURCES) if args.cell == "ALL" else [args.cell]
     phases = [args.phase] if args.phase else list(PHASES)
     missing = [c for c in cells if not CELL_SOURCES[c].exists()]
     if missing:
@@ -457,8 +471,13 @@ def main():
                   f"{r.get('minutes','')}min", flush=True)
 
     df = pd.DataFrame(rows)
-    tag = f"_{args.cell}_{args.phase}" if args.cell else ""
-    df.to_csv(OUT / f"recompute_summary{tag}.csv", index=False)
+    # One summary per (cell, phase). run.sh invoked this once per phase, so
+    # that is the name the shipped tables carry; writing it per row keeps a
+    # two-phase run reproducing the same file names instead of inventing
+    # recompute_summary_Neutrophils_None.csv.
+    for r in rows:
+        pd.DataFrame([r]).to_csv(
+            OUT / f"recompute_summary_{r['cell']}_{r['phase']}.csv", index=False)
     print(df.to_string(index=False))
 
     # Exit non-zero when a job did not produce its primary result. Without this

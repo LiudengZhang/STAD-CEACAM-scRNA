@@ -1,5 +1,5 @@
 #!/bin/bash
-# The thirteen-type sound table: the twelve types of the 2026-08-31 sound run,
+# The thirteen-type sound table: the twelve types of the archived sound run,
 # plus neutrophils from the rebuilt input. Nothing is merged in place - the
 # archive is copied from, never written to, and 12_R1.8_DEG_Recompute/outputs/
 # is not touched.

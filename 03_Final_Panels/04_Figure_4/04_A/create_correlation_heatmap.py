@@ -1,22 +1,66 @@
 #!/usr/bin/env python3
 """
-Create Cell State Correlation Matrix Heatmap (Figure 04 Panel A)
+Figure 4 panel A - Spearman correlation between every pair of minor cell
+states, ordered by module, with the five modules named along the bottom.
 
-Generates a correlation heatmap showing cell-cell relationships organized by modules.
+  printed panel  Figure 4 A       (PROVENANCE.csv - the directory is "04_A";
+                                   do NOT read the directory as the letter)
+
+The correlation matrix, the module ordering, the short row names, the masked
+diagonal, the colour map, the limits and the module boundaries are unchanged.
+Only the canvas and the type change: the panel is drawn at the millimetre
+rectangle it prints in and set in the figure's one type system.
+
+ONE ROW NAME IS RESTORED
+    The page names the C3 state MoMac_IL1B, the form the lineage analysis
+    settled on; the script still carried the earlier Mac_IL1B. The row, its
+    position and its correlations do not move - only the printed name.
+
+THE ROW LABELS ARE AN EXEMPTION
+    Fifty-six cell states are named down the side of a square matrix that has
+    to fit a 94.3 mm slot, which leaves 1.57 mm - about 4.5 pt - of pitch per
+    row. The names are kept at the size they print at, 3.32 pt: they are
+    neither shrunk nor abbreviated, because every alternative loses a cell-state
+    name a reader needs. Every other string on the panel is set to the figure's
+    type spec. This is the one place in Figure 4 where 6 pt is not reached.
+
+MARK
+    The earlier drawing set no SCALE. It drew a 12 x 12 inch canvas and cropped
+    it to the ink on save, and that crop reached the page at a fixed fraction of
+    its natural size. The fraction is legible in the published panel itself:
+    8 pt row labels print at 3.322 pt, 12 pt module labels at 4.984 pt, and
+    matplotlib's own 10 pt colour-bar ticks at 4.153 pt - one ratio, 0.41525.
+    So
+
+        MARK = ROW_LABEL_PT / CELL_LABEL_SIZE
+
+    and the two lengths the drawing sets in points, the cell grid and the module
+    boundary, are written here as they were written there with `* MARK`
+    appended.
+
+Input : correlation_matrix.csv; module_mappings.csv (beside this script)
+Output: this directory / correlation_heatmap_k5.{svg,pdf,png}
 """
 
 import pandas as pd
 import numpy as np
 import re
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import seaborn as sns
 from pathlib import Path
+import sys
 
-plt.rcParams.update({'svg.fonttype': 'none', 'pdf.fonttype': 42, 'ps.fonttype': 42, 'font.family': 'sans-serif', 'font.sans-serif': ['Arial', 'Liberation Sans', 'Helvetica', 'DejaVu Sans']})
+sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
+import panel_style_cns as style           # noqa: E402
+import slots                              # noqa: E402
+
+PANEL_LETTER = "A"
+PANEL_W_MM, PANEL_H_MM = slots.size_mm(4, PANEL_LETTER)
+LETTER_CELL = slots.letter_cell_mm(4, PANEL_LETTER)
 
 # Parameters
-FIGURE_SIZE = (12, 12)
-DPI = 300
 COLORMAP = 'RdBu_r'
 VMIN, VMAX = -1, 1
 CENTER = 0
@@ -24,8 +68,11 @@ MASK_DIAGONAL = True
 BOUNDARY_COLOR = 'black'
 BOUNDARY_WIDTH = 2
 CELL_LABEL_SIZE = 8
-MODULE_LABEL_SIZE = 12
 COLORBAR_SHRINK = 0.6
+
+#: The size the fifty-six row labels print at on the published page. Held
+#: deliberately; see THE ROW LABELS ARE AN EXEMPTION above.
+ROW_LABEL_PT = 3.322
 
 # Short display names for y-axis labels
 SHORT_NAMES = {
@@ -50,7 +97,7 @@ SHORT_NAMES = {
     'C4_Mono_Alternative_CD16':       'C4_Mono_CD16',
     'C2_MoMac_Intermediate_HLA-DRA':  'C2_MoMac_Inter',
     'C1_Mono_Classic_CD14':           'C1_Mono_CD14',
-    'C3_Mac_Inflam_IL1B':             'C3_Mac_IL1B',
+    'C3_Mac_Inflam_IL1B':             'C3_MoMac_IL1B',
     'C0_Mac_Classic_TREM2':           'C0_Mac_TREM2',
     'C6_Mac_Metallothionein_MT1G':    'C6_Mac_MT1G',
     # Module 3 — Mixed immune
@@ -71,6 +118,7 @@ SHORT_NAMES = {
     'C1_B_Memory_NR4A1':             'C1_B_Mem_NR4A1',
 }
 
+
 def main():
     """Generate correlation heatmap."""
     print("=" * 60)
@@ -79,6 +127,13 @@ def main():
 
     # Get script directory
     script_dir = Path(__file__).parent
+
+    family = style.apply(title_fontsize=7, fontsize_legend=6,
+                         legend_fontsize=6)
+    MARK = ROW_LABEL_PT / CELL_LABEL_SIZE
+    print(f"  type set in {family}; body {style.body_pt():g} pt, "
+          f"ticks/legend {style.tick_pt():g} pt; MARK {MARK:.5f}")
+    print(f"  row labels held at {ROW_LABEL_PT:g} pt by the author's exemption")
 
     # Load data
     print("\nLoading data...")
@@ -107,7 +162,7 @@ def main():
 
     # Create figure
     print("\nCreating heatmap...")
-    fig, ax = plt.subplots(figsize=FIGURE_SIZE)
+    fig, ax = style.subplots_mm(PANEL_W_MM, PANEL_H_MM)
 
     # Create mask for diagonal
     mask = np.eye(len(correlation_ordered), dtype=bool) if MASK_DIAGONAL else None
@@ -125,7 +180,7 @@ def main():
         ax=ax,
         xticklabels=False,
         yticklabels=correlation_ordered.index,
-        linewidths=0.5,
+        linewidths=0.5 * MARK,
         linecolor='lightgray'
     )
     # De-rasterize heatmap (seaborn uses pcolormesh which defaults to rasterized in SVG)
@@ -133,12 +188,12 @@ def main():
         coll.set_rasterized(False)
 
     # Adjust cell labels
-    ax.set_yticklabels(ax.get_yticklabels(), fontsize=CELL_LABEL_SIZE)
+    ax.set_yticklabels(ax.get_yticklabels(), fontsize=ROW_LABEL_PT)
 
     # Add module boundaries
     for boundary in module_boundaries:
-        ax.axhline(y=boundary, color=BOUNDARY_COLOR, linewidth=BOUNDARY_WIDTH)
-        ax.axvline(x=boundary, color=BOUNDARY_COLOR, linewidth=BOUNDARY_WIDTH)
+        ax.axhline(y=boundary, color=BOUNDARY_COLOR, linewidth=BOUNDARY_WIDTH * MARK)
+        ax.axvline(x=boundary, color=BOUNDARY_COLOR, linewidth=BOUNDARY_WIDTH * MARK)
 
     # Add module labels at bottom
     module_positions = []
@@ -149,24 +204,24 @@ def main():
 
     ax.set_xticks(module_positions)
     ax.set_xticklabels(
-        ['IM-T/NK/DC', 'IM-MoMac', 'IM-Mixed', 'IM-Neutrophil', 'IM-B/Plasma'],
-        fontsize=MODULE_LABEL_SIZE
-    )
+        ['IM-T/NK/DC', 'IM-MoMac', 'IM-Mixed', 'IM-Neutrophil', 'IM-B/Plasma'])
     ax.xaxis.tick_bottom()
 
-    plt.tight_layout()
+    style.fit_margins(fig, pad_mm=0.6, cell_mm=LETTER_CELL)
+    over = style.overflow_mm(fig)
+    if max(over) > 0:
+        raise RuntimeError(
+            f"ink outside the {PANEL_W_MM} x {PANEL_H_MM} mm canvas "
+            f"(l,r,b,t mm): {over}")
+    intruders = style.letter_clear(fig, LETTER_CELL)
+    if intruders:
+        raise RuntimeError(f"ink under the panel letter cell: {intruders}")
 
-    # Save
-    output_path = script_dir / 'correlation_heatmap_k5.png'
-    fig.savefig(output_path, dpi=DPI, bbox_inches='tight')
-    fig.savefig(output_path.with_suffix('.svg'), bbox_inches='tight')
-
-    file_size = output_path.stat().st_size / 1024
-    print(f"\n✓ Saved: {output_path.name}")
-    print(f"  Size: {file_size:.1f} KB")
+    stem = 'correlation_heatmap_k5'
+    style.save_panel(fig, script_dir / stem)
+    print(f"\nSaved: {stem}.[svg|pdf|png] at {PANEL_W_MM} x {PANEL_H_MM} mm")
     print("=" * 60)
 
-    plt.close()
 
 if __name__ == "__main__":
     main()

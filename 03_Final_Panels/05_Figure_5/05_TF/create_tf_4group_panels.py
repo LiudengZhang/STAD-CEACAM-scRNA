@@ -1,12 +1,49 @@
 #!/usr/bin/env python3
 # REVISED FOR CIR-26-0753-ET, reviewer 1 point R1.3c:
 # the test is two-sided and the annotation reports the exact P value.
-# The one-tailed version this replaces is the one used in the preprint,
-# https://www.biorxiv.org/content/10.64898/2026.03.05.708917
-"""Create individual BACH1 and NFKB1 regulon activity 4-group boxplots.
-1-vs-3 comparison: Post-R vs Others (exact permutation test).
-KW homogeneity test among the other 3 groups.
-Outputs: bach1_tf_4group.svg, nfkb1_tf_4group.svg
+"""
+Figure 5 panels D and E - BACH1 and NFKB1 regulon activity across the four
+treatment/response groups, one point per sample.
+
+ONE SCRIPT, TWO PRINTED PANELS. `bach1_tf_4group` is printed panel D and
+`nfkb1_tf_4group` is printed panel E (PROVENANCE.csv, confirmed against the
+published page: panel D is titled BACH1 regulon and panel E NFKB1 regulon).
+Each is drawn at its own printed rectangle, read from
+03_Final_Panels/panel_rects.csv through 00_Config/slots.py - the two are not
+the same size and are stacked, not side by side.
+
+The two SCENIC regulon gene lists, the C3 filter, `sc.tl.score_genes`, the
+per-sample aggregation, the exact permutation test, the Kruskal-Wallis
+homogeneity test, the bracket heights and both P-value strings are unchanged,
+and `np.random.seed(42 + i)` stays exactly where it was. Both P values are
+printed, each on its own line: the Kruskal-Wallis homogeneity P over the
+three-group bracket and the permutation P over the four-group bracket.
+
+The four group names are set on two lines - "Post" over "NR" - instead of on
+one line at 45 degrees. The same four groups, in the same order, at the same
+tick positions; only the line break and the rotation change, and the break is
+declared in 00_Config/shared/labels.py.
+
+MARK
+    The earlier drawing used a canvas four times the printed size and set its
+    smallest body type - the y axis label, the x tick labels, both sets of tick
+    labels and the grey Kruskal-Wallis annotation - at 5 * SCALE, so
+
+        MARK = style.tick_pt() / (SMALL_PT * SCALE)
+        AREA = MARK ** 2
+
+    Box, whisker, cap, median and bracket line widths, the flier marker size
+    and edge width, and the jitter marker area and edge width are scaled by
+    those. Tick widths and lengths and spine widths are not: those are style,
+    and cnsplots sets them.
+
+Judgement calls, stated plainly:
+  - The earlier drawing set three annotation sizes. cnsplots offers two, so the
+    ordering is kept rather than the numbers: the grey Kruskal-Wallis note
+    takes `tick_pt`, the permutation P takes `body_pt`, and the title takes the
+    axes-title size.
+  - The title's explicit `fontweight='normal'` is dropped so cnsplots' bold
+    axis title applies.
 """
 import pandas as pd
 import numpy as np
@@ -20,11 +57,17 @@ from pathlib import Path
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
 from paths import MOMAC_H5AD
-from shared.figure_config import use_panel_style
+import panel_style_cns as style
+import slots
 import warnings
 warnings.filterwarnings('ignore')
 
-SCALE = 4
+SCALE = 4                       # the earlier canvas multiplier, for MARK only
+SMALL_PT = 5.0                  # the earlier smallest body type, before * SCALE
+
+# Which printed panel each regulon is, and therefore which slot it is drawn in.
+PANEL_LETTER = {'BACH1': 'D', 'NFKB1': 'E'}
+
 OUT = str(Path(__file__).resolve().parent)
 H5AD = str(MOMAC_H5AD)
 
@@ -57,7 +100,11 @@ COLORS = {
     'Post-NR': '#f1c0e8',
 }
 
-use_panel_style(font_pt=7)
+_family = style.apply(title_fontsize=7, fontsize_legend=6, legend_fontsize=6)
+MARK = style.tick_pt() / (SMALL_PT * SCALE)
+AREA = MARK ** 2
+print(f"  type set in {_family}; body {style.body_pt():g} pt, "
+      f"ticks/legend {style.tick_pt():g} pt; MARK {MARK:.3f}")
 
 
 def exact_permutation_test(x, y, alternative='two-sided'):
@@ -140,7 +187,10 @@ for tf_name in ['BACH1', 'NFKB1']:
     sample_mean = df.groupby('sample')['score'].mean().reset_index()
     sample_scores = sample_group.merge(sample_mean, on='sample')
 
-    fig, ax = plt.subplots(1, 1, figsize=(6 * SCALE / 2.54, 5.5 * SCALE / 2.54))
+    letter = PANEL_LETTER[tf_name]
+    panel_w_mm, panel_h_mm = slots.size_mm(5, letter)
+    letter_cell = slots.letter_cell_mm(5, letter)
+    fig, ax = style.subplots_mm(panel_w_mm, panel_h_mm)
 
     data_list = []
     colors_list = []
@@ -150,15 +200,17 @@ for tf_name in ['BACH1', 'NFKB1']:
         colors_list.append(COLORS[grp])
 
     bp = ax.boxplot(data_list, positions=positions, widths=0.6, patch_artist=True,
-                    boxprops=dict(linewidth=1.0 * SCALE),
-                    whiskerprops=dict(color='black', linewidth=1.0 * SCALE),
-                    capprops=dict(color='black', linewidth=1.0 * SCALE),
-                    flierprops=dict(marker='o', markerfacecolor='white', markersize=4 * SCALE,
-                                   markeredgecolor='black', markeredgewidth=0.5 * SCALE))
+                    boxprops=dict(linewidth=1.0 * SCALE * MARK),
+                    whiskerprops=dict(color='black', linewidth=1.0 * SCALE * MARK),
+                    capprops=dict(color='black', linewidth=1.0 * SCALE * MARK),
+                    flierprops=dict(marker='o', markerfacecolor='white',
+                                    markersize=4 * SCALE * MARK,
+                                    markeredgecolor='black',
+                                    markeredgewidth=0.5 * SCALE * MARK))
     for patch, color in zip(bp['boxes'], colors_list):
         patch.set_facecolor(color)
     for median in bp['medians']:
-        median.set(color='black', linewidth=1.5 * SCALE)
+        median.set(color='black', linewidth=1.5 * SCALE * MARK)
 
     # Jitter points
     for i, (grp, pos) in enumerate(zip(groups_order, positions)):
@@ -167,8 +219,9 @@ for tf_name in ['BACH1', 'NFKB1']:
             np.random.seed(42 + i)
             jitter = np.random.uniform(-0.12, 0.12, size=len(grp_data))
             ax.scatter(np.full(len(grp_data), pos) + jitter, grp_data,
-                       c='black', s=20 * SCALE, zorder=3, edgecolors='white',
-                       linewidths=0.3 * SCALE, alpha=0.85)
+                       c='black', s=20 * SCALE * AREA, zorder=3,
+                       edgecolors='white',
+                       linewidths=0.3 * SCALE * MARK, alpha=0.85)
 
     # ── Stats: Post-R vs Others (exact permutation test) ──
     post_r_vals = sample_scores[sample_scores['group'] == 'Post-R']['score'].values
@@ -195,35 +248,43 @@ for tf_name in ['BACH1', 'NFKB1']:
     # Bracket 1 (lower): KW ns among Others (positions 0, 1, 2)
     ns_y = y_max * 1.08
     ax.plot([0, 0, 2, 2], [ns_y, ns_y * 1.03, ns_y * 1.03, ns_y],
-            'k-', lw=0.8 * SCALE, alpha=0.6)
+            'k-', lw=0.8 * SCALE * MARK, alpha=0.6)
     # Exact P rather than a star: R1.3c asks for exact values, and the test
     # above is already two-sided.
     kw_str = f'P = {kw_p:.3f}' if kw_p >= 0.001 else 'P < 0.001'
-    ax.text(1.0, ns_y * 1.04, kw_str, ha='center', fontsize=5 * SCALE, color='#666666')
+    ax.text(1.0, ns_y * 1.04, kw_str, ha='center',
+            fontsize=style.tick_pt(), color='#666666')
 
     # Bracket 2 (upper): Post-R vs Others — spans all 4 (positions 0 to 3.5)
     bracket_y = y_max * 1.22
     ax.plot([0, 0, 3.5, 3.5], [bracket_y, bracket_y * 1.03, bracket_y * 1.03, bracket_y],
-            'k-', lw=0.8 * SCALE)
+            'k-', lw=0.8 * SCALE * MARK)
     p_str = f'P = {perm_p:.3f}' if perm_p >= 0.001 else 'P < 0.001'
-    ax.text(1.75, bracket_y * 1.04, p_str, ha='center', fontsize=6 * SCALE)
+    ax.text(1.75, bracket_y * 1.04, p_str, ha='center',
+            fontsize=style.body_pt())
 
-    ax.set_ylabel('Regulon activity score', fontsize=5 * SCALE)
-    ax.set_title(f'$\\it{{{tf_name}}}$ regulon', fontsize=7 * SCALE, fontweight='normal')
+    ax.set_ylabel('Regulon activity score')
+    ax.set_title(f'$\\it{{{tf_name}}}$ regulon')
     ax.set_xticks(positions)
-    ax.set_xticklabels(groups_order, fontsize=5 * SCALE, rotation=45, ha='right')
+    # Two lines rather than one line at 45 degrees: the same four names in
+    # the same order at the same tick positions, in half the width.
+    ax.set_xticklabels([g.replace('-', '\n') for g in groups_order])
     ax.set_ylim(top=y_max * 1.50)
-    ax.tick_params(axis='both', labelsize=5 * SCALE, width=1.0 * SCALE, length=4 * SCALE)
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
-    ax.spines['left'].set_linewidth(1.0 * SCALE)
-    ax.spines['bottom'].set_linewidth(1.0 * SCALE)
 
-    plt.tight_layout()
-    out_svg = f'{OUT}/{tf_name.lower()}_tf_4group.svg'
-    plt.savefig(out_svg, bbox_inches='tight')
-    plt.savefig(f'{OUT}/{tf_name.lower()}_tf_4group.png', dpi=300, bbox_inches='tight')
-    plt.close()
-    print(f"  Saved: {out_svg}")
+    style.fit_margins(fig, pad_mm=0.6, cell_mm=letter_cell)
+    over = style.overflow_mm(fig)
+    if max(over) > 0:
+        raise RuntimeError(
+            f"ink outside the {panel_w_mm} x {panel_h_mm} mm canvas "
+            f"(l,r,b,t mm): {over}")
+    intruders = style.letter_clear(fig, letter_cell)
+    if intruders:
+        raise RuntimeError(f"ink under the panel letter cell: {intruders}")
+    stem = f'{OUT}/{tf_name.lower()}_tf_4group'
+    style.save_panel(fig, stem)
+    print(f"  Saved: {stem}.[svg|pdf|png] at {panel_w_mm} x {panel_h_mm} mm "
+          f"(printed panel {letter})")
 
 print("\nDone — both TF panels created.")

@@ -3,19 +3,30 @@ Gate PROVENANCE.csv against the files it describes.
 
 The failure this exists to prevent: a panel script whose output disagrees with
 the printed figure, sitting in the tree with nothing to say so, until someone
-concludes the paper is wrong. That has happened twice, both times on Figure 5A,
-both times retracted. See 00_GROUND_TRUTH/README.md.
+concludes the paper is wrong. Figure 5A is the worked example: it looked
+irreproducible for a month, and the cause was its input path rather than the
+figure. See 00_GROUND_TRUTH/README.md.
 
 Eight checks.
 
   1. Structure      every row names a directory and a script that exist.
-  2. Coverage       every printed panel of Figures 1-6 and S7-S11 has a row, and
+  2. Coverage       every printed panel of Figures 1-6 and S7-S9 has a row, and
                     every panel directory is either mapped to a printed panel or
                     recorded as an orphan.
-  3. Known broken   a row marked reproduces_published = no must carry a
-                    KNOWN_BROKEN.md beside its script and a warning in the
-                    script's own docstring. A panel may be broken; it may not be
-                    silently broken.
+  3. Known broken   a row marked reproduces_published = no must carry a marker
+                    beside its script and a warning in the script's own
+                    docstring. A panel may be broken; it may not be silently
+                    broken.
+
+                    "no" has two senses and they take different markers.
+                    KNOWN_BROKEN.md means broken and awaiting a fix. But since
+                    2026-09-10 a panel may also be deliberately superseded -
+                    redrawn under an author's ruling so that it no longer
+                    reproduces the printed panel and never will again - and that
+                    takes SUPERSEDED.md instead. Exactly one of the two: a row
+                    carrying both is claiming to be broken and correct at once,
+                    and a row carrying neither is the silent breakage this check
+                    exists to stop.
   4. Placement      a row marked yes that carries printed_rect_mm must actually
                     appear at that rectangle of the shipped figure: the panel's
                     own text tokens are compared against the text inside the
@@ -23,17 +34,17 @@ Eight checks.
                     check that a whole-page comparison cannot make - a text
                     sweep against the whole figure scores Figure 5A at 0 percent
                     missing, because "Hypoxia" appears in panel N.
-  5. Guard rails    CLAUDE.md, 00_GROUND_TRUTH/README.md and the two tree
+  5. Guard rails    the project's rules file, 00_GROUND_TRUTH/README.md and the two tree
                     READMEs exist, and the ground-truth figures are read-only.
   6. Freshness      a verdict must be newer than the script it judges. A panel
                     edited after it was verified carries a verdict about a file
                     that no longer exists, which reads exactly like a verdict
                     about the file that does.
   7. Lookup         every panel directory that holds a panel script or a drawn
-                    artefact is named in some row's source_dir. CLAUDE.md's
-                    second rule says to look every panel up here rather than
-                    read its letter off the directory name; a directory that
-                    cannot be looked up leaves no way to obey that but guessing.
+                    artefact is named in some row's source_dir. A panel's letter
+                    is looked up here rather than read off its directory name,
+                    because the two diverge; a directory that cannot be looked
+                    up leaves no way to obey that but guessing.
                     Check 2 already does this for the main figures by directory
                     name; this extends it to the supplementary trees and matches
                     on the path the rows actually carry.
@@ -51,8 +62,8 @@ Eight checks.
                     blind spot that reports itself is a blind spot, one that stays
                     quiet reads as a clean bill of health.
 
-                    Two blind spots were closed on 2026-09-01, both of them
-                    shapes that let the Figure 5A repoint through:
+                    Two shapes of read are easy to leave unexamined, and both
+                    are what let the Figure 5A repoint through:
 
                     a. Directory reads. A script that names its input with
                        .glob("*.csv"), .iterdir(), os.listdir(), a formatted
@@ -76,22 +87,22 @@ Eight checks.
                        written, or written and then read back, is still an
                        output.
 
-                    Positive controls for both live in the session scratch, not
-                    in the tree: a script that globs
+                    Positive controls for both are kept out of the tree, since
+                    a planted fault that ships is a fault: a script that globs
                     07_Archive/.../12_R1.8_DEG_Recompute/outputs/gsea, and one
-                    that reads a nonexistent prepared table beside itself. Both
-                    passed this check in silence before the change.
+                    that reads a nonexistent prepared table beside itself.
+                    Neither is detectable without the two rules above.
  11. Upstream       the same archive guard, applied to the pipelines that produce
      inputs         what the panels read. Check 9 looks only at panel scripts, so
                     an input repointed one step upstream - in a NicheNet or NMF
                     config, in a BayesPrism step script - passed it untouched.
                     That is the Figure 5A fault with one more link in the chain.
-                    Two roots are read: 02_Preparation_for_Panels/ (the five imported
-                    pipelines) and the Round_5 preparation tree whose configs
-                    they reference.
+                    Two roots are read: upstream/ (the five imported
+                    pipelines) and the preparation tree whose configs they
+                    reference.
 
                     Only the archive guard is applied here, never the existence
-                    check. 02_Preparation_for_Panels/ holds scripts and no outputs on purpose
+                    check. upstream/ holds scripts and no outputs on purpose
                     - import_pipelines.py says so in its own docstring, because
                     a second copy of an intermediate can drift from the one the
                     panels read - so every relative output path in it is
@@ -106,11 +117,24 @@ Eight checks.
                     not a live repoint.
 
  10. Broken expires a row marked reproduces_published = no must name a mechanism
-                    in its note - which input, which run, which step - and its
-                    KNOWN_BROKEN.md must carry a "Retest-by: YYYY-MM-DD" line that
-                    has not passed. The marker exists so a machine cannot overwrite
-                    a human finding; it must not also let a wrong finding harden
-                    into a fact. The Figure 5A marker did exactly that.
+                    in its note - which input, which run, which step - whichever
+                    marker it carries.
+
+                    A KNOWN_BROKEN.md must then carry a "Retest-by: YYYY-MM-DD"
+                    line that has not passed. The marker exists so a machine
+                    cannot overwrite a human finding; it must not also let a
+                    wrong finding harden into a fact. An unexpired marker on a
+                    panel that does in fact reproduce is a public claim against
+                    the paper's own figure that nothing in the tree will ever
+                    come back to.
+
+                    A SUPERSEDED.md carries no retest date, because there is
+                    nothing to retest: the panel was deliberately redrawn and
+                    will not reproduce the printed one again. What it must carry
+                    instead is "Ruling-date: YYYY-MM-DD", not in the future -
+                    the date the author ruled. A retest date here would file an
+                    authorised correction as a defect and put it in the queue of
+                    things to go back and fix.
 
 Run: python verify_panel_provenance.py
 Exit status is non-zero if anything fails.
@@ -127,42 +151,55 @@ import unicodedata
 try:
     import fitz
 except ImportError:
-    sys.exit("PyMuPDF (fitz) is required: conda run -n Liudeng_Python_310 ...")
+    sys.exit("PyMuPDF (fitz) is required: conda run -n stad_ceacam ...")
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
+# The release drops the Main_Figures/ level (03_Final_Panels ->
+# 03_Final_Panels). A HERE-relative "Main_Figures" carries no tree name, so
+# rewrite_figure_tree() never saw these paths and they shipped broken; paths.py
+# names the directory correctly in both layouts.
+sys.path.insert(0, str(ROOT / "00_Config"))
+from paths import MAIN_FIGURES  # noqa: E402
 GROUND = ROOT / "00_GROUND_TRUTH"
-PATCHED = HERE / "Main_Figures" / "_patched"
+# The six figures as they ship: Figure 1 patched, 2 to 5 redrawn into
+# their printed slots, 6 supplied whole by the author, collected by
+# build_shipped_figures.py.
+PATCHED = MAIN_FIGURES / "_shipped"
 MANIFEST = HERE / "PROVENANCE.csv"
 RELEASE = ROOT / "05_Code_Release" / "github_repo" / "03_Final_Panels"
 
 MM = 72 / 25.4
-# All five figures resolve into the working tree. Figures 1 and 4 pointed at
-# RELEASE until 2026-09-01, because they were the two with no working-tree panel
-# directories - update_release.py says so in its own docstring, and filled them
-# from Round_5. So this file was checking a *generated* copy of eleven scripts:
-# a stale release would have been validated as though it were the source, and
-# the check would have reported "all inputs live" about code nobody was editing.
-# Both directories were copied in from Round_5/03_Final_Panels that day, verified
-# byte-identical file by file, so nothing this file judges changed value.
-FIG_DIR = {"1": HERE / "Main_Figures" / "01_Figure_1",
-           "2": HERE / "Main_Figures" / "02_Figure_2",
-           "3": HERE / "Main_Figures" / "03_Figure_3",
-           "4": HERE / "Main_Figures" / "04_Figure_4",
-           "5": HERE / "Main_Figures" / "05_Figure_5"}
+# All five figures must resolve into the working tree, never into the generated
+# release. Figures 1 and 4 are the two whose panel directories were imported
+# rather than authored here - update_release.py says so in its own docstring -
+# and pointing them at the release instead would make this file check a
+# *generated* copy of eleven scripts: a stale release would be validated as
+# though it were the source, and the check would report "all inputs live" about
+# code nobody is editing.
+FIG_DIR = {"1": MAIN_FIGURES / "01_Figure_1",
+           "2": MAIN_FIGURES / "02_Figure_2",
+           "3": MAIN_FIGURES / "03_Figure_3",
+           "4": MAIN_FIGURES / "04_Figure_4",
+           "5": MAIN_FIGURES / "05_Figure_5"}
 PRINTED_PANELS = {"1": "ABC", "2": "ABCDEFGHIJKLMN", "3": "ABCDEFGHIJKLMN",
                   "4": "ABCDEFGH", "5": "ABCDEFGHIJKLMN"}
 BROKEN_MARKER = "KNOWN_BROKEN.md"
+# The other sense of "no": deliberately superseded under an author's ruling,
+# rather than broken and awaiting a fix. See checks 3 and 10.
+SUPERSEDED_MARKER = "SUPERSEDED.md"
+MARKERS = (BROKEN_MARKER, SUPERSEDED_MARKER)
 RETEST = re.compile(r"^Retest-by:\s*(\d{4})-(\d{2})-(\d{2})\s*$", re.M)
+RULING = re.compile(r"^Ruling-date:\s*(\d{4})-(\d{2})-(\d{2})\s*$", re.M)
 # Suffixes that make a path a data input rather than a drawn artefact.
 DATA_SUFFIX = {".csv", ".tsv", ".txt", ".h5ad", ".pkl", ".xlsx", ".xls",
                ".loom", ".rds", ".json", ".gmt", ".parquet", ".npy", ".npz"}
 # Directory names that mean "this is not a live input".
-STALE_MARKERS = ("_archived", "_Archived", "99_Archive", "98_Temp_workspace",
+STALE_MARKERS = ("_archived", "_Archived", "99_Archive", "temp-workspace",
                  "backup", "_BACKUP", "Backup", "_Old", "_old", "07_Archive",
                  "release_candidate")
 # Check 11. The upstream pipelines that produce what the panels read.
-UPSTREAM = ROOT / "02_Preparation_for_Panels"
+UPSTREAM = ROOT / "upstream"
 # An absolute path written into a config or a non-Python pipeline step. The two
 # prefixes are the ones this project's storage actually uses; LOCAL_PATH in
 # verify_release_sync.py names the same pair.
@@ -170,8 +207,8 @@ ABS_PATH = re.compile(r"/(?:priv18data1|rsrch\d+)/[A-Za-z0-9_./+~-]+")
 # YAML has no AST here and R and shell have no Python one; their paths are text.
 TEXT_INPUT_PATTERNS = ("*.yaml", "*.yml", "*.R", "*.sh")
 # How a path is used tells read from write. Location does not: a table prepared
-# beside a panel script and read by it is an input, and check 9 skipped every
-# one of those as an output until 2026-09-01.
+# beside a panel script and read by it is an input, so treating everything in a
+# script's own directory as an output hides every one of them from check 9.
 READ_CALLS = {"read_csv", "read_table", "read_excel", "read_tsv", "read_fwf",
               "read_parquet", "read_json", "read_pickle", "read_hdf",
               "read_feather", "read_stata", "read_sas", "read_h5ad",
@@ -235,7 +272,7 @@ def resolve(figure, rel):
     if not rel or rel.startswith("<"):
         return None
     if rel.startswith("_panel_1A"):
-        return HERE / "Main_Figures" / rel
+        return MAIN_FIGURES / rel
     if rel.startswith(("00_GROUND_TRUTH/", "04_Revision_Analyses/")):
         # Twenty-one supplementary panels are written by an analysis module
         # rather than by a script beside them.
@@ -281,13 +318,20 @@ def check_coverage(rows):
         for c in letters:
             if (fig, c) not in seen:
                 fail(f"Figure {fig} panel {c} has no row in PROVENANCE.csv")
+    # A directory's name is not a panel letter. Deriving one here would let a
+    # rerun of an analysis, which writes wherever its own constant points,
+    # invent a supplementary panel that the manifest has never heard of. So the
+    # question asked is the same one the main figures are asked below: is this
+    # directory named by a row?
+    mapped = {p for r in rows if r["figure"].startswith("S")
+              for p in r["source_dir"].split("; ") if p}
     for s in sorted((HERE / "Supplementary_New").glob("S*/")):
-        figname = s.name.split("_")[0]
         for d in sorted(p for p in s.iterdir()
                         if p.is_dir() and not p.name.startswith("_")):
-            letter = d.name.split("_")[-1]
-            if (figname, letter) not in seen:
-                fail(f"{figname} panel {letter} has no row in PROVENANCE.csv")
+            rel = f"Supplementary_New/{s.name}/{d.name}"
+            if rel not in mapped:
+                fail(f"{rel} holds a panel directory that no row in "
+                     f"PROVENANCE.csv names in source_dir")
     for fig, root in FIG_DIR.items():
         if not root.is_dir():
             continue
@@ -300,28 +344,47 @@ def check_coverage(rows):
                      f"nor an orphan row")
 
 
+def markers_of(row):
+    """Which of the two "no" markers sit beside a row's script."""
+    d = panel_dir(row)
+    if d is None:
+        return d, []
+    return d, [m for m in MARKERS if (d / m).exists()]
+
+
 def check_known_broken(rows):
     for r in rows:
         if r["reproduces_published"] != "no":
             continue
         tag = f"Figure {r['figure']} panel {r['printed_panel']}"
-        d = panel_dir(r)
-        if d is None or not (d / BROKEN_MARKER).exists():
-            fail(f"{tag} is marked reproduces_published=no but has no "
-                 f"{BROKEN_MARKER} beside its script - a broken panel must not "
-                 f"be silently broken")
+        d, present = markers_of(r)
+        if not present:
+            fail(f"{tag} is marked reproduces_published=no but has neither "
+                 f"{BROKEN_MARKER} nor {SUPERSEDED_MARKER} beside its script - "
+                 f"a panel that does not reproduce must say which it is, "
+                 f"broken and awaiting a fix or deliberately superseded, and "
+                 f"must not be silently either")
             continue
+        if len(present) > 1:
+            fail(f"{tag} carries both {BROKEN_MARKER} and {SUPERSEDED_MARKER} - "
+                 f"those are the two different senses of reproduces_published="
+                 f"no and a panel is in one of them, not both")
+            continue
+        marker = present[0]
         warned = False
         for rel in filter(None, r["source_script"].split("; ")):
             p = resolve(r["figure"], rel)
-            if p and p.exists() and BROKEN_MARKER in p.read_text(errors="replace"):
+            if p and p.exists() and marker in p.read_text(errors="replace"):
                 warned = True
         if not warned:
-            fail(f"{tag}: {BROKEN_MARKER} exists but no source_script points at "
+            fail(f"{tag}: {marker} exists but no source_script points at "
                  f"it from its own docstring")
-        else:
+        elif marker == BROKEN_MARKER:
             note(f"{tag}: recorded as not reproducible, marker and warning both "
                  f"present")
+        else:
+            note(f"{tag}: recorded as deliberately superseded, {marker} and "
+                 f"warning both present")
 
 
 def check_placement(rows):
@@ -391,7 +454,12 @@ def check_lookup(rows):
                 fail(f"{d.relative_to(HERE)} produces a panel artefact but no "
                      f"row names it in source_dir - there is no way to look its "
                      f"printed letter up, and the directory name is not it")
-    for root in sorted((HERE / "Main_Figures").glob("0*_Figure_*")):
+    main_roots = sorted(MAIN_FIGURES.glob("0*_Figure_*"))
+    if not main_roots:
+        fail(f"no main-figure directories under {MAIN_FIGURES} - this scan's\n"
+             f"glob matched nothing, so every main figure would go unchecked\n"
+             f"and this verifier would pass having read nothing")
+    for root in main_roots:
         scan(root, by_path=False)
     for root in sorted((HERE / "Supplementary_New").glob("S*")):
         scan(root, by_path=True)
@@ -429,12 +497,12 @@ class _Resolver:
     Anything else resolves to None and is reported as unresolved rather than
     guessed at.
 
-    The f-string and os.path.join forms were added on 2026-09-03 for the glob
-    patterns of SUPPLEMENTARY_AUDIT.md fault 3: glob.glob(f"{DIR}/*.csv") and
-    glob.glob(os.path.join(str(DIR), "*.csv")) named a directory that check 9
-    could not see at all - not as an input, not as unresolved, not anywhere.
-    An f-string resolves only if EVERY part of it resolves; one run-time piece
-    makes the whole thing None, so nothing is guessed at.
+    The f-string and os.path.join forms are here for the glob patterns of
+    SUPPLEMENTARY_AUDIT.md fault 3: glob.glob(f"{DIR}/*.csv") and
+    glob.glob(os.path.join(str(DIR), "*.csv")) name a directory that check 9
+    would otherwise not see at all - not as an input, not as unresolved, not
+    anywhere. An f-string resolves only if EVERY part of it resolves; one
+    run-time piece makes the whole thing None, so nothing is guessed at.
     """
 
     def __init__(self, script, consts):
@@ -591,8 +659,8 @@ def _dir_read(node, r):
     # glob.glob("/abs/dir/*.csv") and glob.iglob - directory and pattern in one.
     # The argument is not always a literal: glob.glob(f"{DIR}/*.csv") and
     # glob.glob(os.path.join(str(DIR), "*.csv")) name a directory just as
-    # plainly, and until 2026-09-03 both resolved to nothing at all. _Resolver
-    # is asked second, so a literal still behaves exactly as before.
+    # plainly, and neither resolves by string inspection alone. _Resolver is
+    # asked second, so a literal behaves exactly as it would without it.
     if attr in ("glob", "iglob") and isinstance(f.value, ast.Name) \
             and f.value.id == "glob":
         s = const(node.args[0]) if node.args else None
@@ -842,9 +910,9 @@ def check_inputs(rows):
             # SUPPLEMENTARY_AUDIT.md fault 3, row 5: PREPARATION / "GSEA" /
             # phase / f"{name}_hallmark.csv" names a real directory even though
             # the leaf is built at run time. The leaf cannot be checked; the
-            # directory can, and until 2026-09-03 its absence was written into
-            # a note that nothing reads. A read whose own resolvable root is
-            # gone is the Figure 5A fault, not an open question.
+            # directory can, and its absence is a failure rather than a note,
+            # because a read whose own resolvable root is gone is the Figure 5A
+            # fault and not an open question.
             if near is not None and not near.exists():
                 fail(f"{s.name}:{line} builds a read path under {near}, which "
                      f"does not exist - {desc}")
@@ -874,17 +942,17 @@ def check_upstream_inputs():
     Check 9 asks where a *panel script* reads from. Everything a panel script
     reads was written by something else, and that something else has inputs of
     its own. A prior model, a reference matrix or a deconvolution table
-    repointed into an archive up there reaches the printed page just as surely,
-    and nothing in this file looked at it until 2026-09-03.
+    repointed into an archive up there reaches the printed page just as surely
+    as one repointed in the panel script itself.
 
     Reuses check 9's machinery rather than growing a second one: _inputs_of and
     _Resolver read the Python, STALE_MARKERS decides what an archive is.
     """
     consts = _path_constants()
     prep = consts.get("PREPARATION")
-    py_roots = [("02_Preparation_for_Panels", UPSTREAM)]
-    text_roots = [("02_Preparation_for_Panels", UPSTREAM),
-                  ("Round_5/02_Preparation_for_Panels", prep)]
+    py_roots = [("upstream", UPSTREAM)]
+    text_roots = [("upstream", UPSTREAM),
+                  ("submission-tree/02_Preparation_for_Panels", prep)]
 
     stale = archived = 0
     n_py = n_text = 0
@@ -954,7 +1022,12 @@ def check_upstream_inputs():
 
 
 def check_broken_expires(rows):
-    """A "no" must name a mechanism and come up for re-test."""
+    """A "no" must name a mechanism, and be dated in the way its marker asks.
+
+    A KNOWN_BROKEN.md comes up for re-test. A SUPERSEDED.md does not - there is
+    nothing to retest - but it must say when the ruling that superseded the
+    panel was made, so the record cannot be a bare assertion either.
+    """
     today = datetime.date.today()
     for r in rows:
         if r["reproduces_published"] != "no":
@@ -964,11 +1037,29 @@ def check_broken_expires(rows):
             fail(f"{tag} is marked reproduces_published=no with a note too short "
                  f"to name a mechanism - say which input, which run or which step "
                  f"differs, not merely that the output does")
-        d = panel_dir(r)
-        marker = d / BROKEN_MARKER if d else None
-        if marker is None or not marker.exists():
+        d, present = markers_of(r)
+        if len(present) != 1:
             continue                       # check 3 already failed this row
-        m = RETEST.search(marker.read_text(errors="replace"))
+        marker = d / present[0]
+        text = marker.read_text(errors="replace")
+
+        if present[0] == SUPERSEDED_MARKER:
+            m = RULING.search(text)
+            if not m:
+                fail(f"{tag}: {SUPERSEDED_MARKER} carries no "
+                     f"'Ruling-date: YYYY-MM-DD' line - a panel superseded by "
+                     f"nobody on no date is an assertion, not a record")
+                continue
+            ruled = datetime.date(*(int(x) for x in m.groups()))
+            if ruled > today:
+                fail(f"{tag}: {SUPERSEDED_MARKER} is dated {ruled}, which is in "
+                     f"the future")
+            else:
+                note(f"{tag}: recorded deliberately superseded, author's ruling "
+                     f"{ruled}, no re-test due")
+            continue
+
+        m = RETEST.search(text)
         if not m:
             fail(f"{tag}: {BROKEN_MARKER} carries no 'Retest-by: YYYY-MM-DD' "
                  f"line - a marker that never expires lets a wrong finding "
@@ -984,8 +1075,11 @@ def check_broken_expires(rows):
 
 
 def check_guard_rails():
-    for p in (ROOT / "CLAUDE.md", GROUND / "README.md",
-              HERE / "Main_Figures" / "README.md",
+    # The working tree's own rules file. Named as a literal because this check
+    # is that the file is there; it is not deposited, and the release copy of
+    # this script skips the check rather than looking for it.
+    for p in (ROOT / "RULES.md", GROUND / "README.md",
+              MAIN_FIGURES / "README.md",
               HERE / "Supplementary_New" / "README.md"):
         if not p.exists():
             fail(f"missing guard-rail document: {p}")
@@ -1020,10 +1114,10 @@ def check_freshness(rows):
         # Figures 1 and 4 resolve into the generated release, where every file
         # carries the mtime of the last update_release.py run rather than of an
         # edit. Judging those would fail the whole check every time the release
-        # is rebuilt. The Round_5 original they are generated from is the file
+        # is rebuilt. The submission-tree original they are generated from is the file
         # the verdict was actually made against.
         if RELEASE in path.parents:
-            source = (ROOT.parent / "Round_5" / "03_Final_Panels"
+            source = (ROOT.parent / "submission-tree" / "03_Final_Panels"
                       / path.relative_to(RELEASE))
             if not source.exists():
                 continue

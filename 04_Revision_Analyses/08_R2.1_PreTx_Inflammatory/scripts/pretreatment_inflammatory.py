@@ -18,23 +18,31 @@ post-treatment one on the same scale:
      module 12 recompute on .raw - the same producer as Fig. S9E, Welch t-test
      branch. Its NES is already non-responder-relative.
 
-Inputs : Round_5/01_Raw_Inputs/01_H5AD/MoMac.h5ad
+Inputs : submission-tree/01_Raw_Inputs/01_H5AD/MoMac.h5ad
          12_R1.8_DEG_Recompute/outputs/gsea/*_{pre,post}_ttest_hallmark.csv
          13_R1.8_Neutrophil_Rebuilt_Recompute/outputs/nfkb_per_celltype_sound13.csv
-             - PANEL S10_C since 2026-09-03, and the REPORT's section 3 since
-               2026-09-04. See ADOPTED_GSEA below.
+             - the REPORT's section 3 only. See ADOPTED_GSEA below.
 Outputs: pretx_state_abundance.csv, pretx_signature_scores.csv,
-         nfkb_pre_vs_post.csv, pretx_inflammatory_report.txt,
-         panels S10_A, S10_B, S10_C
+         il1b_signature_genes.csv, nfkb_pre_vs_post.csv,
+         pretx_inflammatory_report.txt, README.txt
 
-The tables this module writes are the live run and are unchanged, nfkb_pre_vs_post
-.csv included. Panel S10_C is drawn from the adopted sound-input table instead,
-under the author's ruling of 2026-09-03, and since 2026-09-04 so is section 3 of
-pretx_inflammatory_report.txt - from the same load_adopted_shift() call, so text
-and panel are rendered from one frame and cannot diverge. Until then the report
-still counted the live run and contradicted its own figure; the resolved record
-is outputs/pretx_inflammatory_report_KNOWN_DISCREPANCY.txt. Panels S10_A and
-S10_B do not read a GSEA table at all and are not affected.
+This module computes these results and does not draw them. The three panels it
+carried belonged to a supplementary figure the article does not print, so
+drawing them wrote figures that no assembled figure reads and no page carries;
+the five tables above are the whole output, and they are what the Results, the
+response letter and verify_numbers.py read.
+
+The tables this module writes are the live run, nfkb_pre_vs_post.csv included.
+Section 3 of pretx_inflammatory_report.txt is rendered instead from the adopted
+sound-input table, through load_adopted_shift(); sections 1 and 2 are this
+module's own live run.
+
+That distinction now also travels with the tables. write_outputs_readme() puts
+outputs/README.txt beside them saying which of the two NF-kB runs each file is,
+because outputs/ is the directory that ships and a reader who opens
+nfkb_pre_vs_post.csv there and compares it with Supplementary Table S10 needs
+to be told, in that directory, that the two are different runs and neither is
+a corrected copy of the other.
 
 --rewrite-report-from-adopted rebuilds the report alone, reading sections 1 and 2
 back from this module's own deposited CSVs, so the report can be regenerated
@@ -46,34 +54,31 @@ from pathlib import Path
 import sys
 import warnings
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import scanpy as sc
 from scipy import stats
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
-from paths import MOMAC_H5AD, REVISED_PANELS  # noqa: E402
+from paths import MOMAC_H5AD  # noqa: E402
 from shared.sample_ids import sample_id_map, to_study_ids  # noqa: E402
 
 RECOMPUTE_GSEA = (Path(__file__).resolve().parents[2]
                   / "12_R1.8_DEG_Recompute" / "outputs" / "gsea")
 
 # ---------------------------------------------------------------- the adopted table
-# Author's ruling, 2026-09-03. Panel S10_C is drawn from the SOUND-INPUT
-# recompute, not from this module's own nfkb_pre_vs_post.csv, so that the panel
-# agrees with the Results and the response letter, which were moved to the same
-# table in the same pass. RECOMPUTE_GSEA above is the "live" run, computed on the
-# doubly-normalised .X of 00_Data_Audit/FINDINGS.md sections 1 and 7.
+# Section 3 of the report is rendered from the SOUND-INPUT recompute, not from
+# this module's own nfkb_pre_vs_post.csv, so that it agrees with the Results and
+# the response letter, which take every NF-kB number from that same table.
+# RECOMPUTE_GSEA above is the "live" run, computed on the doubly-normalised .X
+# of 00_Data_Audit/FINDINGS.md sections 1 and 7.
 #
-# The analysis below is untouched: nfkb_pre_vs_post.csv and the report are still
-# the live run, byte for byte, and one file name still means one set of contents.
-# Six quantities differ between the two tables, and only these six:
+# The analysis below is untouched: nfkb_pre_vs_post.csv is still the live run,
+# byte for byte, and one file name still means one set of contents. Six
+# quantities differ between the two tables, and only these six:
 #     post FDR q < 0.05 count   4  -> 3     rank-1 count      5  -> 3
 #     pericyte ordinal         31  -> 30    B-cell ordinal   37  -> 38
 #     pre positive count        6  -> 5     pre q < 0.05      1  -> 3
-# Of those, S10_C shows the pre and post NES per cell type, so what moves on this
-# panel is the pre positive count, the pre q < 0.05 count and the row order.
 ADOPTED_GSEA = (Path(__file__).resolve().parents[2]
                 / "13_R1.8_Neutrophil_Rebuilt_Recompute" / "outputs"
                 / "nfkb_per_celltype_sound13.csv")
@@ -83,27 +88,10 @@ sc.settings.verbosity = 0
 
 OUT = Path(__file__).resolve().parents[1] / "outputs"
 OUT.mkdir(parents=True, exist_ok=True)
-S10 = REVISED_PANELS / "Supplementary_New" / "S10_PreTx_and_Adaptive"
 
-SCALE, CM, DPI = 4, 1 / 2.54, 300
 MIN_CELLS = 20
 TARGET = "C3_Mac_Inflam_IL1B"
 GROUPS = ["Pre-R", "Pre-NR", "Post-R", "Post-NR"]
-# The names the figures use, matching Fig. 5H and Fig. S9E.
-LABELS = {"B_cells": "B cells", "DC_cells": "DC",
-          "Endothelial_cells": "Endothelial", "Epithelial": "Epithelial",
-          "Fibroblast": "Fibroblast", "Mast_cells": "Mast", "MoMac": "MoMac",
-          "Neutrophils": "Neutrophils", "NK_cells": "NK",
-          "Pericyte": "Pericyte", "Plasma_cells": "Plasma",
-          "TCD4_cells": "CD4+ T", "TCD8_cells": "CD8+ T"}
-COLORS = {"Pre-R": "#bde0fe", "Pre-NR": "#a2d2ff",
-          "Post-R": "#ffcfd2", "Post-NR": "#f1c0e8"}
-
-plt.rcParams.update({
-    "font.family": "sans-serif",
-    "font.sans-serif": ["Arial", "Liberation Sans", "Helvetica", "DejaVu Sans"],
-    "svg.fonttype": "none", "pdf.fonttype": 42, "ps.fonttype": 42,
-})
 
 
 def four_group_label(row):
@@ -192,23 +180,83 @@ def main():
     nfkb.to_csv(OUT / "nfkb_pre_vs_post.csv", index=False)
 
     # -------------------------------------------------------------- report
-    # Section 3 is rendered from the ADOPTED sound-input table - the same
-    # frame _panel_nfkb_shift() is handed below - so the report and panel
-    # S10_C quote the same counts. nfkb_pre_vs_post.csv, written just above,
-    # remains the live run and is not what the report quotes; the report's
-    # own SOURCES block says so.
+    # Section 3 is rendered from the ADOPTED sound-input table.
+    # nfkb_pre_vs_post.csv, written just above, remains the live run and is not
+    # what the report quotes; the report's own SOURCES block says so.
     report = render_report(frac, score, load_adopted_shift(),
                            sources=ADOPTED_SOURCES)
     (OUT / "pretx_inflammatory_report.txt").write_text(report, encoding="utf-8")
+    write_outputs_readme()
     print(report)
 
-    _panel_four_group(frac, "fraction", "IL-1$\\beta$+ state\n(% of mono/macrophages)",
-                      "S10_A", "S10_A_il1b_state_four_groups", pct=True)
-    _panel_four_group(score, "score", "IL-1$\\beta$+ signature score",
-                      "S10_B", "S10_B_il1b_signature_four_groups")
-    # S10_C is drawn from the adopted sound table, not from `n`. See ADOPTED_GSEA.
-    _panel_nfkb_shift(load_adopted_shift())
 
+# ------------------------------------------------------- the outputs/ note
+# nfkb_pre_vs_post.csv disagrees with Table S10, on purpose, and a reader who
+# opens outputs/ has no way of knowing that. Everything above explains it - the
+# module docstring, the ADOPTED_GSEA comment, the report's own SOURCES block -
+# and none of it is in the directory the CSV is in. That directory is what
+# ships: 06_Code/code/04_Revision_Analyses/08_R2.1_PreTx_Inflammatory/outputs/
+# is where the code reads these tables from, where the archive README.txt sends
+# a reader looking for the numbers behind a claim, and where the response
+# letter's other two analysis-output citations land them. A note anywhere else
+# is a note they do not reach.
+#
+# It is written from this module's own constants rather than typed into the
+# directory as a file of its own, so that the paths it names cannot drift from
+# the paths the code actually reads. main() writes it with the tables.
+README_NAME = "README.txt"
+
+OUTPUTS_README = """\
+Outputs of 08_R2.1_PreTx_Inflammatory (reviewer point R2.1)
+
+  pretx_state_abundance.csv    IL-1b+ inflammatory MoMac abundance, by group
+  pretx_signature_scores.csv   that state's signature, scored per cell, by group
+  il1b_signature_genes.csv     the genes that signature is built from
+  nfkb_pre_vs_post.csv         TNFa/NF-kB Hallmark NES and FDR, pre and post,
+                               per cell type - READ THE NOTE BELOW
+  pretx_inflammatory_report.txt  the three sections written up, each with the
+                               table it was rendered from named in its SOURCES
+
+nfkb_pre_vs_post.csv IS NOT THE TABLE THE PAPER QUOTES.
+
+  Two NF-kB enrichment runs exist and both are kept. They differ because they
+  are computed on different matrices, not because one is a corrected copy of
+  the other:
+
+    live      this file. Computed by this module from
+              {live}
+              which was produced on the .X of the input objects. Eight of those
+              carry a double normalisation dated 2026-07-30 (see the data
+              audit, FINDINGS.md sections 1 and 7).
+
+    adopted   {adopted_name}, written by
+              13_R1.8_Neutrophil_Rebuilt_Recompute. Same analysis, recomputed
+              on sound input. This is the one Supplementary Table S10, the
+              Results, the response letter and section 3 of the report beside
+              this file all quote.
+
+  So the numbers here will not match Supplementary Table S10, and are not meant
+  to. Measured 2026-09-10 over the 52 paired values ST10's per-cell columns and
+  this file have in common - 13 cell types x {{pre, post}} x {{NES, FDR}} - 43
+  of the 52 differ, and MoMac pre-treatment differs in sign: here NES +1.055
+  with FDR 0.472, in ST10 NES -1.001 with FDR 0.893.
+
+  This file is kept, unaltered, because it is what this module computed and
+  because one file name has to keep meaning one set of contents. Regenerating
+  it from the adopted table would put a second set of contents behind a name
+  that has already been cited, which is the defect this project has already
+  been bitten by twice. If you want the paper's numbers, read Table S10 or
+  {adopted_name}.
+"""
+
+
+def write_outputs_readme():
+    """Write outputs/README.txt, naming the two NF-kB lineages beside the CSV."""
+    text = OUTPUTS_README.format(
+        live=RECOMPUTE_GSEA.name + "/  (12_R1.8_DEG_Recompute)",
+        adopted_name=ADOPTED_GSEA.name)
+    (OUT / README_NAME).write_text(text, encoding="utf-8")
+    return OUT / README_NAME
 
 
 SECTION_SOURCE = {
@@ -231,7 +279,7 @@ ADOPTED_SOURCES = [
     "       13_R1.8_Neutrophil_Rebuilt_Recompute/outputs/"
     "nfkb_per_celltype_sound13.csv",
     "",
-    "   under the author's ruling of 2026-09-03, and NOT from this module's own",
+    "   and NOT from this module's own",
     "   outputs/nfkb_pre_vs_post.csv. That file is the live run on the doubly-",
     "   normalised matrix of 00_Data_Audit/FINDINGS.md sections 1 and 7. It is",
     "   unchanged and still sits beside this report; it is simply not the table",
@@ -248,12 +296,10 @@ def render_report(frac, score, n, sources=None):
 
     `n` is the per-cell-type NF-kB frame for section 3, already restricted to
     cell types that have both phases and already sorted by post NES descending
-    - that is, exactly what load_adopted_shift() returns and exactly the frame
-    _panel_nfkb_shift() is handed, so the text and the panel cannot diverge
-    again.
+    - that is, exactly what load_adopted_shift() returns.
 
     `sources` is the list of lines naming the table behind each section. With
-    sources=None nothing is inserted and the output is the 2026-08-29 layout
+    sources=None nothing is inserted and the output is the original layout
     unchanged, which is what makes this refactor checkable against the report
     that shipped.
     """
@@ -353,11 +399,11 @@ def render_report(frac, score, n, sources=None):
 def load_adopted_shift():
     """
     Pre and post NES and FDR per cell type from the adopted sound table, in the
-    same shape, column names and sort order that _panel_nfkb_shift() expects.
+    shape, column names and sort order section 3 of the report expects.
 
-    The sort is by post NES, descending, exactly as in main(); it is the panel's
-    row order and it is recomputed rather than carried over, because the adopted
-    table may order two cell types differently.
+    The sort is by post NES, descending; it is the order the section's rows are
+    printed in, and it is recomputed rather than carried over, because the
+    adopted table may order two cell types differently.
     """
     if not ADOPTED_GSEA.exists():
         raise SystemExit(
@@ -381,8 +427,8 @@ def rewrite_report_from_adopted():
     main() rereads MoMac.h5ad and rewrites five outputs. Putting a second,
     different set of contents behind an already-cited filename is the
     nfkb_rankings_13types_mast.csv defect this project already carries one
-    instance of, so the report is regenerated the way panel S10_C is: from the
-    tables, without re-running the analysis.
+    instance of, so the report is regenerated from the tables, without
+    re-running the analysis.
 
     Sections 1 and 2 are read back from this module's own deposited CSVs, which
     are the frames main() computed those sections from - same columns, same
@@ -397,101 +443,25 @@ def rewrite_report_from_adopted():
     print(report)
 
 
-def _panel_four_group(data, col, ylabel, sub, stem_name, pct=False):
-    d = (S10 / sub); d.mkdir(parents=True, exist_ok=True)
-    fig, ax = plt.subplots(figsize=(5.5 * SCALE * CM, 4.2 * SCALE * CM))
-    vals = [data.loc[data["group4"] == g, col].values * (100 if pct else 1)
-            for g in GROUPS]
-    bp = ax.boxplot(vals, positions=range(4), widths=0.6, patch_artist=True,
-                    showfliers=False, boxprops=dict(linewidth=0.8),
-                    whiskerprops=dict(linewidth=0.8), capprops=dict(linewidth=0.8),
-                    medianprops=dict(color="black", linewidth=1.2))
-    for patch, g in zip(bp["boxes"], GROUPS):
-        patch.set_facecolor(COLORS[g]); patch.set_edgecolor("#444444")
-    rng = np.random.default_rng(3)
-    for i, v in enumerate(vals):
-        ax.scatter(i + rng.uniform(-0.12, 0.12, len(v)), v, s=9 * SCALE,
-                   c="#333333", zorder=3, alpha=0.85,
-                   edgecolors="white", linewidths=0.3 * SCALE)
-    top = max(v.max() for v in vals)
-    bot = min(v.min() for v in vals)
-    span = top - bot
-    for k, (i, j) in enumerate(((0, 1), (2, 3))):
-        p, _ = mw(vals[i], vals[j])
-        yy = top + span * (0.10 + 0.16 * k)
-        ax.plot([i, i, j, j], [yy, yy + span * 0.04, yy + span * 0.04, yy],
-                color="#444444", linewidth=0.8)
-        ax.text((i + j) / 2, yy + span * 0.05, f"P = {p:.3f}", ha="center",
-                va="bottom", fontsize=5 * SCALE)
-    ax.set_ylim(bot - span * 0.10, top + span * 0.42)
-    ax.set_xticks(range(4)); ax.set_xticklabels(GROUPS, fontsize=6 * SCALE)
-    ax.set_ylabel(ylabel, fontsize=6 * SCALE)
-    ax.tick_params(axis="both", labelsize=5.5 * SCALE, width=0.8, length=3)
-    for s in ("top", "right"):
-        ax.spines[s].set_visible(False)
-    fig.subplots_adjust(left=0.20, right=0.97, top=0.96, bottom=0.12)
-    stem = d / stem_name
-    for ext in ("svg", "pdf", "png"):
-        fig.savefig(f"{stem}.{ext}", dpi=DPI, facecolor="white")
-    plt.close(fig)
-    print(f"\nSaved {stem}.[svg|pdf|png]")
-
-
-def _panel_nfkb_shift(n):
-    d = (S10 / "S10_C"); d.mkdir(parents=True, exist_ok=True)
-    fig, ax = plt.subplots(figsize=(6.5 * SCALE * CM, 4.6 * SCALE * CM))
-    y = np.arange(len(n))
-    for i, (_, r) in enumerate(n.iterrows()):
-        ax.plot([r["pre_nes"], r["post_nes"]], [i, i], color="#bbbbbb",
-                linewidth=1.0, zorder=1)
-        ax.scatter(r["pre_nes"], i, s=24, c="#a2d2ff", edgecolors="#444444",
-                   linewidths=0.4, zorder=3)
-        ax.scatter(r["post_nes"], i, s=24, c="#f1c0e8", edgecolors="#444444",
-                   linewidths=0.4, zorder=3)
-    ax.axvline(0, color="#999999", linestyle="--", linewidth=0.8)
-    ax.set_yticks(y)
-    ax.set_yticklabels([LABELS[c] for c in n["cell_type"]],
-                       fontsize=5.5 * SCALE)
-    ax.set_xlabel("NES, TNF$\\alpha$/NF-$\\kappa$B\n(positive = enriched in non-responders)",
-                  fontsize=6 * SCALE)
-    ax.tick_params(axis="x", labelsize=5.5 * SCALE, width=0.8, length=3)
-    ax.tick_params(axis="y", length=0)
-    for s in ("top", "right", "left"):
-        ax.spines[s].set_visible(False)
-    handles = [plt.Line2D([], [], marker="o", linestyle="none", markersize=4,
-                          markerfacecolor=c, markeredgecolor="#444444", label=l)
-               for c, l in (("#a2d2ff", "Pre-treatment"), ("#f1c0e8", "Post-treatment"))]
-    ax.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, -0.22),
-              ncol=2, frameon=False, fontsize=5.5 * SCALE)
-    fig.subplots_adjust(left=0.30, right=0.97, top=0.97, bottom=0.26)
-    stem = d / "S10_C_nfkb_pre_vs_post"
-    for ext in ("svg", "pdf", "png"):
-        fig.savefig(f"{stem}.{ext}", dpi=DPI, facecolor="white")
-    plt.close(fig)
-    print(f"Saved {stem}.[svg|pdf|png]")
-
-
 if __name__ == "__main__":
     import argparse
 
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument(
-        "--redraw-adopted-panel", action="store_true",
-        help="redraw panel S10_C from the adopted sound table and do nothing "
-             "else. The full run rereads MoMac.h5ad and rewrites five outputs; "
-             "this draws the one panel the 2026-09-03 ruling covers and touches "
-             "no analysis output.")
-    ap.add_argument(
         "--rewrite-report-from-adopted", action="store_true",
         help="rewrite pretx_inflammatory_report.txt only, from tables already "
              "on disk: sections 1 and 2 from this module's own deposited CSVs, "
-             "section 3 from the adopted sound table. The counterpart of "
-             "--redraw-adopted-panel for the text. No analysis table is "
+             "section 3 from the adopted sound table. No analysis table is "
              "rewritten and MoMac.h5ad is never opened.")
+    ap.add_argument(
+        "--write-outputs-readme", action="store_true",
+        help="write outputs/README.txt only, from this module's own path "
+             "constants. No table is rewritten, no analysis runs and "
+             "MoMac.h5ad is never opened.")
     args = ap.parse_args()
-    if args.redraw_adopted_panel:
-        _panel_nfkb_shift(load_adopted_shift())
-    elif args.rewrite_report_from_adopted:
+    if args.rewrite_report_from_adopted:
         rewrite_report_from_adopted()
+    elif args.write_outputs_readme:
+        print(f"wrote {write_outputs_readme()}")
     else:
         main()

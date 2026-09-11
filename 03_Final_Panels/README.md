@@ -32,11 +32,16 @@ share the filename `ceacam_spatial_boxplot.png`.
 
 **Look every panel up in `../PROVENANCE.csv`.** Do not infer one from a directory name.
 
-## One panel is known not to reproduce
+## Figure 5A: the printed panel is correct
 
-`05_Figure_5/05_A/` — see `05_Figure_5/05_A/KNOWN_BROKEN.md`. The printed panel is
-correct; the script in that directory is not, and has twice been mistaken for evidence
-that the paper was wrong.
+`05_Figure_5/05_A/` reproduces the published panel against the GSEA table the panel was
+made from, `MoMac_mast_prerank_gsea.csv`: the top nine hallmarks by |NES| are the printed
+nine, in the printed order, matching the published bars to 0.00014 NES. It reproduces
+nothing at all if the script is pointed at a different run — `GSEA/post/`, built on the
+doubly normalised matrix — which is what an input path moved into an archive will do to
+it. When a panel will not reproduce, suspect its input path before the figure;
+`../verify_panel_provenance.py` check 9 is what looks at where every panel script reads
+from.
 
 ## Rebuilding a panel
 

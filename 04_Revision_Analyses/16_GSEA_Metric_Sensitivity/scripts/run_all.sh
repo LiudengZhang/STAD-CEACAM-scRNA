@@ -6,6 +6,6 @@ HERE="$(cd "$(dirname "$0")" && pwd)"
 cd "$(dirname "$HERE")/../.."
 for stage in metrics settings seeds; do
   echo "########## $stage ##########"
-  PYTHONHASHSEED=0 conda run --no-capture-output -n Liudeng_Python_310 \
+  PYTHONHASHSEED=0 conda run --no-capture-output -n stad_ceacam \
       python "$HERE/metric_sensitivity.py" --stage "$stage" --threads 4
 done

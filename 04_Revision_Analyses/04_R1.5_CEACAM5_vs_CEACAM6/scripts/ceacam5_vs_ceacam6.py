@@ -17,8 +17,8 @@ Three questions are answered separately.
   C. Does the IHC conclusion depend on summation? CEACAM5 and CEACAM6 staining
      are tested separately and against the summed composite.
 
-Inputs : Round_5/01_Raw_Inputs/01_H5AD/Epithelial.h5ad
-         Round_5/02_Preparation_for_Panels/IHC/ceacam_ihc_color_deconv_results.csv
+Inputs : submission-tree/01_Raw_Inputs/01_H5AD/Epithelial.h5ad
+         submission-tree/02_Preparation_for_Panels/IHC/ceacam_ihc_color_deconv_results.csv
 Outputs: ceacam_state_fractions.csv, ceacam_state_tests.csv,
          ihc_per_marker_tests.csv, ceacam5_vs_6_report.txt
          panels S8_B (state fractions) and S8_C (per-marker IHC)
@@ -34,12 +34,13 @@ import scanpy as sc
 from scipy import stats
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
-from paths import EPITHELIAL_H5AD, PREPARATION, REVISED_PANELS  # noqa: E402
+from paths import ANALYSIS_PANELS, EPITHELIAL_H5AD, PREPARATION  # noqa: E402
+from shared.expression import expression_source  # noqa: E402
 from shared.sample_ids import sample_id_map, to_study_ids  # noqa: E402
 
 OUT = Path(__file__).resolve().parents[1] / "outputs"
 OUT.mkdir(parents=True, exist_ok=True)
-S8 = REVISED_PANELS / "Supplementary_New" / "S8_CEACAM_Metaprogram"
+S8 = ANALYSIS_PANELS / "S8_CEACAM_Metaprogram"
 
 SCALE, CM, DPI = 4, 1 / 2.54, 300
 MIN_CELLS = 20
@@ -70,15 +71,15 @@ def load_pre_epithelial():
     ad = ad[ad.obs["Sample site"] == "Stomach"]
     ad = ad[ad.obs["Treatment phase"] == "Pre"]
     ad = ad[ad.obs["stomach_pre_grouping"].isin(["Responsed", "No-response"])].copy()
-    # .raw only. Eight of the input h5ads carry a double normalisation in .X
-    # that left whole cell rows NaN, so falling back to it would put damaged
-    # expression behind these numbers without saying so. This never fired -
-    # every object reaching here has a .raw - which is the argument for
-    # raising rather than keeping a path nothing has ever taken.
-    if ad.raw is None:
-        raise SystemExit("this object has no .raw; refusing to read .X - "
-                         "see 00_Data_Audit/FINDINGS.md sections 1 and 7")
-    src = ad.raw
+    # Eight of the input h5ads carry a double normalisation in .X that left
+    # whole cell rows NaN, so this must never silently read .X. It must also
+    # not refuse the DEPOSITED object, whose .X is the promoted .raw and which
+    # has no .raw at all - which is what the bare `if ad.raw is None: raise`
+    # here did, so a reviewer running this against the Zenodo record got a
+    # SystemExit rather than a table. shared.expression is the one owner of
+    # that distinction: .raw where there is one, .X only where the object
+    # proves it is the promoted deposit, and a refusal otherwise.
+    src = expression_source(ad, EPITHELIAL_H5AD.name)
     out = {}
     for g in ("CEACAM5", "CEACAM6"):
         i = list(src.var_names).index(g)

@@ -76,10 +76,10 @@ def main():
 
     comparisons = [
         (frac, "Double positive",
-         "scRNA CEACAM5/6 double-positive epithelial fraction (Fig. 2E, Fig. S8B)"),
+         "scRNA CEACAM5/6 double-positive epithelial fraction (Fig. 2E, Fig. S7B)"),
         (ihc, "Summed (published)", "IHC CEACAM5 + CEACAM6, summed (Fig. 2N)"),
-        (ihc, "CEACAM5", "IHC CEACAM5 alone (Fig. S8C)"),
-        (ihc, "CEACAM6", "IHC CEACAM6 alone (Fig. S8C)"),
+        (ihc, "CEACAM5", "IHC CEACAM5 alone (Fig. S7C)"),
+        (ihc, "CEACAM6", "IHC CEACAM6 alone (Fig. S7C)"),
     ]
 
     rows = []

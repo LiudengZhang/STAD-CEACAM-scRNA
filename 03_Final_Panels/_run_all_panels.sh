@@ -9,7 +9,16 @@
 #        bash _run_all_panels.sh         # all figures
 #
 # Conda env: stad_ceacam
-# Updated: 2026-02-23 (rebuilt from live directory audit)
+#
+# THIS IS THE SOURCE OF THE DEPOSITED DRIVER.
+# The driver is maintained here and nowhere else. Keeping the only corrected
+# copy inside 05_Code_Release/github_repo/ would make a generated tree the
+# master of a hand-maintained file: an edit here would be reverted by the next
+# build, and an edit there would be invisible to every check that reads the
+# working tree. update_release.py copies this file into the release and then
+# applies extend_driver(), prune_driver(), parameterize_driver_env(),
+# fix_milo_env() and pin_driver_hash_seed() on top of it - all five are no-ops
+# against this text, because this text already carries what they add.
 # =============================================================================
 
 set -euo pipefail
@@ -46,14 +55,14 @@ echo "========================================"
 
 
 # ── Preparation Pipeline (uncomment to regenerate from scratch) ─────────────
-# $CONDA_CMD "$BASE/../02_Preparation_for_Panels/DEG/scripts/01_run_mast_analysis.py"
-# $CONDA_CMD "$BASE/../02_Preparation_for_Panels/GSEA/run_gsea_from_mast.py"
-# $CONDA_CMD "$BASE/../02_Preparation_for_Panels/IHC/quantify_ceacam_ihc.py"
-# $CONDA_CMD "$BASE/../02_Preparation_for_Panels/BayesPrism/step1_prepare_reference.py"
-# $CONDA_CMD "$BASE/../02_Preparation_for_Panels/BayesPrism/step1b_reduce_genes.py"
-# conda run -n r_bayesprism Rscript "$BASE/../02_Preparation_for_Panels/BayesPrism/step2_run_bayesprism.R"
-# $CONDA_CMD "$BASE/../02_Preparation_for_Panels/BayesPrism/step3_plot_results.py"
-# $CONDA_CMD "$BASE/../02_Preparation_for_Panels/Metaprogram_Permutation/mp4_pre_r_permutation_analysis.py"
+# $CONDA_CMD "$BASE/../upstream/DEG/scripts/01_run_mast_analysis.py"
+# $CONDA_CMD "$BASE/../upstream/GSEA/run_gsea_from_mast.py"
+# $CONDA_CMD "$BASE/../upstream/IHC/quantify_ceacam_ihc.py"
+# $CONDA_CMD "$BASE/../upstream/BayesPrism/step1_prepare_reference.py"
+# $CONDA_CMD "$BASE/../upstream/BayesPrism/step1b_reduce_genes.py"
+# conda run -n r_bayesprism Rscript "$BASE/../upstream/BayesPrism/step2_run_bayesprism.R"
+# $CONDA_CMD "$BASE/../upstream/BayesPrism/step3_plot_results.py"
+# $CONDA_CMD "$BASE/../upstream/Metaprogram_Permutation/mp4_pre_r_permutation_analysis.py"
 
 
 # =====================================================================
@@ -235,7 +244,23 @@ run_revision() {
             *)  run_script "$s" ;;
         esac
     done
-    for s in "$BASE"/Supplementary_New/*/*/create_*.py; do
+    # The S7-S9 panels are drawn by the drivers under Supplementary_New/
+    # _drivers/, not by create_*.py scripts in the panel directories: those
+    # directories hold panel outputs (.svg/.pdf/.png) and no code at all, so
+    # copy_tree(), which ships code only, never carries them into the release
+    # and the old `*/*/create_*.py` glob matched nothing there.
+    #
+    # Measured in the reviewer simulation of 2026-09-10: the glob ran zero
+    # scripts, so assemble_new_supplementaries.py found no panel SVG and died
+    # with "no panel SVG in Supplementary_New/S7_CEACAM5_vs_CEACAM6/S7_A".
+    # Three of the paper's nine supplementary figures could not be rebuilt from
+    # the capsule.
+    #
+    # draw_*.py writes to Supplementary_New/<FIG>/<panel>/ through
+    # _driver_base.save(), where <FIG> is exactly the key
+    # assemble_new_supplementaries.FIGURES uses, so the drawing and the
+    # assembly meet where the assembler already looks.
+    for s in "$BASE"/Supplementary_New/_drivers/draw_*.py; do
         [ -e "$s" ] || continue
         run_script "$s"
     done
@@ -276,3 +301,14 @@ if [ -n "$FAILED_SCRIPTS" ]; then
     echo -e "$FAILED_SCRIPTS"
 fi
 echo "========================================"
+
+# run_script() deliberately does not abort on a failing script - one broken
+# panel must not take the other hundred and fifty down with it - but that
+# tolerance must stop here. If the driver printed its FAIL count and still
+# exited 0, ./run would exit 0 too, and a capsule in which twenty-six scripts
+# had died would report success with nothing downstream able to see it. The
+# count is the exit status, and code/run propagates it.
+if [ "$FAIL" -gt 0 ]; then
+    echo "  $FAIL script(s) failed; exiting non-zero." >&2
+    exit 1
+fi

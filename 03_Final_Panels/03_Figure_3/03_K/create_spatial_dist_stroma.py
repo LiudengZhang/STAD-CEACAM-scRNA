@@ -1,7 +1,90 @@
 #!/usr/bin/env python3
 """
-Panel H: Spatial Distance to Stroma (single panel, sample_03)
-Extracted from old 03_C composite. 4x scaling — ONLY canvas + fonts scaled.
+Figure 3 panel K - the distance to stroma across the spatial spots of one
+Visium section.
+
+The panel is drawn at the millimetre rectangle it prints in, read from
+03_Final_Panels/panel_rects.csv through 00_Config/slots.py, so the type size
+set here is the type size printed. Margins are measured from the rendered ink
+rather than typed, and the panel-letter corner is left clear for the assembler.
+
+  printed panel  Figure 3 K       (PROVENANCE.csv; the directory name agrees,
+                                   but the letter was looked up, not inferred)
+
+Every spot, every coordinate, every colour value, every colour map and every
+string is the earlier drawing's: the same section, the same
+distance_to_stroma column, the same colour map, the same alpha, the same
+colour bar and the same equal aspect - except for the unit on the colour bar,
+which is the subject of the next section.
+
+THE UNIT ON THE COLOUR BAR
+    Changed 2026-09-10. `distance_to_stroma` is in the full-resolution image's
+    own pixels, the array unit, and the shipped page printed this bar as
+    `0 / 2000 / 4000` with no unit anywhere on it. That was survivable while
+    panels I and J beside it printed `Distance (a.u.)`. It stopped being
+    survivable on 2026-09-10, when I and J were converted and now print
+    `Distance (um)`: an array unit is 0.2874 um, so a reader carrying the
+    neighbouring panels' unit across to this one reads every number here as
+    3.476 times what it is.
+
+    So the values are converted here too, by the one factor
+    00_Config/spatial_scale.py derives from the array geometry - imported, not
+    repeated, because a second derivation of the same constant is what
+    RULES.md rule 5 exists to stop.
+
+    The unit goes in the panel TITLE and not on the bar. REMOVALS_FIGURE_3's
+    own reason for the bar carrying no label is that "the quantity each bar
+    measures is named by the panel title above the map"; the unit is part of
+    naming the quantity, and putting it where the name already is adds no new
+    text object.
+
+    It goes on a SECOND LINE, and that is a measurement rather than a
+    preference. Three layouts were drawn and their ink read back off the PDFs:
+
+      published            title x 3.13-25.64 mm, y 1.91-4.38; bar at x 25.40,
+                           ticks 0 / 2000 / 4000
+      "... Stroma (µm)"    title x 0.60-29.17, y 4.12-6.59; ticks 0 / 1000
+      "µm" on the bar      title x 0.60-23.10, y 4.02-6.49; ticks 0 / 1000
+      "... Stroma\n(µm)"   title x 3.11-25.62, y 0.52-2.99; bar at x 25.40,
+                           ticks 0 / 500 / 1000 / 1500
+
+    A one-line title widens to 28.5 mm in a 30.7 mm panel, so its first glyph
+    lands inside the panel-letter keep-out cell and `fit_margins` pushes the
+    whole panel down by 2.2 mm to clear it - taking 2.2 mm off the colour bar,
+    which then carries two labelled ticks instead of three. Labelling the bar
+    itself does the same thing from the other side. The two-line title keeps
+    the first line's width, and therefore its x position, within 0.02 mm of the
+    published page, keeps the bar where it was, and leaves it four ticks.
+
+    This panel therefore no longer reproduces the colour bar printed in
+    00_GROUND_TRUTH/figures/Figure 3.pdf, and is not meant to. See
+    `SUPERSEDED.md` beside this script - the marker is not `KNOWN_BROKEN.md`
+    and carries no `Retest-by:` date, because there is nothing to retest.
+    RULES.md rule 1 sets out the two senses of `reproduces_published = no`.
+
+    The map itself does not move in value: the colours come from a `Normalize`
+    over the data's own range, so multiplying every value by one positive
+    constant leaves the normalised position of every spot - and therefore every
+    colour on the map and on the bar - identical. What changes is the bar's
+    tick NUMBERS, the added unit, and the layout the fit derives from them.
+
+MARK
+    The earlier drawing used a canvas four times the printed size and set its
+    smallest body type - the axis tick labels and the colour bar tick labels -
+    at 6 * SCALE. MARK carries the non-type point sizes across to the 1:1
+    canvas:
+
+        MARK = style.tick_pt() / (SMALL_PT * SCALE)
+
+    The spot area, the colour bar outline and both sets of tick width and
+    length are scaled by it. Spine widths are not: those are style, and
+    cnsplots sets them.
+
+THE COLOUR BAR IS MADE BEFORE THE MARGINS ARE FITTED
+    `plt.colorbar(ax=ax)` splits the axes' own grid cell between the plot and
+    the bar, so both keep a subplot specification and both move together when
+    `fit_margins` changes the margins. Made afterwards, the bar would be placed
+    against a box the fit had already left.
 """
 
 import pandas as pd
@@ -12,60 +95,97 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
 from paths import SPATIAL_SPOT_DATA
-from shared.figure_config import use_panel_style
+from spatial_scale import cohort_um_per_unit  # noqa: E402
+import panel_style_cns as style  # noqa: E402
+import slots  # noqa: E402
 
-DPI = 300
-SCALE = 4
-PANEL_WIDTH_CM = 5.0 * SCALE
-PANEL_HEIGHT_CM = 5.0 * SCALE
-CM_TO_INCH = 1 / 2.54
+SCALE = 4                       # the earlier canvas multiplier, for MARK only
+SMALL_PT = 6.0                  # the earlier smallest body type, before * SCALE
+
+MARK = style.tick_pt() / (SMALL_PT * SCALE)   # length multiplier
+AREA = MARK ** 2                              # area multiplier
+
+PANEL_LETTER = "K"
+PANEL_W_MM, PANEL_H_MM = slots.size_mm(3, PANEL_LETTER)
+LETTER_CELL = slots.letter_cell_mm(3, PANEL_LETTER)
+# The map fills its slot to the left edge and the title is centred over it,
+# so the title's first glyph comes to rest against the panel letter with no
+# paper between them. The fit is given the keep-out cell plus a millimetre of
+# gutter; the cell itself is what is checked afterwards.
+LETTER_GUTTER_MM = 1.0
+LETTER_FIT = (LETTER_CELL[0] + LETTER_GUTTER_MM, LETTER_CELL[1])
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 SAMPLE_NAME = 'sample_03'
 
 
 def main():
-    use_panel_style(font_pt=8)
+    family = style.apply(title_fontsize=7, fontsize_legend=6,
+                         legend_fontsize=6)
+    print(f"  type set in {family}; body {style.body_pt():g} pt, "
+          f"ticks/legend {style.tick_pt():g} pt; MARK {MARK:.3f}")
 
     print("=" * 60)
-    print("Panel H: Spatial Distance to Stroma")
+    print("Figure 3 panel K: spatial distance to stroma")
     print("=" * 60)
 
     print("\n[1/2] Loading spot data...")
     df = pd.read_csv(SPATIAL_SPOT_DATA)
     sample_df = df[df['sample'] == SAMPLE_NAME].copy()
     print(f"  {SAMPLE_NAME}: {len(sample_df)} spots")
+    # Array units -> micrometres. The factor is taken off the WHOLE
+    # cohort table, not this section's slice, for the same reason
+    # panels I and J take it off the whole table: it is one cohort
+    # constant, and a per-section factor would make this map's unit
+    # differ from the boxplots' by up to 2 per cent.
+    um_per_unit = cohort_um_per_unit(df)
+    print(f"  distances -> micrometres at {um_per_unit:.9f} um "
+          f"per array unit")
+    sample_df['distance_to_stroma'] = (
+        sample_df['distance_to_stroma'] * um_per_unit)
 
     print("\n[2/2] Creating visualization...")
-    fig_w = PANEL_WIDTH_CM * CM_TO_INCH
-    fig_h = PANEL_HEIGHT_CM * CM_TO_INCH
-    fig, ax = plt.subplots(figsize=(fig_w, fig_h))
+    fig, ax = style.subplots_mm(PANEL_W_MM, PANEL_H_MM)
 
     sc = ax.scatter(sample_df['x'], sample_df['y'],
                     c=sample_df['distance_to_stroma'],
-                    cmap='viridis', s=6, alpha=0.8)
+                    cmap='viridis', s=6 * AREA, alpha=0.8)
     cbar = plt.colorbar(sc, ax=ax, fraction=0.046, pad=0.04)
     cbar.solids.set_rasterized(False)
-    cbar.set_label('Dist to Stroma', fontsize=7 * SCALE)
-    cbar.ax.tick_params(labelsize=6 * SCALE, width=1.0, length=4)
-    cbar.outline.set_linewidth(1.0)
+    # The shipped page prints no label on the colour bar; the quantity is
+    # named by the panel title above the map. Declared in
+    # REMOVALS_FIGURE_3.
+    cbar.set_label('')
+    cbar.ax.tick_params(width=1.0 * MARK, length=4 * MARK)
+    cbar.outline.set_linewidth(1.0 * MARK)
 
-    ax.set_title('Distance to Stroma', fontsize=8 * SCALE, fontweight='normal')
-    ax.set_xlabel('X coordinate', fontsize=7 * SCALE)
-    ax.set_ylabel('Y coordinate', fontsize=7 * SCALE)
-    ax.tick_params(axis='both', labelsize=6 * SCALE, width=1.0, length=4)
+    ax.set_title('Distance to Stroma\n(µm)')
+    # The shipped page prints neither axis label nor either ruler on this map:
+    # the coordinates are Visium pixel positions within one section and carry
+    # nothing the reader reads off them. The two labels are declared in
+    # REMOVALS_FIGURE_3; the tick labels are the numeric ruler.
+    ax.set_xlabel('')
+    ax.set_ylabel('')
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.tick_params(axis='both', width=1.0 * MARK, length=4 * MARK)
     for spine in ax.spines.values():
-        spine.set_linewidth(1.0)
+        spine.set_linewidth(1.0 * MARK)
     ax.set_aspect('equal')
 
-    plt.tight_layout()
+    style.fit_margins(fig, pad_mm=0.6, cell_mm=LETTER_FIT)
+    over = style.overflow_mm(fig)
+    if max(over) > 0:
+        raise RuntimeError(
+            f"ink outside the {PANEL_W_MM} x {PANEL_H_MM} mm canvas "
+            f"(l,r,b,t mm): {over}")
+    intruders = style.letter_clear(fig, LETTER_CELL)
+    if intruders:
+        raise RuntimeError(f"ink under the panel letter cell: {intruders}")
 
-    out = os.path.join(BASE_DIR, 'spatial_dist_stroma.png')
-    plt.savefig(out, dpi=DPI, facecolor='white', bbox_inches='tight')
-    plt.savefig(out.replace('.png', '.svg'), format='svg', facecolor='white', bbox_inches='tight')
-    plt.savefig(out.replace('.png', '.pdf'), dpi=DPI, facecolor='white', bbox_inches='tight')
-    print(f"\n  Saved: {out}")
-    plt.close()
+    out = os.path.join(BASE_DIR, 'spatial_dist_stroma')
+    style.save_panel(fig, out)
+    print(f"\n  Saved: {out}.[svg|pdf|png] at {PANEL_W_MM} x {PANEL_H_MM} mm")
 
     print("\nDone!")
 

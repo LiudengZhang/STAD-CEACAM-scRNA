@@ -1,9 +1,9 @@
 # STAD-CEACAM-scRNA
 
-> Figure-generation code for the bioRxiv preprint:
+> Figure-generation code for:
 >
-> **CEACAM5/6⁺ Tumor Cells and IL-1β⁺ Macrophages Drive Resistance to Chemo-immunotherapy in Gastric Cancer**
-> bioRxiv 2026.03.05.708917 (2026) — [Preprint](https://www.biorxiv.org/content/10.64898/2026.03.05.708917v1) · [DOI](https://doi.org/10.64898/2026.03.05.708917)
+> **CEACAM5/6⁺ Tumor Cells and IL-1β⁺ Myeloid Cells Mark Distinct States of Resistance to Chemo-immunotherapy in Gastric Cancer**
+> Posted as a bioRxiv preprint under an earlier title: bioRxiv 2026.03.05.708917 (2026) — [Preprint](https://www.biorxiv.org/content/10.64898/2026.03.05.708917v1) · [DOI](https://doi.org/10.64898/2026.03.05.708917)
 
 ## Study at a glance
 
@@ -28,16 +28,19 @@
 ```
 00_Config/                   # Shared config (paths, colors, gene panels)
 01_Raw_Inputs/               # Documented input expectations (h5ad, spatial, bulk)
-02_Preparation_for_Panels/   # Per-method preprocessing (SCENIC, Milo, BayesPrism, ST)
+02_Preparation_for_Panels/   # Placeholders; the prepared intermediates are fetched from Zenodo
 03_Final_Panels/             # Figure assembly scripts — one folder per main figure
     ├── 01_Figure_1 ... 05_Figure_5
     ├── 10_Supplementaries
     ├── Supplementary_New/   # Supplementary Figures S7–S11 (revision)
     └── _run_all_panels.sh   # Orchestrator
 04_Revision_Analyses/        # Analyses added in revision, one folder per reviewer point
-05_Manuscript/04_Tables/     # Supplementary Tables ST1–ST9, read by the revision scripts
+05_Manuscript/04_Tables/     # Supplementary Tables ST1–ST10, read by the revision scripts
+upstream/                    # How the deposited intermediates were produced (SCENIC, NMF, NicheNet, BayesPrism, spatial)
 environment.yml              # Main conda env (stad_ceacam)
 ```
+
+`upstream/` records how the deposited intermediate results were produced; it is reference material and is not executed by `./run` or `_run_all_panels.sh`.
 
 ## Environment Setup
 
@@ -74,7 +77,7 @@ conda run -n stad_numpy2 python -m pip install numpy==2.4.6 scanpy==1.11.5 \
 
 ### BayesPrism (R, for the deconvolution step)
 
-The BayesPrism pipeline in `02_Preparation_for_Panels/BayesPrism/` runs Python prep and plotting in the main env, with a dedicated R env for the BayesPrism call itself:
+The BayesPrism pipeline in `upstream/BayesPrism/` (reference only; its results are in the Zenodo record) runs Python prep and plotting in the main env, with a dedicated R env for the BayesPrism call itself:
 
 ```bash
 conda create -n r_bayesprism -c conda-forge r-base r-data.table r-devtools -y
@@ -116,7 +119,7 @@ prepared intermediates the panels read (`02_Preparation_for_Panels/`). Set
 
 Public datasets are obtained from their own sources: GSE251950 (spatial),
 GSE183904 and GSE239676 (single-cell validation), PRJEB25780 (bulk, TIGER) and
-TCGA-STAD from the NCI GDC. Supplementary Tables ST1–ST9 accompany the paper and
+TCGA-STAD from the NCI GDC. Supplementary Tables ST1–ST10 accompany the paper and
 are also included here, because three revision scripts read the cohort and
 signature definitions out of them.
 
@@ -124,7 +127,7 @@ signature definitions out of them.
 
 ```bibtex
 @article{chen2026ceacam,
-  title   = {CEACAM5/6+ Tumor Cells and IL-1β+ Macrophages Drive Resistance to Chemo-immunotherapy in Gastric Cancer},
+  title   = {CEACAM5/6+ Tumor Cells and IL-1β+ Myeloid Cells Mark Distinct States of Resistance to Chemo-immunotherapy in Gastric Cancer},
   author  = {Chen, Jian and Zhang, Liudeng and Luo, Yikai and Han, Xiaying and Kang, Muxing
              and Chen, Jing and Liu, Wei and Xun, Zhenzhen and Chen, Guofeng and Chen, Ke
              and Xu, Shenbin and Zhang, Chaoyang and Wu, Zhiwei and Wu, Wenxuan

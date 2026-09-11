@@ -74,19 +74,17 @@ def main():
     head = f"""# NF-κB / TNFα-signalling claims, sentence by sentence
 
 **Module** `04_Revision_Analyses/17_NFkB_Claim_Ledger/`
-**Date** 1 September 2026 · **Status** report only. Nothing is adopted, nothing is
+**Status** report only. Nothing is adopted, nothing is
 applied. No manuscript file, figure, panel script, `PROVENANCE.csv`, `verify_numbers.py`
-or sibling module's output was written; the only files created are this document, its
+or sibling module's output is written; the only files created are this document, its
 CSV and the two scripts that build them, all inside this directory.
 
-**Premise, given by the author and not re-derived here.** The NF-κB analysis **adopts**
-the sound-input recompute, and **Fig. S10E is to be changed**. So the question below is
+**Premise, not re-derived here.** The NF-κB analysis **adopts** the sound-input
+recompute, and **Fig. S10E is to be changed**. So the question below is
 not *whether* to adopt. It is: given adoption, which sentence survives, which must be
 restated and to what, and which must go. Where a sentence survives unchanged that is
-recorded as a finding, not as a blank row. (For the record: the on-disk file that raised
-the S10E question, `03_Final_Panels/SUPPLEMENTARY_AUDIT.md`, still reads
-"Needs the author's ruling. Do not repoint it unasked." It has not been updated with the
-ruling; that is a bookkeeping gap, not a contradiction.)
+recorded as a finding, not as a blank row. (The S10E question itself is raised in
+`03_Final_Panels/SUPPLEMENTARY_AUDIT.md`.)
 
 ---
 
@@ -160,7 +158,7 @@ are given where it matters.
 paper", and `stability.csv` scores M12 `untestable` on all five axes. **That is now out
 of date.** `03_Final_Panels/SUPPLEMENTARY_AUDIT.md` fault 1 measured it:
 
-- repointing `adaptive_immune_resource.py:146` from the prepared Round_5 tables to the
+- repointing `adaptive_immune_resource.py:146` from the prepared submission-tree tables to the
   sound recompute leaves **2 of 40 top-5 Hallmark slots** standing across the eight
   lineage × phase cells;
 - `G2-M Checkpoint`, `Mitotic Spindle` and `E2F Targets` — the entire "proliferation
@@ -197,9 +195,9 @@ sign of the condition coefficient when the samples are renamed).
 
 One live tension to hand to the author with it, from `VERIFICATION_ADDENDUM.md`
 addenda 2 and 3: **`Manuscript_R1_clean.docx` now contains zero mentions of MAST, while
-Figure 5A is drawn from a MAST prerank** (`Round_5/.../MoMac_mast_prerank_gsea.csv`,
+Figure 5A is drawn from a MAST prerank** (`submission-tree/.../MoMac_mast_prerank_gsea.csv`,
 NES +2.140, reproducing the printed panel to 0.0001) and C26 is the Results sentence that
-quotes it. The figure is right — rule 1, settled 2026-09-01. The Methods no longer
+quotes it. The figure is right: it reproduces the printed panel. The Methods no longer
 describe how it was made. No remedy is proposed here; the measurements do not choose one.
 
 ---
@@ -262,7 +260,7 @@ touched here; recorded for the author.
                 "letter. They must move together.\n")
         if rec == "keep verbatim (flagged)":
             parts.append(
-                "**CLAUDE.md rule 1: the published figure is the ground truth and the "
+                "**The published figure is the ground truth and the "
                 "code is the suspect.** None of these is proposed for correction. Each "
                 "is recorded as not reproducible from the tables on disk, with the "
                 "mechanism where one could be found and without one where it could "
@@ -353,7 +351,7 @@ Unchanged from `FINDINGS.md` §10, and it bounds every row above.
 Read-only throughout: `04_Manuscript_R1/` (both .docx files, `edits.py`,
 `verify_numbers.py`, the response letter), `03_Final_Panels/` (`PROVENANCE.csv`,
 `SUPPLEMENTARY_AUDIT.md`), `04_Revision_Analyses/07_`, `08_`, `09_`, `12_`, `13_`, `14_`,
-`15_`, `16_`, `00_Data_Audit/`, `00_GROUND_TRUTH/` and `Round_5/`. No GSEA, DEG or panel
+`15_`, `16_`, `00_Data_Audit/`, `00_GROUND_TRUTH/` and `submission-tree/`. No GSEA, DEG or panel
 pipeline was run. No patient name, medical record number or specimen identifier appears
 in any file in this directory.
 """)

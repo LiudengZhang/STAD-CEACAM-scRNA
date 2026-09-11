@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
 """
-Panel D: CEACAM5 versus CEACAM6 in pre-treatment stomach epithelium.
+Figure 2 panel D - CEACAM5 versus CEACAM6 in pre-treatment stomach epithelium.
 
-Replaces the per-cell scatter of create_ceacam_correlation.py. At this
-sequencing depth a per-cell scatter is dominated by dropout: two thirds of the
-cells in the shallowest quintile are double-negative, and the per-cell rho of
-0.44 is a floor set by detection rather than a measurement of co-expression.
-The panel therefore shows kNN metacells of 10 cells built within each sample,
-and reports the per-cell value beside the metacell value so that neither is
-mistaken for the other.
+At this sequencing depth a per-cell scatter is dominated by dropout: two thirds
+of the cells in the shallowest quintile are double-negative, and the per-cell
+rho of 0.44 is a floor set by detection rather than a measurement of
+co-expression. The panel therefore shows kNN metacells of 10 cells built within
+each sample.
 
 The pooling and the data path are copied from
 04_Revision_Analyses/04_R1.5_CEACAM5_vs_CEACAM6/scripts/dropout_and_coexpression.py,
@@ -17,8 +15,39 @@ gives rho = 0.71 at k = 10, so the rise from 0.44 is largely the arithmetic of
 averaging. The co-expression claim rests on the within-stratum odds ratio in
 that module (3.4 to 12.2 across depth quintiles), not on this panel.
 
-Panel is drawn to the slot measured in the submitted Figure 2: x 80.5-118.2 mm,
-y 6.7-31.3 mm.
+The panel is drawn at the millimetre rectangle it prints in, read from
+03_Final_Panels/panel_rects.csv through 00_Config/slots.py, so the type size
+set here is the type size printed. Margins are measured from the rendered ink
+rather than typed, and the panel-letter corner is left clear for the assembler.
+
+  printed panel  Figure 2 D       (PROVENANCE.csv; the directory name agrees,
+                                   but the letter was looked up, not inferred)
+
+The plotting box is square: the two axes carry the same quantity on the same
+scale and the same limits, so a square box is the one in which equal expression
+lies on the diagonal. `set_box_aspect` sets the box, not the limits, so no
+plotted value moves.
+
+The panel prints the metacell correlation alone. The per-cell correlation and
+its cell count are stated in the figure legend, so repeating them here would
+print the same two numbers twice; both are still computed, and both are still
+written to ceacam_correlation_levels.csv beside this file.
+
+MARK
+    The earlier drawing set its type at print size on a 34.0 x 24.0 mm canvas,
+    so SCALE = 1, and its smallest body type is the rho annotation at 4.6 pt.
+    MARK carries the non-type point sizes across:
+
+        MARK = style.tick_pt() / (SMALL_PT * SCALE)
+        AREA = MARK ** 2
+
+    The one non-type size is the metacell dot area, which takes AREA. The spine
+    and tick widths the earlier drawing set are not carried over: those are axes
+    furniture, cnsplots has its own settings for them, and following the library
+    rather than rescaling the old numbers is the standard-methods rule.
+
+K, N_PCS, SEED, the sample filter, the pooling and both correlations are the
+earlier drawing's. The drawing code is the same code.
 """
 
 import sys
@@ -26,7 +55,6 @@ from pathlib import Path
 
 import matplotlib
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import scanpy as sc
@@ -35,12 +63,18 @@ from sklearn.neighbors import NearestNeighbors
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
 from paths import EPITHELIAL_H5AD  # noqa: E402
-from shared.figure_config import use_panel_style
+import panel_style_cns as style    # noqa: E402
+import slots                       # noqa: E402
 
 OUT = Path(__file__).parent
-PANEL_W_MM, PANEL_H_MM = 34.0, 24.0
-MM_TO_INCH = 1 / 25.4
-DPI = 300
+
+PANEL_LETTER = "D"
+PANEL_W_MM, PANEL_H_MM = slots.size_mm(2, PANEL_LETTER)
+LETTER_CELL = slots.letter_cell_mm(2, PANEL_LETTER)
+
+SCALE = 1                           # the earlier canvas multiplier
+SMALL_PT = 4.6                      # the earlier smallest body type
+
 K = 10
 N_PCS = 30
 SEED = 42
@@ -84,7 +118,12 @@ def pools_knn(emb, k):
 
 
 def main():
-    use_panel_style(font_pt=6, scale=1, **{'axes.labelsize': 6, 'xtick.labelsize': 5, 'ytick.labelsize': 5, 'axes.linewidth': 0.5, 'xtick.major.width': 0.5, 'ytick.major.width': 0.5, 'xtick.major.size': 2, 'ytick.major.size': 2, 'axes.spines.top': False, 'axes.spines.right': False})
+    family = style.apply(title_fontsize=7, fontsize_legend=6,
+                         legend_fontsize=6)
+    MARK = style.tick_pt() / (SMALL_PT * SCALE)
+    AREA = MARK ** 2
+    print(f"  type set in {family}; body {style.body_pt():g} pt, "
+          f"ticks/legend {style.tick_pt():g} pt; MARK {MARK:.5f}")
 
     df, emb = load()
     print(f"Pre-treatment stomach epithelial cells: {len(df):,} "
@@ -120,10 +159,9 @@ def main():
         dict(level="sample", n=len(agg), rho=float(rho_s), p=float(p_s)),
     ]).to_csv(OUT / "ceacam_correlation_levels.csv", index=False)
 
-    fig, ax = plt.subplots(figsize=(PANEL_W_MM * MM_TO_INCH,
-                                    PANEL_H_MM * MM_TO_INCH))
-    ax.scatter(mc["CEACAM5"], mc["CEACAM6"], s=1.4, alpha=0.45, c="#3498db",
-               edgecolors="none")
+    fig, ax = style.subplots_mm(PANEL_W_MM, PANEL_H_MM)
+    ax.scatter(mc["CEACAM5"], mc["CEACAM6"], s=1.4 * AREA, alpha=0.45,
+               c="#3498db", edgecolors="none")
     ax.set_xlabel(r"$\it{CEACAM5}$")
     ax.set_ylabel(r"$\it{CEACAM6}$")
 
@@ -132,20 +170,26 @@ def main():
     ax.set_ylim(0, hi)
     ax.set_xticks(np.arange(0, hi + 1, 2))
     ax.set_yticks(np.arange(0, hi + 1, 2))
+    ax.set_box_aspect(1)
 
-    ax.text(0.04, 0.97,
-            f"ρ = {rho_mc:.2f}, metacells of {K} (n = {len(mc):,})\n"
-            f"ρ = {rho_cell:.2f} per cell (n = {len(df):,})",
-            transform=ax.transAxes, fontsize=4.6, va="top", linespacing=1.35,
+    ax.text(0.04, 0.97, f"ρ = {rho_mc:.2f}",
+            transform=ax.transAxes, fontsize=style.tick_pt(), va="top",
+            linespacing=1.35,
             bbox=dict(boxstyle="round,pad=0.2", facecolor="white", alpha=0.85,
                       edgecolor="none"))
 
-    plt.tight_layout(pad=0.3)
-    for ext in ("svg", "pdf", "png"):
-        f = OUT / f"ceacam_metacell_correlation.{ext}"
-        plt.savefig(f, dpi=DPI, bbox_inches="tight", facecolor="white")
-        print("Saved:", f)
-    plt.close()
+    style.fit_margins(fig, pad_mm=0.6, cell_mm=LETTER_CELL)
+    over = style.overflow_mm(fig)
+    if max(over) > 0:
+        raise RuntimeError(
+            f"ink outside the {PANEL_W_MM} x {PANEL_H_MM} mm canvas "
+            f"(l,r,b,t mm): {over}")
+    intruders = style.letter_clear(fig, LETTER_CELL)
+    if intruders:
+        raise RuntimeError(f"ink under the panel letter cell: {intruders}")
+    style.save_panel(fig, OUT / "ceacam_metacell_correlation")
+    print(f"Saved: {OUT / 'ceacam_metacell_correlation'}.[svg|pdf|png] "
+          f"at {PANEL_W_MM} x {PANEL_H_MM} mm")
 
 
 if __name__ == "__main__":

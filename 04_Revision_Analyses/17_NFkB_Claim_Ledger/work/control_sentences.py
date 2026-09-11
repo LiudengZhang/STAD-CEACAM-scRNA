@@ -1,6 +1,7 @@
-# Paths below refer to the upstream Round_4 processing pipeline, which is
-# not part of this release. This script is included as a record of how the
-# input was produced; it is not called by _run_all_panels.sh.
+# Paths below refer to the upstream processing pipeline that produced the
+# deposited intermediates; it is not part of this release's run path. This
+# file is included as a record of how the input was produced; it is not
+# called by _run_all_panels.sh or ./run.
 """Positive control for the CLAIM_COMPARISON.md sentence extractor.
 
 The extractor is run three times:
@@ -16,7 +17,7 @@ import sys, csv, pathlib
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 from extract_claims import docx_paras, scan_paras
 
-ROOT = pathlib.Path("/path/to/Project_4_05232025/"
+ROOT = pathlib.Path("/path/to/project/"
                     "Round_7_major_revision")
 CLEAN = ROOT / "04_Manuscript_R1/01_Main_Text/Manuscript_R1_clean.docx"
 LETTER = (ROOT / "04_Manuscript_R1/05_Response_to_Reviewers/"

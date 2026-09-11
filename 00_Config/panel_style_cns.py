@@ -2,9 +2,8 @@
 """
 The single entry point for the cnsplots restyle (Version B).
 
-Authorised by the author on 2026-09-01: the main figures are redrawn rather
-than patched, and every figure is set in one type system, taken from
-https://github.com/faridrashidi/cnsplots.
+The main figures are redrawn rather than patched, and every figure is set in
+one type system, taken from https://github.com/faridrashidi/cnsplots.
 
 WHAT THIS MODULE IS
 -------------------
@@ -24,8 +23,8 @@ about, because it is specific to this project:
 
 WHY THE PANELS ARE DRAWN AT PRINT SIZE
 --------------------------------------
-Measured on the shipped supplementary figures on 2026-09-01: every panel SVG
-is drawn 3.5x to 6.3x larger than the box the assembler puts it in, then fitted
+Measured on the shipped supplementary figures: every panel SVG is drawn
+3.5x to 6.3x larger than the box the assembler puts it in, then fitted
 into that box with `preserveAspectRatio='xMidYMid meet'`. The fit scale runs
 from 0.1600 (S8H) to 0.4538 (S7A), a 2.84x spread. A panel that sets 20 pt type
 - which is what the project's 4x convention produces from a nominal 5 pt -
@@ -52,7 +51,8 @@ is markedly wider. Two Helvetica-metric faces *are* installed:
                      clone; already 2072 of the 2954 shipped text spans
 
 Both carry regular, bold, italic and bold-italic and both embed cleanly under
-`pdf.fonttype=42` (tested 2026-09-01). So the stack is cnsplots' own order with
+`pdf.fonttype=42`, which is tested rather than assumed. So the stack is
+cnsplots' own order with
 those two inserted ahead of the DejaVu fallback, set through
 `cns.settings.font_sans_serif`. On a machine with real Helvetica installed,
 Helvetica still wins and nothing here changes.
@@ -81,7 +81,7 @@ USAGE
 
 Run this file directly for a self-test:
 
-    conda run -n Liudeng_Python_310 python 00_Config/panel_style_cns.py
+    conda run -n stad_ceacam python 00_Config/panel_style_cns.py
 """
 
 from __future__ import annotations
@@ -93,12 +93,113 @@ import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib import font_manager as fm
 
-import cnsplots as cns
+import json
+import types
+
+try:
+    import cnsplots as cns
+    FROM_SNAPSHOT = False
+except ImportError:
+    cns = None
+    FROM_SNAPSHOT = True
+
+# Where the settings snapshot is written and read.
+SNAPSHOT = Path(__file__).resolve().parent / "panel_style_rc.json"
+
+def dump_snapshot(path=None, **setting_overrides) -> Path:
+    """Record the type system this environment produces, for another to read.
+
+    cnsplots is installed in one environment. Two panels are drawn in a second
+    one that carries a dependency cnsplots cannot be resolved beside, and a
+    panel drawn there must print at the same sizes as the other fifty-one, not
+    at matplotlib's defaults. So the settings and the rcParams they produce are
+    written once, from the environment that has cnsplots, and read there.
+
+    The snapshot is valid only for the overrides it was taken with. Loading it
+    under different ones raises rather than drawing type at the wrong size.
+    """
+    if FROM_SNAPSHOT:
+        raise RuntimeError("dump_snapshot needs cnsplots; run it in the "
+                           "environment where cnsplots is installed")
+    apply(**setting_overrides)
+    settings = {k: getattr(cns.settings, k) for k in dir(cns.settings)
+                if not k.startswith("_")
+                and _jsonable(getattr(cns.settings, k))}
+    snap = {
+        "cnsplots_version": cns.__version__,
+        "overrides": {k: v for k, v in setting_overrides.items()},
+        "resolved_family": resolved_family(),
+        "settings": settings,
+        "rcparams": {k: _jsonable_rc(v)
+                     for k, v in matplotlib.rcParams.items()
+                     if _jsonable(v)},
+    }
+    path = Path(path) if path else SNAPSHOT
+    path.write_text(json.dumps(snap, indent=1, sort_keys=True))
+    return path
+
+
+def _jsonable(v):
+    return isinstance(v, (str, int, float, bool, type(None))) or (
+        isinstance(v, (list, tuple))
+        and all(isinstance(x, (str, int, float, bool, type(None))) for x in v))
+
+
+def _jsonable_rc(v):
+    return list(v) if isinstance(v, tuple) else v
+
+
+class _SnapshotCnsplots:
+    """Stands in for cnsplots, reading one recorded settings namespace.
+
+    Every attribute the module reads off `cns.settings` is present, so the rest
+    of the file is unchanged. `setup_matplotlib` refuses to run if the caller
+    asked for a type spec the snapshot was not taken with, because applying the
+    recorded rcParams then would print sizes nobody asked for.
+    """
+
+    #: font_sans_serif is rebuilt from the fonts installed on the machine, so
+    #: it is compared through resolved_family() instead of literally.
+    _NOT_COMPARED = ("font_sans_serif",)
+
+    def __init__(self, path):
+        if not Path(path).exists():
+            raise RuntimeError(
+                f"cnsplots is not importable here and no settings snapshot is "
+                f"at {path}. Write one from the environment that has cnsplots: "
+                f"python panel_style_cns.py --dump-snapshot")
+        self._snap = json.loads(Path(path).read_text())
+        self.__version__ = self._snap["cnsplots_version"] + " (snapshot)"
+        self.settings = types.SimpleNamespace(**self._snap["settings"])
+        self._recorded = dict(self._snap["settings"])
+
+    def setup_matplotlib(self):
+        differs = [k for k, v in self._recorded.items()
+                   if k not in self._NOT_COMPARED
+                   and getattr(self.settings, k, None) != v]
+        if differs:
+            raise RuntimeError(
+                "the settings snapshot was taken with different values for "
+                + ", ".join(sorted(differs))
+                + "; re-take it with these overrides in the environment that "
+                  "has cnsplots")
+        matplotlib.rcParams.update(self._snap["rcparams"])
+        got = resolved_family()
+        want = self._snap["resolved_family"]
+        if got != want:
+            raise RuntimeError(f"the snapshot was taken with {want} but this "
+                               f"machine resolves the stack to {got}")
+
+
+if cns is None:
+    cns = _SnapshotCnsplots(SNAPSHOT)
+
 
 __all__ = [
     "apply", "describe", "resolved_family",
     "PAGE_W_MM", "PAGE_W_PT", "MM_TO_INCH",
     "figsize_mm", "figure_mm", "subplots_mm", "margins_mm", "overflow_mm",
+    "fit_margins", "letter_clear", "LETTER_CELL_MM", "dump_snapshot",
     "save_panel", "body_pt", "tick_pt", "letter_pt", "self_test",
 ]
 
@@ -224,11 +325,17 @@ def apply(palette: bool = False, **setting_overrides) -> str:
     # The author's spec puts tick labels and legend text together at 7 pt.
     # cnsplots drives tick labels from fontsize_legend (7) but lets legend text
     # inherit title_fontsize (8) unless legend_fontsize is set. Set it.
-    if cns.settings.legend_fontsize is None:
-        cns.settings.legend_fontsize = cns.settings.fontsize_legend
-
     for key, value in setting_overrides.items():
         setattr(cns.settings, key, value)
+
+    # Resolved after the overrides, and only when the caller did not set it.
+    # cnsplots drives tick labels from fontsize_legend but lets legend text
+    # inherit title_fontsize unless legend_fontsize is set; set it here and it
+    # is set from the fontsize_legend that is actually in force. Settings are
+    # module state and outlive one call, so the earlier ordering left a second
+    # apply() in the same process carrying the first one's legend size.
+    if "legend_fontsize" not in setting_overrides:
+        cns.settings.legend_fontsize = cns.settings.fontsize_legend
 
     keep_cycle = matplotlib.rcParams["axes.prop_cycle"]
     keep_cmap = matplotlib.rcParams["image.cmap"]
@@ -425,6 +532,162 @@ def overflow_mm(fig):
                  for v in (left, right, bottom, top))
 
 
+def _ink_bbox_in(fig):
+    """Union of every ink artist's extent, in inches from the canvas corner."""
+    fig.canvas.draw()
+    r = fig.canvas.get_renderer()
+    dpi = fig.dpi
+    x0 = y0 = float("inf")
+    x1 = y1 = float("-inf")
+    for artist in _ink_artists(fig):
+        try:
+            bb = artist.get_window_extent(renderer=r)
+        except Exception:
+            continue
+        if bb is None or bb.width <= 0 or bb.height <= 0:
+            continue
+        x0, y0 = min(x0, bb.x0), min(y0, bb.y0)
+        x1, y1 = max(x1, bb.x1), max(y1, bb.y1)
+    if x0 == float("inf"):
+        raise RuntimeError("the figure draws no measurable ink")
+    return x0 / dpi, y0 / dpi, x1 / dpi, y1 / dpi
+
+
+def fit_margins(fig, pad_mm=0.6, max_iter=24, tol_mm=0.05,
+                reserve_letter=True, cell_mm=None):
+    """Set the margins from the rendered ink, leaving `pad_mm` of paper.
+
+    A margin typed as a number is a guess about how wide a tick label will be,
+    and at 1:1 a guess that is 2 mm short does not shrink away - the label runs
+    off the canvas and the assembler's nested viewport clips it silently. This
+    measures instead: it renders, reads the union extent of every axis label,
+    tick label, title, annotation and legend, and moves the axes box until the
+    ink sits `pad_mm` inside all four edges.
+
+    Only figures whose axes are placed by `subplots_adjust` can be fitted; a
+    figure built with explicit `add_axes` positions is not moved by changing
+    the subplot parameters. If the ink has not converged inside the canvas
+    after `max_iter` passes this raises, rather than saving clipped type.
+
+    With `reserve_letter` the top-left cell the assembler draws the panel
+    letter into is kept free as well: fitting the ink to all four edges puts
+    the topmost y tick label exactly where the letter goes. The axes box is
+    moved down or right, whichever costs less paper, until the corner is clear.
+
+    Returns the final overflow, which is (0, 0, 0, 0) on success.
+    """
+    cell_mm = cell_mm or LETTER_CELL_MM
+    pad = pad_mm * MM_TO_INCH
+    w_in, h_in = fig.get_size_inches()
+    dpi = fig.dpi
+    cx1 = cell_mm[0] * MM_TO_INCH * dpi
+    cy0 = h_in * dpi - cell_mm[1] * MM_TO_INCH * dpi
+    move = None                      # "down" or "right", decided once and kept
+    tol = tol_mm * MM_TO_INCH
+    for _ in range(max_iter):
+        fig.canvas.draw()
+        x0, y0, x1, y1 = _ink_bbox_in(fig)
+        dl, dr = pad - x0, (w_in - pad) - x1
+        db, dt = pad - y0, (h_in - pad) - y1
+        # The corner is judged only once the ink is inside the canvas. Ink
+        # that still hangs off the left edge reads as a huge sideways demand
+        # and would send the axes down when it should go right.
+        inside = (dl <= tol and dr >= -tol and db <= tol and dt >= -tol)
+        if reserve_letter and (inside or move is not None):
+            down, right = _letter_cell_demand(fig, cx1, cy0)
+            if down > 0:
+                # Lowering the top edge moves a vertically centred artist -
+                # a rotated y label, the y tick column - by half as far, so
+                # the demand is doubled to clear it in one pass instead of
+                # halving it forever. The slack absorbs the tolerance the
+                # loop breaks on.
+                slack = 2 * tol_mm * MM_TO_INCH * dpi
+                down, right = 2 * down + slack, right + slack
+                if move is None:
+                    move = "down" if down <= right else "right"
+            if move == "down":
+                # The reserved edge is monotone: once the top has been lowered
+                # to clear the corner, letting the fit raise it again puts the
+                # same ink back under the letter and the loop oscillates.
+                dt = min(dt, -down / dpi if down > 0 else 0.0)
+            elif move == "right":
+                dl = max(dl, right / dpi if down > 0 else 0.0)
+        if max(abs(dl), abs(dr), abs(db), abs(dt)) / MM_TO_INCH < tol_mm:
+            break
+        sp = fig.subplotpars
+        left, right_ = sp.left * w_in + dl, sp.right * w_in + dr
+        bottom, top = sp.bottom * h_in + db, sp.top * h_in + dt
+        if right_ - left < 0.15 * w_in or top - bottom < 0.15 * h_in:
+            raise RuntimeError(
+                "the ink cannot be fitted into this canvas: the axes box would "
+                "have to shrink below 15% of it. The panel needs shorter "
+                "strings or a larger slot.")
+        fig.subplots_adjust(left=left / w_in, right=right_ / w_in,
+                            bottom=bottom / h_in, top=top / h_in)
+    over = overflow_mm(fig)
+    if max(over) > tol_mm:
+        raise RuntimeError(f"ink still outside the canvas after {max_iter} "
+                           f"passes: {over} mm (left, right, bottom, top)")
+    if reserve_letter and letter_clear(fig, cell_mm):
+        raise RuntimeError("the panel-letter cell is still not clear after "
+                           f"{max_iter} passes: {letter_clear(fig, cell_mm)}")
+    return over
+
+
+def _letter_cell_demand(fig, cx1, cy0):
+    """How far ink must move down, or right, to leave the letter cell."""
+    r = fig.canvas.get_renderer()
+    down = right = 0.0
+    for artist in _ink_artists(fig):
+        try:
+            bb = artist.get_window_extent(renderer=r)
+        except Exception:
+            continue
+        if bb is None or bb.width <= 0 or bb.height <= 0:
+            continue
+        if min(bb.x1, cx1) - bb.x0 > 0 and bb.y1 - max(bb.y0, cy0) > 0:
+            down = max(down, bb.y1 - cy0)
+            right = max(right, cx1 - bb.x0)
+    return down, right
+
+
+#: The cell an assembler reserves at a panel's top-left for its letter, in mm.
+LETTER_CELL_MM = (3.5, 3.6)
+
+
+def letter_clear(fig, cell_mm=LETTER_CELL_MM):
+    """Which artists intrude into the panel-letter cell, and by how much.
+
+    The letter is drawn on the page by the assembler, on top of the panel, at
+    the position it prints at today. Anything the panel itself draws in that
+    corner is printed underneath it. Returns a list of
+    (description, overlap_mm2), empty when the corner is clear.
+    """
+    fig.canvas.draw()
+    r = fig.canvas.get_renderer()
+    dpi = fig.dpi
+    w_in, h_in = fig.get_size_inches()
+    cw, ch = (v * MM_TO_INCH * dpi for v in cell_mm)
+    cx0, cx1 = 0.0, cw
+    cy0, cy1 = h_in * dpi - ch, h_in * dpi
+    hits = []
+    for artist in _ink_artists(fig):
+        try:
+            bb = artist.get_window_extent(renderer=r)
+        except Exception:
+            continue
+        if bb is None or bb.width <= 0 or bb.height <= 0:
+            continue
+        ox = min(bb.x1, cx1) - max(bb.x0, cx0)
+        oy = min(bb.y1, cy1) - max(bb.y0, cy0)
+        if ox > 0 and oy > 0:
+            area = (ox / dpi / MM_TO_INCH) * (oy / dpi / MM_TO_INCH)
+            label = getattr(artist, "get_text", lambda: "")() or type(
+                artist).__name__
+            hits.append((str(label)[:40], round(area, 3)))
+    return sorted(hits, key=lambda h: -h[1])
+
+
 # ---------------------------------------------------------------------------
 # Save
 # ---------------------------------------------------------------------------
@@ -453,6 +716,47 @@ def save_panel(fig, stem, formats=("svg", "pdf", "png"), close=True):
 # ---------------------------------------------------------------------------
 # Self-test
 # ---------------------------------------------------------------------------
+
+def _fit_controls():
+    """Show fit_margins and letter_clear able to fail, and then to pass."""
+    out = []
+
+    def panel(w=38, h=30, ylabel="IL-1B signature score"):
+        fig, ax = subplots_mm(w, h)
+        ax.plot([0, 1], [0, 1])
+        ax.set_ylabel(ylabel)
+        ax.set_xlabel("CEACAM5 expression (log)")
+        return fig
+
+    fig = panel()
+    fig.subplots_adjust(left=0.05, right=0.98, bottom=0.05, top=0.98)
+    if max(overflow_mm(fig)) <= 0.5:
+        out.append("overflow_mm does not see ink outside a crowded canvas")
+    if max(fit_margins(fig)) != 0.0:
+        out.append("fit_margins left ink outside the canvas")
+    w_in, h_in = fig.get_size_inches()
+    if abs(w_in / MM_TO_INCH - 38) > 1e-6 or abs(h_in / MM_TO_INCH - 30) > 1e-6:
+        out.append("fit_margins changed the canvas size")
+    if letter_clear(fig):
+        out.append("fit_margins left ink in the panel-letter cell")
+    plt.close(fig)
+
+    fig = panel()
+    fit_margins(fig, reserve_letter=False)
+    if not letter_clear(fig):
+        out.append("letter_clear cannot see ink in the cell it guards")
+    plt.close(fig)
+
+    fig = panel(w=12, h=10,
+                ylabel="Monocytes and macrophages expressing IL-1B")
+    try:
+        fit_margins(fig)
+        out.append("fit_margins accepted a panel whose ink cannot fit")
+    except RuntimeError:
+        pass
+    plt.close(fig)
+    return out
+
 
 def self_test(tmpdir=None) -> int:
     """Assert the style took, and that a saved panel is exactly its own size.
@@ -548,6 +852,8 @@ def self_test(tmpdir=None) -> int:
     except ImportError:
         print("  (PyMuPDF not available - PDF checks skipped)")
 
+    fails += _fit_controls()
+
     print(describe())
     print()
     if fails:
@@ -560,4 +866,9 @@ def self_test(tmpdir=None) -> int:
 
 
 if __name__ == "__main__":
+    if "--dump-snapshot" in sys.argv:
+        apply(title_fontsize=7, fontsize_legend=6, legend_fontsize=6)
+        print(dump_snapshot(title_fontsize=7, fontsize_legend=6,
+                            legend_fontsize=6))
+        sys.exit(0)
     sys.exit(self_test())

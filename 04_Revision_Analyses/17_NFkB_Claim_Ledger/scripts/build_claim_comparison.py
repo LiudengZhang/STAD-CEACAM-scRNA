@@ -423,8 +423,9 @@ row(claim_id="C14", ledger_id="(not in ledger)", source="main text",
                   "BACH1 0.222/0.140 P 0.017",
     sound_input_value="not measured",
     sound_input_table="none - the AUCell matrix is "
-                      "Round_5/02_Preparation_for_Panels/SCENIC/aucell_matrix.csv, "
-                      "frozen by the author's ruling of 1 September 2026",
+                      "submission-tree/02_Preparation_for_Panels/SCENIC/aucell_matrix.csv. "
+                      "The deposited pySCENIC run is canonical and is not "
+                      "recomputed; its network-inference step is declared stochastic",
     axis1_input="not covered", axis2_stability="not measured",
     gate="not applicable - not a gene-set enrichment",
     verify_numbers_guard="yes - verify_numbers.py:347-352 check the P and both means "
@@ -493,9 +494,9 @@ row(claim_id="C26", ledger_id="M22 / F01 (the sentence, not the panel)",
              "significantly enriched pathways (Fig. 5A, 5B).",
     printed_value="direction only; Fig. 5A plots TNF-alpha/NF-kB at +2.140, the "
                   "largest positive of nine bars",
-    sound_input_value="not covered - Fig. 5A is a MAST prerank of a Round_5 "
+    sound_input_value="not covered - Fig. 5A is a MAST prerank of a submission-tree "
                       "differential expression, a third pipeline",
-    sound_input_table="Round_5/02_Preparation_for_Panels/GSEA/"
+    sound_input_table="submission-tree/02_Preparation_for_Panels/GSEA/"
                       "MoMac_mast_prerank_gsea.csv (frozen; reproduces the printed "
                       "panel to 0.0001 NES)",
     axis1_input="not covered", axis2_stability="not measured - Fig. 5A was not "
@@ -535,8 +536,8 @@ row(claim_id="C18", ledger_id="M13 + M14", source="main text",
     proposed_wording="",
     supporting_measurement=P70 + " rows Epithelial / Inflammatory Response and "
                           "Epithelial / Hypoxia",
-    note="CLAUDE.md rule 1. The printed figure is the ground truth and these are "
-         "pre-existing submitted numbers; a P-value mismatch in the code's table is "
+    note="The published figure is the ground truth and the code is the suspect. "
+         "These are pre-existing submitted numbers; a P-value mismatch in the code's table is "
          "not grounds to change the text. FOR THE AUTHOR: check the two P values "
          "against printed Fig. 5N before the next submission, and consider whether "
          "quoting a nominal P for a claim at FDR q ~ 0.09-0.13 is the form wanted.")
@@ -555,14 +556,14 @@ row(claim_id="C19", ledger_id="M15", source="main text",
                     "1.2796-1.2980 over 7 seeds; the band does not reach 1.30, so "
                     "the 0.020 gap is not a seed effect. Every CSV with an NES "
                     "column under 03_Final_Panels, 04_Revision_Analyses "
-                    "and Round_5/02_Preparation_for_Panels was scanned; none gives "
+                    "and submission-tree/02_Preparation_for_Panels was scanned; none gives "
                     "1.30. FDR q 0.676-0.932",
     gate="all 50 Hallmark sets tested",
     verify_numbers_guard="no", guard_expected_value="",
     recommendation="keep verbatim (flagged)", proposed_wording="",
     supporting_measurement=P70 + " row Fibroblast / Inflammatory Response, "
                           "abs_diff_from_printed 0.0204",
-    note="CLAUDE.md rule 1 - recorded as not reproducible, no correction proposed. "
+    note="The published figure is the ground truth - recorded as not reproducible, no correction proposed. "
          "Mechanism not found. The far more consequential fact for the author is "
          "the FDR: q = 0.68 to 0.93 across seeds, so this claim rests on a nominal "
          "P alone.")
@@ -592,7 +593,7 @@ row(claim_id="C20", ledger_id="M16-M19", source="main text",
     recommendation="keep verbatim (flagged)", proposed_wording="",
     supporting_measurement=P70 + " rows MoMac / Inflammatory Response, EMT, Hypoxia, "
                           "Angiogenesis",
-    note="CLAUDE.md rule 1 - the EMT mismatch is recorded, not acted on. Note that "
+    note="The published figure is the ground truth - the EMT mismatch is recorded, not acted on. Note that "
          "MoMac post TNFa/NF-kB has three different printed values in three panels: "
          "+2.140 (Fig. 5A, MAST prerank), +2.233 (Fig. 5H / S9E / Results) and "
          "+1.894 (Fig. 5N, this table). All positive, all at or near rank 1; the "
@@ -804,7 +805,7 @@ legend("C30", "M22 / F01", "clean.docx para 242 s1 (Figure 5 legend)",
        "keep verbatim",
        "PROVENANCE.csv: figure 5, printed panel A, build dir 05_A, "
        "reproduces_published = yes, reproduced 2026-09-01 to 0.0001 NES against "
-       "Round_5/.../MoMac_mast_prerank_gsea.csv. Frozen; a Version A ship.",
+       "submission-tree/.../MoMac_mast_prerank_gsea.csv. Frozen; a Version A ship.",
        axis1="not covered", axis2="reproduces the printed panel",
        support="PROVENANCE.csv; VERIFICATION_ADDENDUM.md addendum 3")
 
@@ -815,12 +816,12 @@ legend("C31", "M23 / F02", "clean.docx para 242 s12 (Figure 5 legend)",
        "PROVENANCE.csv: figure 5, printed panel H, build dir 05_F (the directory "
        "letter is NOT the panel letter). The panel reads "
        "nfkb_per_celltype.csv, so adoption redraws it; the legend sentence itself is "
-       "unaffected. Author's ruling of 1 September 2026: the pre-treatment ring "
-       "stays and is not greyed or annotated for the signal gate.",
+       "unaffected. The pre-treatment ring stays as drawn: it is neither greyed "
+       "nor annotated for the signal gate.",
        axis1="the plotted values move; the legend does not",
        axis2="the post half is sound; the pre half plots five contrasts with no "
              "gene-set signal",
-       support="signal.csv; VERIFICATION_ADDENDUM.md, author's ruling")
+       support="signal.csv; VERIFICATION_ADDENDUM.md")
 
 legend("C32", "F05", "clean.docx para 242 s13 (Figure 5 legend)",
        "(I) GSEA enrichment curves for TNF-α Signaling via NF-κB in fibroblasts and "
@@ -873,8 +874,8 @@ legend("C37", "(not in ledger)", "clean.docx para 259 s5 (Figure S11 legend)",
        "(C) NFKB1, NFKB2 and BACH1 regulon activity from motif-anchored pySCENIC, "
        "with the NF-κB negative-feedback target genes.",
        "keep verbatim",
-       "MISSED BY THE LEDGER. The panel that carries C14 and C15. pySCENIC output is "
-       "frozen by the author's ruling of 1 September 2026, so adoption does not "
+       "MISSED BY THE LEDGER. The panel that carries C14 and C15. The deposited "
+       "pySCENIC output is canonical and is not recomputed, so adoption does not "
        "touch it.",
        guard="indirect - verify_numbers.py:345-354",
        axis1="not covered", axis2="not measured")

@@ -1,11 +1,41 @@
 #!/usr/bin/env python3
 """
-Panel F: MoMac Density Plots (2×2 grid)
-Shows cell density for Pre R, Pre NR, Post R, Post NR conditions
-4× scaling method - larger plots, smaller legend
+Figure 4 panel F - cell density over the MoMac embedding in the four
+treatment-and-response groups, on one shared density scale.
+
+  printed panel  Figure 4 F       (PROVENANCE.csv - the directory is "04_F";
+                                   do NOT read the directory as the letter)
+
+The embedding, the four group definitions, the kernel density estimate, the
+draw order, the shared axis limits, the colour map and the shared colour bar
+are unchanged. Only the canvas and the type change: the panel is drawn at the
+millimetre rectangle it prints in and set in the figure's one type system.
+
+MARK
+    The earlier drawing used a canvas four times the printed size and set its
+    smallest body type - the colour-bar label and its tick labels - at
+    `4 * SCALE`, so SMALL_PT = 4 and
+
+        MARK = style.tick_pt() / (SMALL_PT * SCALE)
+        AREA = MARK ** 2
+
+    The point size is an area and is scaled by AREA; the title pad is a length
+    in points and is scaled by MARK. The grid's `hspace` and `wspace` are
+    fractions of an axes, not lengths, so they are carried over unchanged and
+    the four boxes sit at the same relative spacing as before.
+
+Judgement call, stated plainly:
+  - the colour-bar tick labels were set at 0.8 of the tick size. At the type
+    spec that is 4.8 pt, below the floor this figure is set to, so the factor
+    is dropped and they take the tick size from the system.
+
+Input : MOMAC_H5AD (00_Config/paths.py)
+Output: this directory / momac_density_panel.{svg,pdf,png}
 """
 
 import scanpy as sc
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import numpy as np
@@ -15,23 +45,16 @@ import sys
 
 # Central config
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
-from paths import *
+from paths import *                       # noqa: E402,F401,F403
+import panel_style_cns as style           # noqa: E402
+import slots                              # noqa: E402
 
-# 4× scaling method
-SCALE = 4
-DPI = 300
+SCALE = 4                       # the earlier canvas multiplier, for MARK only
+SMALL_PT = 4.0                  # the earlier smallest body type, before * SCALE
 
-# Target print size: 5.8 × 6.4 cm (fits Row 3 height)
-FIGURE_WIDTH_CM = 5.8 * SCALE
-FIGURE_HEIGHT_CM = 6.4 * SCALE
-
-# Font sizes
-TITLE_FONTSIZE = 5 * SCALE
-LEGEND_FONTSIZE = 4 * SCALE  # Smaller legend
-TICK_FONTSIZE = 4 * SCALE
-
-# Point size (larger for visibility)
-POINT_SIZE = 1.0 * SCALE
+PANEL_LETTER = "F"
+PANEL_W_MM, PANEL_H_MM = slots.size_mm(4, PANEL_LETTER)
+LETTER_CELL = slots.letter_cell_mm(4, PANEL_LETTER)
 
 CMAP_DENSITY = 'magma'
 
@@ -43,6 +66,7 @@ CONDITIONS = [
     {'name': 'Post NR', 'phase': 'Post', 'col': 'stomach_post_grouping', 'val': 'No-response'},
 ]
 
+
 def compute_density(x, y):
     """Compute KDE density for points."""
     xy = np.vstack([x, y])
@@ -53,23 +77,21 @@ def compute_density(x, y):
         density = np.ones(len(x))
     return density
 
+
 def main():
     print("=" * 60)
-    print("Panel F: MoMac Density Plots (4× scaling)")
+    print("Panel F: MoMac Density Plots")
     print("=" * 60)
 
     script_dir = Path(__file__).parent
     data_path = MOMAC_H5AD
 
-    plt.rcParams.update({
-        'font.family': 'sans-serif',
-        'font.sans-serif': ['Arial', 'Liberation Sans', 'Helvetica', 'DejaVu Sans'],
-        'font.size': TITLE_FONTSIZE,
-        'axes.linewidth': 0.8 * SCALE,
-        'svg.fonttype': 'none',
-        'pdf.fonttype': 42,
-        'ps.fonttype': 42,
-    })
+    family = style.apply(title_fontsize=7, fontsize_legend=6,
+                         legend_fontsize=6)
+    MARK = style.tick_pt() / (SMALL_PT * SCALE)
+    AREA = MARK ** 2
+    print(f"  type set in {family}; body {style.body_pt():g} pt, "
+          f"ticks/legend {style.tick_pt():g} pt; MARK {MARK:.4f}")
 
     print("\nLoading data...")
     adata = sc.read_h5ad(data_path)
@@ -83,9 +105,7 @@ def main():
     y_pad = (y_max - y_min) * 0.05
 
     # Create figure
-    fig_w = FIGURE_WIDTH_CM / 2.54
-    fig_h = FIGURE_HEIGHT_CM / 2.54
-    fig = plt.figure(figsize=(fig_w, fig_h))
+    fig = style.figure_mm(PANEL_W_MM, PANEL_H_MM)
 
     # GridSpec: 2×2 grid with small colorbar row
     gs = gridspec.GridSpec(3, 2, figure=fig,
@@ -116,13 +136,13 @@ def main():
         x, y, density = x[order], y[order], density[order]
 
         # Plot density
-        sc_plot = ax.scatter(x, y, c=density, s=POINT_SIZE,
+        sc_plot = ax.scatter(x, y, c=density, s=1.0 * SCALE * AREA,
                              cmap=CMAP_DENSITY, rasterized=False, linewidths=0)
         scatter_handles.append(sc_plot)
 
         ax.set_xlim(x_min - x_pad, x_max + x_pad)
         ax.set_ylim(y_min - y_pad, y_max + y_pad)
-        ax.set_title(cond['name'], fontsize=TITLE_FONTSIZE, pad=2 * SCALE)
+        ax.set_title(cond['name'], pad=2 * SCALE * MARK)
         ax.set_aspect('equal')
         ax.axis('off')
 
@@ -131,18 +151,23 @@ def main():
     ax_cbar.axis('off')
     cbar = fig.colorbar(scatter_handles[0], ax=ax_cbar, orientation='horizontal',
                         fraction=0.6, pad=0.05, aspect=25)
-    cbar.set_label('Cell Density', fontsize=LEGEND_FONTSIZE)
-    cbar.ax.tick_params(labelsize=TICK_FONTSIZE * 0.8)
+    cbar.set_label('Cell Density')
+    cbar.ax.tick_params(labelsize=style.tick_pt())
 
-    plt.tight_layout()
+    style.fit_margins(fig, pad_mm=0.6, cell_mm=LETTER_CELL)
+    over = style.overflow_mm(fig)
+    if max(over) > 0:
+        raise RuntimeError(
+            f"ink outside the {PANEL_W_MM} x {PANEL_H_MM} mm canvas "
+            f"(l,r,b,t mm): {over}")
+    intruders = style.letter_clear(fig, LETTER_CELL)
+    if intruders:
+        raise RuntimeError(f"ink under the panel letter cell: {intruders}")
 
-    # Save
-    output_path = script_dir / 'momac_density_panel.png'
-    fig.savefig(output_path, dpi=DPI, bbox_inches='tight', facecolor='white')
-    fig.savefig(output_path.with_suffix('.svg'), bbox_inches='tight', facecolor='white')
-    print(f"\nSaved: {output_path}")
+    stem = 'momac_density_panel'
+    style.save_panel(fig, script_dir / stem)
+    print(f"\nSaved: {stem}.[svg|pdf|png] at {PANEL_W_MM} x {PANEL_H_MM} mm")
 
-    plt.close()
 
 if __name__ == '__main__':
     main()

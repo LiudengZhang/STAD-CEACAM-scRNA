@@ -25,6 +25,15 @@ figure actually contains:
                     than what they replace, so each is redrawn on the anchor its
                     neighbours share - right edge for tick labels, midpoint for
                     the UMAP annotation and the rotated axis titles.
+  Figure 6          RETIRED. The schematic once printed "Pan-TME NF-kB
+                    Activation" after the main text had dropped the pan-TME
+                    framing, and the qualifier was redacted here. The figure now
+                    ships as a page supplied whole by the author, in which that
+                    qualifier is absent at source: the label reads
+                    "Multi-Lineage" over "NF-kB Activation". There is nothing
+                    left for the redaction to find, so this figure is no longer
+                    patched and is collected by build_shipped_figures.py from
+                    Main_Figures/_supplied/ instead.
 
 Figure 1 is different in kind: panel A is a schematic, not a measurement, and
 the author replaced it with a redrawn vector version (_panel_1A/). That panel
@@ -40,16 +49,17 @@ Run: python patch_figure_annotations.py
 """
 
 from pathlib import Path
+import hashlib
 import sys
 
 import fitz
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "00_Config"))
-from paths import REVIEWER_MATERIALS  # noqa: E402
+from paths import MAIN_FIGURES, REVIEWER_MATERIALS  # noqa: E402
 
 SRC = REVIEWER_MATERIALS / "figures_submitted"
-OUT = Path(__file__).parent / "Main_Figures" / "_patched"
-PANEL_1A = Path(__file__).parent / "Main_Figures" / "_panel_1A" / "figure1A.pdf"
+OUT = MAIN_FIGURES / "_patched"
+PANEL_1A = MAIN_FIGURES / "_panel_1A" / "figure1A.pdf"
 
 # Two measured panels are redrawn rather than annotated, because the numbers
 # behind them were wrong rather than merely unlabelled.
@@ -74,6 +84,15 @@ PANEL_1A = Path(__file__).parent / "Main_Figures" / "_panel_1A" / "figure1A.pdf"
 # of the artwork placed beside it.
 LETTER_INSET = 3.0      # mm
 
+# Retired: kept because build_provenance.py reads this table to record which
+# drawing is spliced into which slot, and because the splices are part of how
+# the shipped Figures 2 and 5 were made. main() no longer reaches them - those
+# figures are redrawn rather than patched.
+#
+# letter, slot rect in mm, letter origin in mm, the drawing, and the digest of
+# the drawing this splice was built from. The digest is what makes the splice
+# reproducible: the path is a panel script's ordinary output and moves whenever
+# that panel is redrawn.
 PANEL_SWAPS = {
     "Figure 2": [
         # The right edge was 118.3 mm (335.34 pt) and that blanked panel F.
@@ -92,13 +111,15 @@ PANEL_SWAPS = {
         # guessed - and check_slot_images() below now refuses to run if this
         # ever stops being true.
         ("D", (79.8, 5.5, 117.2, 30.5), (80.50, 9.49),
-         Path(__file__).parent / "Main_Figures" / "02_Figure_2" / "02_D"
-         / "ceacam_metacell_correlation.pdf"),
+         MAIN_FIGURES / "02_Figure_2" / "02_D"
+         / "ceacam_metacell_correlation.pdf",
+         "618c72dff1949ae0e0c297bc1f8f18af"),
     ],
     "Figure 5": [
         ("H", (118.8, 45.5, 171.1, 81.0), (119.54, 50.65),
-         Path(__file__).parent / "Main_Figures" / "05_Figure_5" / "05_F"
-         / "nfkb_radar_celltype_enrichment.pdf"),
+         MAIN_FIGURES / "05_Figure_5" / "05_F"
+         / "nfkb_radar_celltype_enrichment.pdf",
+         "03111dbbd8363c5de4d09a2e5bd6b965"),
     ],
 }
 
@@ -139,6 +160,20 @@ TEXT_PATCHES = {
         ("*", (157.1, 334.0, 162.6, 343.4), "P = 0.055", "J, fibroblasts"),
         ("*", (220.1, 338.2, 225.5, 347.6), "P = 0.032", "J, dendritic cells"),
         ("*", (357.3, 338.2, 362.8, 347.6), "P = 0.030", "L, IL-6/JAK/STAT3 in CD4+ T"),
+    ],
+    # RETIRED, and kept rather than deleted: the qualifier this deletion
+    # removed is now absent at source, because Figure 6 ships as a page the
+    # author supplies whole. The entry records what was once done to the
+    # submitted schematic, and PATCHED_FIGURES no longer reaches it - run
+    # against the supplied page it would search for a string that is not there.
+    # "Acquired Resistance" was left alone, and so were the six "NF-kB" spans:
+    # Figures 1A and 6 are the two the author sets by hand, and nothing in this
+    # file may write into either figure's wording. The measurements behind that
+    # boundary are recorded against F28 in
+    # 00_Inbox/audit_handoff_20260904/AUDIT_RESPONSE.csv.
+    "Figure 6": [
+        ("Pan-TME ", (376.2, 258.8, 424.8, 273.1), "",
+         "schematic, pan-TME qualifier removed"),
     ],
 }
 
@@ -183,7 +218,9 @@ LABEL_PATCHES = {
     ],
 }
 
-SIZES = {"Figure 2": 6.0, "Figure 3": 5.0, "Figure 5": 3.5}
+# Figure 6's entry is the size the submitted label was set at. That figure is no
+# longer patched, so it is carried for the record rather than used.
+SIZES = {"Figure 2": 6.0, "Figure 3": 5.0, "Figure 5": 3.5, "Figure 6": 10.515}
 
 
 def centred(page, box, baseline, text, size):
@@ -209,6 +246,11 @@ def patch_text(page, name, size):
     page.apply_redactions(images=fitz.PDF_REDACT_IMAGE_NONE,
                           graphics=fitz.PDF_REDACT_LINE_ART_NONE)
     for rect, new, where in done:
+        # An empty replacement is a deletion: the glyphs go and nothing takes
+        # their place, so whatever else the label carries stays exactly where the
+        # submitted file put it.
+        if not new:
+            continue
         centred(page, (rect.x0, rect.y0, rect.x1, rect.y1), rect.y1, new, size)
     return [w for _, _, w in done]
 
@@ -302,13 +344,23 @@ def replace_panels(page, name):
     the slot.
     """
     done = []
-    for letter, (x0, y0, x1, y1), (lx, ly), src in PANEL_SWAPS.get(name, []):
+    for letter, (x0, y0, x1, y1), (lx, ly), src, want in \
+            PANEL_SWAPS.get(name, []):
         if not src.exists():
             sys.exit(f"{src} not found - run its panel script first")
+        got = hashlib.md5(src.read_bytes()).hexdigest()
+        if got != want:
+            sys.exit(
+                f"{name} panel {letter}: {src.name} is not the drawing this "
+                f"splice was built from (md5 {got}, expected {want}). The "
+                f"panel has been redrawn since. Splicing a different drawing "
+                f"into a frozen figure would change it without saying so; "
+                f"restore the recorded drawing, or retire this swap once the "
+                f"figure is rebuilt from its slots.")
         # Redaction, not a white rectangle. Painting over the slot leaves the
-        # superseded panel in the content stream: the first attempt at this left
-        # "rho = 0.93 (***)" extractable, and a PDF text search still found it
-        # under the replacement. apply_redactions removes the objects. The slot
+        # replaced panel in the content stream: cover it and "rho = 0.93 (***)"
+        # stays extractable, and a PDF text search still finds it underneath
+        # the replacement. apply_redactions removes the objects. The slot
         # is bounded by the white gutters measured in the submitted file, so
         # nothing outside it intersects.
         slot = fitz.Rect(x0 * MM, y0 * MM, x1 * MM, y1 * MM)
@@ -371,10 +423,19 @@ def replace_figure_1a(doc):
     return out
 
 
+#: The figures this still makes. Figures 2 to 5 are redrawn into their printed
+#: slots by assemble_slotted.py; patching them here would write the submitted
+#: layout over the redrawn one. Figure 6 is supplied whole by the author, and
+#: the qualifier its patch removed is absent from that page. All five are
+#: collected by build_shipped_figures.py, which records the mechanism behind
+#: each.
+PATCHED_FIGURES = (1,)
+
+
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
     total = 0
-    for i in range(1, 7):
+    for i in PATCHED_FIGURES:
         name = f"Figure {i}"
         src = SRC / f"{name}.pdf"
         doc = fitz.open(src)
@@ -402,6 +463,9 @@ def main():
         for w in changed:
             print(f"    {w}")
     print(f"\n{total} annotations replaced; written to {OUT}")
+    print("Figures 2, 3, 4 and 5 are not patched: they are redrawn into their "
+          "printed slots. Figure 6 is not patched either: it is supplied whole "
+          "by the author. All are collected by build_shipped_figures.py")
 
 
 if __name__ == "__main__":

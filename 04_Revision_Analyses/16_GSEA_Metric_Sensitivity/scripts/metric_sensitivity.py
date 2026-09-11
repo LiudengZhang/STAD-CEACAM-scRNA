@@ -41,7 +41,7 @@ SETTINGS  permutation_num 1000 vs 10000; the min_size / max_size filters.
 SEEDS     42 is the published seed. 1, 7, 13, 101 are added to measure the
           permutation noise the reproduction check is judged against.
 
-Run: PYTHONHASHSEED=0 conda run -n Liudeng_Python_310 python metric_sensitivity.py
+Run: PYTHONHASHSEED=0 conda run -n stad_ceacam python metric_sensitivity.py
 """
 
 from pathlib import Path
@@ -62,10 +62,17 @@ ROOT = MOD.parents[1]
 OUT = MOD / "outputs"
 OUT.mkdir(parents=True, exist_ok=True)
 
-HALLMARK = ROOT / "00_Reference" / "MSigDB_Hallmark_2020.gmt"
-SOUND12 = (ROOT / "07_Archive"
-           / "2026-08-31_deg_recompute_on_sound_per_cell_type_inputs"
-           / "04_Revision_Analyses" / "12_R1.8_DEG_Recompute" / "outputs" / "deg")
+sys.path.insert(0, str(ROOT / "00_Config"))
+from paths import HALLMARK_GMT, SOUND_DEG_DIR                       # noqa: E402
+
+HALLMARK = HALLMARK_GMT
+# The twelve sound-input DEG tables, named through paths.py rather than as a
+# literal into 07_Archive/. A literal there would be a live input read out of an
+# archive - the fault 03_Final_Panels/verify_panel_provenance.py check 9
+# exists to catch - and a path that resolves to nothing in the deposit. They are
+# an intermediate the record carries as
+# 02_Preparation_for_Panels/DEG_Sound_Recompute/deg.
+SOUND12 = SOUND_DEG_DIR
 NEUT = (ROOT / "04_Revision_Analyses" / "13_R1.8_Neutrophil_Rebuilt_Recompute"
         / "outputs" / "deg")
 # The `live` tables - module 12's own outputs/, from full_dataset.h5ad. These
@@ -175,19 +182,36 @@ def summarise(tab, rnk, **meta):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--stage", required=True,
-                    choices=["metrics", "settings", "seeds"])
-    ap.add_argument("--degset", default="sound13", choices=["sound13", "live"])
+    # No-argument default: every stage on both DE sets, which is exactly what
+    # scripts/run_all.sh and scripts/run_live.sh between them ran and exactly
+    # what outputs/ holds - nfkb_{metrics,settings,seeds}[_live].csv and the
+    # matching all_terms_*. The figure driver launches every scripts/*.py with
+    # no arguments, and `required=True` made that an argparse error rather than
+    # a run. About 45 min at --threads 4.
+    ap.add_argument("--stage", default="all",
+                    choices=["all", "metrics", "settings", "seeds"])
+    ap.add_argument("--degset", default="both",
+                    choices=["both", "sound13", "live"])
     ap.add_argument("--threads", type=int, default=4)
     args = ap.parse_args()
 
+    stages = (["metrics", "settings", "seeds"] if args.stage == "all"
+              else [args.stage])
+    degsets = (["sound13", "live"] if args.degset == "both" else [args.degset])
+    for stage in stages:
+        for degset in degsets:
+            one_sweep(stage, degset, args.threads)
+    return 0
+
+
+def one_sweep(stage, degset, threads):
     rows, dists = [], []
     t0 = time.time()
 
-    if args.stage == "metrics":
+    if stage == "metrics":
         # A: four metrics, published GSEA settings, published seed.
         grid = [(m, PUB_SEED, 1000, 15, 500) for m in METRICS]
-    elif args.stage == "settings":
+    elif stage == "settings":
         # B: published metric only; permutations, then the size filters.
         grid = [("published", PUB_SEED, 10000, 15, 500),
                 ("published", PUB_SEED, 1000, 5, 500),
@@ -202,10 +226,10 @@ def main():
 
     for cell, phase in itertools.product(CELLS, PHASES):
         for metric, seed, perm, mn, mx in grid:
-            rnk = load_rank(cell, phase, metric, args.degset)
+            rnk = load_rank(cell, phase, metric, degset)
             tag = f"{metric}_p{perm}_min{mn}_max{mx}_s{seed}"
-            tab = run_one(rnk, perm, mn, mx, seed, args.threads)
-            meta = dict(stage=args.stage, degset=args.degset, cell=cell,
+            tab = run_one(rnk, perm, mn, mx, seed, threads)
+            meta = dict(stage=stage, degset=degset, cell=cell,
                         phase=phase, metric=metric,
                         permutations=perm, min_size=mn, max_size=mx, seed=seed,
                         run_id=tag)
@@ -217,12 +241,11 @@ def main():
             print(f"[{time.time()-t0:7.0f}s] {cell:<20}{phase:<5}{tag:<40}"
                   f"NES={rows[-1]['nes']}", flush=True)
 
-    sfx = "" if args.degset == "sound13" else f"_{args.degset}"
-    pd.DataFrame(rows).to_csv(OUT / f"nfkb_{args.stage}{sfx}.csv", index=False)
+    sfx = "" if degset == "sound13" else f"_{degset}"
+    pd.DataFrame(rows).to_csv(OUT / f"nfkb_{stage}{sfx}.csv", index=False)
     pd.concat(dists, ignore_index=True).to_csv(
-        OUT / f"all_terms_{args.stage}{sfx}.csv", index=False)
-    print(f"done in {(time.time()-t0)/60:.1f} min", flush=True)
-    return 0
+        OUT / f"all_terms_{stage}{sfx}.csv", index=False)
+    print(f"{stage} {degset}: done in {(time.time()-t0)/60:.1f} min", flush=True)
 
 
 if __name__ == "__main__":

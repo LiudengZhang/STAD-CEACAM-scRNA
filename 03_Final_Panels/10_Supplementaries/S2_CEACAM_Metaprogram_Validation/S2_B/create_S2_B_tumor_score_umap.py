@@ -3,8 +3,9 @@
 S2_B: Tumor Score UMAP on epithelial cells
 4x scaling method for crisp text rendering
 
-Tumor score from Round_4 (malignant_score - non_malignant_score, Seurat AddModuleScore).
-Transferred via cell barcode matching (100% overlap confirmed).
+Tumor score is malignant_score - non_malignant_score from the upstream Seurat
+AddModuleScore run. It is an obs column of the epithelial object, beside the
+UMAP it is drawn on, so there is nothing to transfer between files.
 """
 
 import scanpy as sc
@@ -17,7 +18,7 @@ import os
 from pathlib import Path
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[4] / "00_Config"))
-from paths import EPITHELIAL_H5AD, EPITHELIAL_TUMOR_SCORED_H5AD
+from paths import EPITHELIAL_H5AD
 
 # Nature Cancer specifications - 4x scaling method
 DPI = 300
@@ -41,17 +42,10 @@ def main():
         'ps.fonttype': 42,
     })
 
-    print("Loading Round_5 epithelial data...")
+    print("Loading epithelial data...")
     adata = sc.read_h5ad(EPITHELIAL_H5AD)
-    print(f"Loaded {adata.n_obs} cells")
-
-    # Transfer tumor_score from Round_4 tumor-scored file
-    print("Loading tumor scores from Round_4...")
-    adata_ts = sc.read_h5ad(EPITHELIAL_TUMOR_SCORED_H5AD, backed='r')
-    tumor_scores = adata_ts.obs['tumor_score']
-    adata.obs['tumor_score'] = tumor_scores.reindex(adata.obs.index)
     n_valid = adata.obs['tumor_score'].notna().sum()
-    print(f"  Transferred tumor_score for {n_valid}/{adata.n_obs} cells")
+    print(f"Loaded {adata.n_obs} cells, tumor_score on {n_valid}")
 
     fig_width = PANEL_WIDTH_CM * CM_TO_INCH
     fig_height = PANEL_HEIGHT_CM * CM_TO_INCH

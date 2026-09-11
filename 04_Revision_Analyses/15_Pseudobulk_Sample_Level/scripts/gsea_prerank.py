@@ -38,9 +38,21 @@ from paths import HALLMARK_GMT                                       # noqa: E40
 SEED = 42
 
 
+# The module's own outputs/de and outputs/gsea. scripts/run_all.sh passes them
+# explicitly, four shards at a time; with no arguments this script raised
+# IndexError on sys.argv[1], which is how the figure driver - which launches
+# every scripts/*.py bare - recorded it as a failure. Unsharded, one process
+# over the whole directory is the same 52 tables and the same output, about
+# five minutes.
+MOD = Path(__file__).resolve().parents[1]
+DEFAULT_DE = MOD / "outputs" / "de"
+DEFAULT_GSEA = MOD / "outputs" / "gsea"
+
+
 def main():
-    de, out = Path(sys.argv[1]), Path(sys.argv[2])
-    shard = int(sys.argv[3]) if len(sys.argv) > 4 else 1
+    de = Path(sys.argv[1]) if len(sys.argv) > 1 else DEFAULT_DE
+    out = Path(sys.argv[2]) if len(sys.argv) > 2 else DEFAULT_GSEA
+    shard = int(sys.argv[3]) if len(sys.argv) > 3 else 1
     nshards = int(sys.argv[4]) if len(sys.argv) > 4 else 1
     out.mkdir(parents=True, exist_ok=True)
     import gseapy as gp

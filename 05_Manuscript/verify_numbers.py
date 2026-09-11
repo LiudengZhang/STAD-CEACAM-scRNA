@@ -21,26 +21,70 @@ import pandas as pd
 from scipy.stats import norm
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "00_Config"))
-from paths import NEW_ANALYSES  # noqa: E402
+from paths import (CLEAN_MANUSCRIPT_DOCX, MAIN_FIGURES, NEW_ANALYSES,
+                   RESPONSE_DIR, REVISED_PANELS)  # noqa: E402
 
-TOL = 0.0055  # claims are quoted to 2-3 decimals, so half a unit in the last place
+# Half a unit in the last place the claim actually quotes.
+#
+# Until 2026-09-10 this was one constant, TOL = 0.0055, with the comment
+# "claims are quoted to 2-3 decimals, so half a unit in the last place". Half a
+# unit in the last place of a THREE-decimal claim is 0.0005. 0.0055 is the
+# two-decimal figure, and applying it to a three-decimal claim buys nine times
+# the slack the claim asks for: a claim of "P = 0.064" passed against an
+# analysis value of 0.06349, and would have passed against anything from 0.0585
+# to 0.0695. It did exactly that. The response letter's MP4 post-versus-pre P
+# in responders was 0.064 where mp_group_comparisons.csv holds 0.06349206 and
+# Fig. S7A prints 0.063, and this checker read the pair and said nothing.
+#
+# The tolerance is now derived per claim from the decimals the claim is written
+# to, by quoted_tol() below, and the old constant survives only as a ceiling.
+# The ceiling is there so that this change can only ever tighten a check: a
+# claim written 1.00 reaches this file as the float 1.0, whose literal shows one
+# decimal and would ask for 0.05, five times looser than what was in force
+# yesterday. Where the literal asks for more slack than 0.0055 it does not get
+# it; where it asks for less it gets less. Claims that need a wider tolerance
+# than either - a percentage quoted to one decimal, a distance in micrometres -
+# pass tol= explicitly, and an explicit tol= always wins.
+CEILING_TOL = 0.0055
+
+
+def quoted_tol(expected):
+    """Half a unit in the last decimal place the claim is written to.
+
+    Read off the literal in this file, which is the claim as the manuscript or
+    the letter quotes it. Trailing zeros do not survive the float - 1.00 arrives
+    as 1.0 - so a claim can be read as quoted less precisely than it is, never
+    more; that direction is safe, because the ceiling below already holds those
+    at yesterday's tolerance.
+    """
+    text = repr(float(expected))
+    if "e" in text or "E" in text:          # not a literal anyone quotes
+        return CEILING_TOL
+    frac = text.split(".")[1].rstrip("0") if "." in text else ""
+    return min(CEILING_TOL, 0.5 * 10 ** -len(frac))
 
 failures, checks = [], 0
+# Checks that do not apply to the layout being run. Recorded and printed
+# rather than counted, so `checks` never includes one that read nothing.
+skipped = []
 
 
 def out(sub, name):
     return NEW_ANALYSES / sub / "outputs" / name
 
 
-def check(label, actual, expected, tol=TOL):
+def check(label, actual, expected, tol=None):
+    """tol=None derives the tolerance from the decimals `expected` is written to."""
     global checks
     checks += 1
     if actual is None:
         failures.append(f"{label}: value not found in the analysis output")
         return
+    if tol is None:
+        tol = quoted_tol(expected)
     if abs(float(actual) - float(expected)) > tol:
         failures.append(f"{label}: manuscript says {expected}, analysis gives "
-                        f"{float(actual):.6g}")
+                        f"{float(actual):.6g} (tolerance {tol:g})")
 
 
 def check_eq(label, actual, expected):
@@ -99,11 +143,14 @@ check("IHC summed P with P26 reclassified",
 
 # ------------------------------------------------------- two-sided sweep (R1.3c)
 sweep = pd.read_csv(out("02_R1.3_TwoSided_Stats_Sweep", "twosided_sweep.csv"))
-check_eq("comparisons in the sweep", len(sweep), 19)
-check_eq("significant one-tailed", int((sweep["p_one_tailed"] < 0.05).sum()), 15)
+# 20 rows, the twentieth being the tumor-content-adjusted CEACAM5/6+ proportion
+# of Supplementary Figure S2D, whose printed P was one-sided; it is significant
+# one-tailed, not two-tailed, and its Hedges' g CI excludes zero.
+check_eq("comparisons in the sweep", len(sweep), 20)
+check_eq("significant one-tailed", int((sweep["p_one_tailed"] < 0.05).sum()), 16)
 check_eq("significant two-tailed", int((sweep["p_two_tailed"] < 0.05).sum()), 5)
 check_eq("CIs excluding zero",
-         int(((sweep["g_ci95_lo"] > 0) | (sweep["g_ci95_hi"] < 0)).sum()), 18)
+         int(((sweep["g_ci95_lo"] > 0) | (sweep["g_ci95_hi"] < 0)).sum()), 19)
 
 
 def sweep_p(fragment):
@@ -124,6 +171,8 @@ check("CEACAM5 PRJEB25780 P", sweep_p("CEACAM5 expression, PRJEB25780"), 0.059)
 check("BACH1 regulon P", sweep_p("BACH1 regulon activity"), 0.035)
 check("NFKB1 regulon P", sweep_p("NFKB1 regulon activity"), 0.038)
 check("IL-6/JAK/STAT3 CD4 P", sweep_p("IL-6/JAK/STAT3 module score"), 0.030)
+check("CEACAM5/6+ proportion adjusted for tumor content P (Fig. S2D)",
+      sweep_p("tumor-content adjusted (Fig. S2D)"), 0.057)
 check("n=4 vs 4 two-sided floor",
       sweep.loc[sweep["n_hi"] == 4, "p_two_tailed_floor"].iloc[0], 0.029)
 
@@ -139,8 +188,12 @@ def mp_p(prog, contains):
 check("MP4 pre-R vs rest P", mp_p("S-MP4", "published test"), 0.083)
 check("MP4 direct NR vs R P", mp_p("S-MP4", "Pre-treatment NR vs R"), 0.486)
 check("MP5 direct NR vs R P", mp_p("S-MP5", "Pre-treatment NR vs R"), 0.686)
+# 2026-09-10: was 0.064 here, because the response letter said 0.064. The
+# table holds 0.06349206 and Fig. S7A prints 0.063, so the letter was corrected
+# through apply_consistency_fixes.py and this claim follows the letter, not the
+# other way round. The old 0.0055 tolerance was wide enough to hide the pair.
 check("MP4 post vs pre in responders P",
-      mp_p("S-MP4", "responders (requested)"), 0.064)
+      mp_p("S-MP4", "responders (requested)"), 0.063)
 check("MP4 post vs pre in non-responders P",
       mp_p("S-MP4", "non-responders (requested)"), 1.000)
 mp4_row = mp[(mp["program"] == "S-MP4") & mp["contrast"].str.contains("published")]
@@ -218,15 +271,15 @@ pos = (lin.loc["C3_Mac_Inflam_IL1B", "lineage_index"] - lo) / (hi - lo)
 check("IL-1B cluster position on the lineage axis", pos, 0.41)
 
 # ------------------------------------------------------------ NF-kB (R1.8)
-# ADOPTED TABLE, 2026-09-03. Until this date these checks read
+# ADOPTED TABLE. These checks deliberately do NOT read
 # 07_R1.8_NFkB_Specificity/outputs/nfkb_per_celltype.csv, which is written by
 # nfkb_specificity.py out of 12_R1.8_DEG_Recompute/outputs/gsea - the "live"
 # run, computed on the doubly-normalised .X that 00_Data_Audit/FINDINGS.md
-# sections 1 and 7 describe. The author has adopted the sound-input recompute,
-# and on 2026-09-03 ruled that the sixteen flagged rows of
-# 04_Revision_Analyses/17_NFkB_Claim_Ledger/outputs/claim_comparison.csv be applied
-# as that file recommends. So every NF-kB number now printed in the Results and
-# in the response letter comes from ONE table:
+# sections 1 and 7 describe. The sound-input recompute is what the revision
+# adopts, and the sixteen flagged rows of
+# 04_Revision_Analyses/17_NFkB_Claim_Ledger/outputs/claim_comparison.csv are applied
+# as that file recommends. So every NF-kB number printed in the Results and in
+# the response letter comes from ONE table:
 #
 #     13_R1.8_Neutrophil_Rebuilt_Recompute/outputs/nfkb_per_celltype_sound13.csv
 #
@@ -234,12 +287,14 @@ check("IL-1B cluster position on the lineage axis", pos, 0.41)
 # which is the point: the live table is NOT overwritten and NOT renamed, so no
 # path in this repository ever means two different things.
 #
-# The panels agree, as of 2026-09-03. Panels S9E and S10C were drawn from the
-# live run until that date, which left them disagreeing with this text in six
-# quantities; the author then ruled that they be redrawn from the same adopted
-# table, and they were. 03_Final_Panels/Supplementary_New/S9_Mechanism_
-# Specificity/REDRAW_2026-09-03.md and the S10 equivalent record what moved, and
-# PROVENANCE.csv rows S9,E and S10,C carry the re-adjudication.
+# Panel S9C prints these values and is drawn from the adopted table named
+# above. That used to be the whole of it - a sentence here saying "so the panel
+# and this text cannot diverge" - and on 2026-09-09 they diverged anyway: the
+# panel had been drawn from the live run, and printed B cells at #37/38 and
+# five cell types at Hallmark rank 1 where the adopted table gives #38/38 and
+# three. The comment did not catch it because a claim in a comment checks
+# nothing. It is a comparison now, below the table checks. PROVENANCE.csv
+# carries the panel's adjudication.
 #
 # 07_R1.8_NFkB_Specificity/outputs/nfkb_per_celltype.csv and
 # 08_R2.1_PreTx_Inflammatory/outputs/nfkb_pre_vs_post.csv still exist and are
@@ -280,15 +335,88 @@ check("MoMac pre FDR q", pre_n.loc[pre_n["cell_type"] == "MoMac", "fdr_q"].iloc[
 check("Epithelial post NES", _post("Epithelial", "nes"), 1.90, tol=0.01)
 # Not a printed number: no sentence quotes the B-cell NES, and what IS printed -
 # "the one population with a negative score" - is checked immediately below. It
-# is kept as a regression anchor on the row that carries that claim. Moved from
-# -0.99 to -1.23 on 2026-09-03, when panel S9E was redrawn from the adopted
-# table: until then it anchored the live table the panel came from, and there is
-# now no such table to anchor to.
+# is kept as a regression anchor on the row that carries that claim. It anchors
+# the adopted table, which is the table panel S9C is drawn from.
 check("B cells post NES", _post("B_cells", "nes"), -1.23, tol=0.01)
 checks += 1
 if int((post_n["nes"] < 0).sum()) != 1:
     failures.append("B cells are claimed to be the only population with a "
                     "negative post-treatment NES, but another one is negative")
+
+
+# ------------------------------------------------- what panel S9C actually draws
+# The check the comment above used to stand in for. Each bar of S9C carries the
+# cell type on the axis and "q=<FDR>  #<rank>/<n_sets>" annotated beside it, so
+# the drawn panel states the same four quantities per row that this file checks
+# against the adopted table. They are read back off the shipped SVG - matplotlib
+# writes real <text> elements under svg.fonttype='none' - and compared row by
+# row, in the order the panel draws them.
+#
+# The label map is read out of the analysis module rather than copied, so the
+# two cannot drift apart; importing that module would run scanpy and create
+# directories, so its LABELS literal is parsed instead.
+S9C_SVG = (REVISED_PANELS / "Supplementary_New" / "S9_MoMac_Identity_NFkB"
+           / "S9_C" / "S9_C_nfkb_per_celltype.svg")
+S9C_ANALYSIS = (NEW_ANALYSES / "07_R1.8_NFkB_Specificity" / "scripts"
+                / "nfkb_specificity.py")
+S9C_ANNOT = re.compile(r"q=(\d+\.\d\d)\s+#(\d+)/(\d+)")
+S9C_TEXT = re.compile(r">([^<>]*)</text>")
+
+
+def _s9c_labels():
+    """The LABELS dict of the analysis module, without importing it."""
+    import ast as _ast
+    tree = _ast.parse(S9C_ANALYSIS.read_text(encoding="utf-8"))
+    for node in tree.body:
+        if (isinstance(node, _ast.Assign) and len(node.targets) == 1
+                and getattr(node.targets[0], "id", None) == "LABELS"):
+            return _ast.literal_eval(node.value)
+    return None
+
+
+if not S9C_SVG.exists():
+    skipped.append(f"the S9C panel comparison: {S9C_SVG.name} is not part of "
+                   f"this layout")
+elif not S9C_ANALYSIS.exists():
+    skipped.append(f"the S9C panel comparison: {S9C_ANALYSIS.name} is not part "
+                   f"of this layout")
+else:
+    _s9c_label_map = _s9c_labels()
+    if _s9c_label_map is None:
+        failures.append("S9C panel comparison: nfkb_specificity.py no longer "
+                        "defines LABELS at module level, so the panel's axis "
+                        "labels cannot be resolved - fix the reader, do not "
+                        "drop the check")
+    else:
+        _s9c_strings = [s.strip() for s in
+                    S9C_TEXT.findall(S9C_SVG.read_text(encoding="utf-8"))]
+        _s9c_drawn_labels = [s for s in _s9c_strings if s in set(_s9c_label_map.values())]
+        _s9c_drawn_annots = [(m.group(1), int(m.group(2)), int(m.group(3)))
+                         for s in _s9c_strings for m in [S9C_ANNOT.fullmatch(s)]
+                         if m]
+        _s9c_sorted = post_n.sort_values("nes")
+        _s9c_expect = [(_s9c_label_map[r["cell_type"]], f"{r['fdr_q']:.2f}",
+                    int(r["rank"]), int(r["n_sets"]))
+                   for _, r in _s9c_sorted.iterrows()]
+        checks += 1
+        if len(_s9c_drawn_labels) != len(_s9c_expect) or len(_s9c_drawn_annots) != len(_s9c_expect):
+            # A silent zero here would be the same failure in a new place: the
+            # check has to say it read nothing rather than pass on nothing.
+            failures.append(
+                f"S9C panel comparison read {len(_s9c_drawn_labels)} axis labels "
+                f"and {len(_s9c_drawn_annots)} annotations off "
+                f"{S9C_SVG.name}, but the adopted table has {len(_s9c_expect)} "
+                f"rows - the panel cannot be compared to the text")
+        else:
+            _s9c_drawn = [(l,) + a for l, a in zip(_s9c_drawn_labels, _s9c_drawn_annots)]
+            for _s9c_e, _s9c_g in zip(_s9c_expect, _s9c_drawn):
+                checks += 1
+                if _s9c_e != _s9c_g:
+                    failures.append(
+                        f"S9C prints {_s9c_g[0]} as q={_s9c_g[1]} #{_s9c_g[2]}/{_s9c_g[3]}, but "
+                        f"the adopted table gives {_s9c_e[0]} q={_s9c_e[1]} "
+                        f"#{_s9c_e[2]}/{_s9c_e[3]} - the panel and the text have "
+                        f"diverged")
 
 # claims C03, C04, C05. The manuscript now says the set is among the three
 # highest-ranked Hallmark sets in seven populations, ranks in the lower third in
@@ -373,12 +501,12 @@ if any(v < 0.05 for v in post_ps):
 # The letter's para-98 sentence quotes the same four numbers as the Results, so
 # it is checked against the same adopted table (claims C08, C10, C11, C40).
 # 08_R2.1_PreTx_Inflammatory/outputs/nfkb_pre_vs_post.csv is a projection of the
-# live run and is what panel S10C is drawn from; it is left alone and no longer
-# guards a printed number. See the note at the head of the NF-kB block.
+# live run; it is left alone and no longer guards a printed number. See the note
+# at the head of the NF-kB block.
 _pre_i = pre_n.set_index("cell_type")
 _post_i = post_n.set_index("cell_type")
-check("MoMac pre NES (S10C sentence)", _pre_i.loc["MoMac", "nes"], -1.00, tol=0.01)
-check("MoMac post NES (S10C sentence)", _post_i.loc["MoMac", "nes"], 2.23, tol=0.01)
+check("MoMac pre NES (Table S10 sentence)", _pre_i.loc["MoMac", "nes"], -1.00, tol=0.01)
+check("MoMac post NES (Table S10 sentence)", _post_i.loc["MoMac", "nes"], 2.23, tol=0.01)
 checks += 1
 # The manuscript calls monocytes/macrophages the strongest population after
 # treatment.
@@ -389,6 +517,44 @@ checks += 1
 if int((_pre_i["nes"] > 0).sum()) != 5 or int((_post_i["nes"] > 0).sum()) != 12:
     failures.append("the letter's para-98 sentence no longer holds: it says 5 of "
                     "13 populations positive before treatment and 12 of 13 after")
+
+# ------------------------------------------------- Table S10 (pseudobulk, R1.8)
+# The per-cell analysis is primary and the sample-level pseudobulk analysis
+# ships as Supplementary Table 10,
+# written by 04_Tables/build_tables.py from
+# 15_Pseudobulk_Sample_Level/outputs/nfkb_comparison.csv. The Results cite it
+# for "between six and nine" (both pseudobulk methods give 8 at q < 0.05 after
+# treatment), for "five to nine positive" (the nine is DESeq2 before treatment)
+# and for the MoMac pre-treatment hedge (DESeq2 q = 0.031). The table is read
+# where it ships, so a stale ST10 fails here even if the module output moved.
+# 04_Tables/ sits beside this file in both layouts (04_Manuscript_R1/ here,
+# 05_Manuscript/ in the release), and the release's paths.py has no constant
+# for it, so the directory is taken relative to this file.
+ST10 = Path(__file__).resolve().parent / "04_Tables" / "ST10_nfkb_pseudobulk_sensitivity.csv"
+if not ST10.exists():
+    skipped.append(f"the Table S10 checks: {ST10} is not part of this layout")
+else:
+    st10 = pd.read_csv(ST10)
+    pb_post = st10[st10["Timepoint"] == "Post-treatment"]
+    pb_pre = st10[st10["Timepoint"] == "Pre-treatment"].set_index("Cell type")
+    check_eq("Table S10 rows (13 cell types x 2 timepoints)", len(st10), 26)
+    check_eq("Table S10 limma-voom post NES > 0 and FDR q < 0.05",
+             int(((pb_post["limma-voom NES"] > 0)
+                  & (pb_post["limma-voom FDR q"] < 0.05)).sum()), 8)
+    check_eq("Table S10 DESeq2 post NES > 0 and FDR q < 0.05",
+             int(((pb_post["DESeq2 NES"] > 0)
+                  & (pb_post["DESeq2 FDR q"] < 0.05)).sum()), 8)
+    check_eq("Table S10 limma-voom pre positive (within five to nine)",
+             int((pb_pre["limma-voom NES"] > 0).sum()), 8)
+    check_eq("Table S10 DESeq2 pre positive (the nine of five to nine)",
+             int((pb_pre["DESeq2 NES"] > 0).sum()), 9)
+    check("Table S10 DESeq2 MoMac pre FDR q (the hedge)",
+          pb_pre.loc["MoMac", "DESeq2 FDR q"], 0.031, tol=0.0005)
+    # The per-cell columns must be the adopted table's, or the table would put
+    # two different "primary" values in front of the reader.
+    check("Table S10 per-cell MoMac pre NES equals the adopted table",
+          pb_pre.loc["MoMac", "Per-cell NES (primary analysis; Fig. S9C)"],
+          -1.00, tol=0.01)
 
 # ------------------------------------------------------------- adaptive (R2.2)
 ad_tests = pd.read_csv(out("09_R2.2_Adaptive_Immune", "adaptive_state_tests.csv"))
@@ -447,10 +613,10 @@ check("architecture-adjusted beta, immune",
 check("architecture-adjusted beta, stroma",
       arch.loc["Distance to stroma", "ceacam_coef"], 0.34, tol=0.02)
 
-tig = pd.read_csv(out("05_R1.6_Spatial_Confounders",
-                      "tiger_estimate_harmonised.csv")).set_index("outcome")
-check("TIGER harmonised rho", tig.loc["ImmuneScore", "spearman_rho"], -0.24, tol=0.01)
-check("TIGER harmonised P", tig.loc["ImmuneScore", "spearman_p"], 0.12, tol=0.01)
+# The PRJEB25780 harmonised ESTIMATE regression (rho = -0.24, P = 0.12) is no
+# longer in the Results; tiger_estimate_harmonised.csv is still written but no
+# longer quoted, so there is nothing in the manuscript for it to be checked
+# against.
 
 # --------------------------------------------------- CellTypist annotation (R1.7)
 ct = pd.read_csv(out("06_R1.7_MoMac_Lineage_Markers", "celltypist_labels.csv"))
@@ -535,9 +701,7 @@ for marker, expected in (("Summed", 0.88), ("CEACAM5", 0.86), ("CEACAM6", 0.62))
 # epithelial cells". Both came from the damaged .X of Epithelial.h5ad: 49,696 is
 # the number of rows of that matrix that are not NaN, out of 106,653. The Results
 # now give all three levels of aggregation, read from .raw.
-LEVELS = (Path(__file__).resolve().parents[1] / "03_Final_Panels"
-          / "02_Figure_2" / "02_D"
-          / "ceacam_correlation_levels.csv")
+LEVELS = MAIN_FIGURES / "02_Figure_2" / "02_D" / "ceacam_correlation_levels.csv"
 checks += 1
 if not LEVELS.exists():
     failures.append(f"{LEVELS.name} is missing; run "
@@ -553,11 +717,13 @@ else:
     check_eq("Fig. 2D samples", int(lv.loc["sample", "n"]), 20)
 
 # ------------------------------------------------- reference list integrity
-# Reference 53 (MAST) was removed this round and 54-58 shifted down, so nine
-# in-text citations changed number. A gap, a dangling citation or an uncited
-# entry would all survive a proof-read and none would survive copy-editing.
-CLEAN_DOCX = (Path(__file__).resolve().parent / "01_Main_Text"
-              / "Manuscript_R1_clean.docx")
+# Reference 53 (MAST) is removed in this revision and 54-58 shift down; five
+# citation groups are then consolidated (1-4 -> 3,4; 27-29 -> 29; 40-42 -> 42;
+# 44-46 -> 44; 38,39 dropped), taking the list from 61 to 51 and renumbering
+# every in-text citation, and Voronov & Apte (then 31) is dropped as well, so
+# the list runs 1-50. A gap, a dangling citation or an uncited entry would all
+# survive a proof-read and none would survive copy-editing.
+CLEAN_DOCX = CLEAN_MANUSCRIPT_DOCX
 checks += 1
 if not CLEAN_DOCX.exists():
     failures.append("Manuscript_R1_clean.docx is missing; run apply_edits.py")
@@ -594,7 +760,45 @@ else:
         checks += 1
         if bad:
             failures.append(f"{label}: {bad}")
-    check_eq("reference list length", top, 61)
+    check_eq("reference list length", top, 50)
+
+    # --------------------------------- numbering follows order of first mention
+    # AACR: "Number the references in the order of their first mention in the
+    # text." The revision moves Methods in front of Results, which changes that
+    # order, so the list is renumbered to match.
+    # A citation group is a parenthesis holding nothing but digits, commas,
+    # semicolons, spaces and dashes, so "n = 20", "P = 0.05", "Fig. 5",
+    # "(v1.0.13)" and "13 cell types" cannot match one. `paras[:start]` is
+    # everything before the References heading, which is the whole body: the
+    # figure and table legends sit after the list and carry no citation.
+    GROUP = re.compile(r"\(([\d,;\s\u2013\u2014 -]+)\)")
+    first_mention, seen = [], set()
+    for q in paras[:start]:
+        for m in GROUP.finditer(q):
+            for part in re.split(r"[,;]", m.group(1)):
+                part = part.strip()
+                rng = re.fullmatch(r"(\d+)\s*[\u2013\u2014-]\s*(\d+)", part)
+                if rng and int(rng.group(1)) < int(rng.group(2)) <= 200:
+                    nums = range(int(rng.group(1)), int(rng.group(2)) + 1)
+                elif part.isdigit():
+                    nums = [int(part)]
+                else:
+                    continue
+                for n in nums:
+                    if n in listed and n not in seen:
+                        seen.add(n)
+                        first_mention.append(n)
+    checks += 1
+    if first_mention != sorted(listed):
+        descents = [f"{a} then {b}" for a, b in
+                    zip(first_mention, first_mention[1:]) if b < a]
+        failures.append(
+            "references are not numbered in order of first mention: the body "
+            f"first cites {first_mention[:14]}... "
+            + (f"({len(descents)} descents, e.g. {descents[:4]})"
+               if descents else
+               f"({len(first_mention)} of {len(listed)} entries reached)"))
+
     checks += 1
     if "MAST" in " ".join(paras):
         failures.append("MAST still appears in the manuscript; it was removed "
@@ -605,29 +809,50 @@ else:
 # which was shipped. The chain is fixed at apply_consistency_fixes.py ->
 # ..._v3.docx -> build_clean_response.py -> ..._v3_clean.docx; anything else in
 # that directory that looks like a response letter is a second source of truth.
-LETTER_DIR = Path(__file__).resolve().parent / "05_Response_to_Reviewers"
+LETTER_DIR = RESPONSE_DIR
 ALLOWED_LETTERS = {"Response_to_Reviewers_CIR260753ET_v3.docx",
                    "Response_to_Reviewers_CIR260753ET_v3_clean.docx"}
-checks += 1
-stray = sorted(f.name for f in LETTER_DIR.glob("*.docx")
-               if f.name not in ALLOWED_LETTERS)
-if stray:
-    failures.append(
-        "a second response letter is live beside the shipped one: "
-        f"{', '.join(stray)}. Move it to 99_Superseded/ - the letter has one "
-        "editing entry point, apply_consistency_fixes.py")
-checks += 1
-stray_py = sorted(f.name for f in LETTER_DIR.glob("*.py")
-                  if f.name not in {"apply_consistency_fixes.py",
-                                    "build_clean_response.py"})
-if stray_py:
-    failures.append(
-        f"unexpected script(s) in {LETTER_DIR.name}: {', '.join(stray_py)}. "
-        "Only apply_consistency_fixes.py and build_clean_response.py build the "
-        "shipped letter")
+# These two guards police the working tree's editing pipeline. The release ships
+# one clean letter and none of the scripts that build it, so LETTER_DIR has no
+# deposited counterpart. Letting them run anyway is worse than skipping them:
+# `checks += 1` and then a glob over a directory that does not exist returns
+# empty, so both REPORT AS CHECKED having read nothing, and the deposit's claim
+# count covers them. They are skipped by name instead, and the skip is printed,
+# so the count never covers a check that could not have failed.
+# These two guards police the working tree's editing pipeline. The release ships
+# one clean letter and none of the scripts that build it, so LETTER_DIR has no
+# deposited counterpart. Letting them run anyway is worse than skipping them:
+# `checks += 1` and then a glob over a directory that does not exist returns
+# empty, so both REPORT AS CHECKED having read nothing, and the deposit's claim
+# count covers them. They are skipped by name instead, and the skip is printed,
+# so the count never covers a check that could not have failed.
+if not LETTER_DIR.is_dir():
+    skipped.append(
+        f"the two response-letter guards: {LETTER_DIR} is not part of this "
+        f"layout, so they are not applicable here")
+else:
+    checks += 1
+    stray = sorted(f.name for f in LETTER_DIR.glob("*.docx")
+                   if f.name not in ALLOWED_LETTERS)
+    if stray:
+        failures.append(
+            "a second response letter is live beside the shipped one: "
+            f"{', '.join(stray)}. Move it to 99_Superseded/ - the letter has one "
+            "editing entry point, apply_consistency_fixes.py")
+    checks += 1
+    stray_py = sorted(f.name for f in LETTER_DIR.glob("*.py")
+                      if f.name not in {"apply_consistency_fixes.py",
+                                        "build_clean_response.py"})
+    if stray_py:
+        failures.append(
+            f"unexpected script(s) in {LETTER_DIR.name}: {', '.join(stray_py)}. "
+            "Only apply_consistency_fixes.py and build_clean_response.py build the "
+            "shipped letter")
 
 # ------------------------------------------------------------------- report
 print(f"Checked {checks} claims against the analysis outputs.")
+for s in skipped:
+    print(f"  not applicable here - {s}")
 if failures:
     print(f"\n{len(failures)} FAILED:\n")
     for f in failures:

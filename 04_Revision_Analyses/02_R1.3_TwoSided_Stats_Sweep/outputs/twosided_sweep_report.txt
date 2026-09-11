@@ -4,35 +4,35 @@ TWO-SIDED STATISTICS SWEEP - Reviewer 1 point R1.3c
 [CEACAM]
   CEACAM6 expression, pre-treatment epithelium   (Fig 2 (N1), Mann-Whitney U)
      NR n=4 mean=1.11   R n=4 mean=0.3503
-     P one-tailed = 0.02857   P two-tailed = 0.05714   BH within family = 0.1034
+     P one-tailed = 0.02857   P two-tailed = 0.05714   BH within family = 0.0945
      smallest two-sided P attainable at n=4 vs 4 = 0.02857   <-- AT THE RESOLUTION LIMIT OF THE TEST
      rank-biserial r = 0.875   diff of means = 0.7595 [95% CI 0.1796, 1.365]
      -> Weakened: not significant two-sided, but CI excludes zero
 
   CEACAM5 expression, pre-treatment epithelium   (Fig 2 (N2), Mann-Whitney U)
      NR n=4 mean=1.141   R n=4 mean=0.3664
-     P one-tailed = 0.05714   P two-tailed = 0.1143   BH within family = 0.16
+     P one-tailed = 0.05714   P two-tailed = 0.1143   BH within family = 0.1524
      smallest two-sided P attainable at n=4 vs 4 = 0.02857
      rank-biserial r = 0.750   diff of means = 0.7741 [95% CI 0.2479, 1.235]
      -> Not significant either way
 
   CEACAM6 expression, PRJEB25780 deconvolved epithelium   (Fig 2 (O1), Mann-Whitney U)
      NR n=33 mean=4.661   R n=12 mean=2.976
-     P one-tailed = 0.02791   P two-tailed = 0.05583   BH within family = 0.1034
+     P one-tailed = 0.02791   P two-tailed = 0.05583   BH within family = 0.0945
      smallest two-sided P attainable at n=33 vs 12 = 6.954e-11
      rank-biserial r = 0.379   diff of means = 1.684 [95% CI 0.1673, 3.156]
      -> Weakened: not significant two-sided, but CI excludes zero
 
   CEACAM5 expression, PRJEB25780 deconvolved epithelium   (Fig 2 (O2), Mann-Whitney U)
      NR n=33 mean=5.139   R n=12 mean=3.283
-     P one-tailed = 0.02953   P two-tailed = 0.05906   BH within family = 0.1034
+     P one-tailed = 0.02953   P two-tailed = 0.05906   BH within family = 0.0945
      smallest two-sided P attainable at n=33 vs 12 = 6.954e-11
      rank-biserial r = 0.374   diff of means = 1.856 [95% CI 0.101, 3.61]
      -> Weakened: not significant two-sided, but CI excludes zero
 
   IHC staining, CEACAM5 + CEACAM6 summed   (Fig 2 (Q), Mann-Whitney U)
      NR n=4 mean=83.16   R n=4 mean=55.3
-     P one-tailed = 0.02857   P two-tailed = 0.05714   BH within family = 0.1034
+     P one-tailed = 0.02857   P two-tailed = 0.05714   BH within family = 0.0945
      smallest two-sided P attainable at n=4 vs 4 = 0.02857   <-- AT THE RESOLUTION LIMIT OF THE TEST
      rank-biserial r = 0.875   diff of means = 27.86 [95% CI 10.91, 42.12]
      -> Weakened: not significant two-sided, but CI excludes zero
@@ -50,6 +50,13 @@ TWO-SIDED STATISTICS SWEEP - Reviewer 1 point R1.3c
      smallest two-sided P attainable at n=4 vs 4 = 0.02857
      rank-biserial r = 0.625   diff of means = 7.532 [95% CI -4.863, 19.24]
      -> Not significant either way
+
+  CEACAM5/6+ proportion, tumor-content adjusted (Fig. S2D)   (Fig S2 (D), Mann-Whitney U)
+     NR n=4 mean=3.617   R n=4 mean=-3.617
+     P one-tailed = 0.02857   P two-tailed = 0.05714   BH within family = 0.0945
+     smallest two-sided P attainable at n=4 vs 4 = 0.02857   <-- AT THE RESOLUTION LIMIT OF THE TEST
+     rank-biserial r = 0.875   diff of means = 7.233 [95% CI 2.314, 12.09]
+     -> Weakened: not significant two-sided, but CI excludes zero
 
 
 [Cytokine]
@@ -131,30 +138,30 @@ TWO-SIDED STATISTICS SWEEP - Reviewer 1 point R1.3c
      matched-pairs rank-biserial r = 0.855   diff of means = 0.1765 [95% CI 0.06538, 0.2804]
      -> Robust: significant two-sided
 
-  Distance to stroma, CEACAM-high vs CEACAM-low spots   (Fig 3 (I), Wilcoxon signed-rank (paired))
-     CEACAM-high n=10 mean=1101   CEACAM-low n=10 mean=729.9
+  Distance to stroma (µm), CEACAM-high vs CEACAM-low spots   (Fig 3 (I), Wilcoxon signed-rank (paired))
+     CEACAM-high n=10 mean=316.3   CEACAM-low n=10 mean=209.7
      P one-tailed = 0.04199   P two-tailed = 0.08398   BH within family = 0.08398
      smallest two-sided P attainable at n=10 vs 10 = 0.001953
-     matched-pairs rank-biserial r = 0.636   diff of means = 370.8 [95% CI 27.52, 664.2]
+     matched-pairs rank-biserial r = 0.636   diff of means = 106.5 [95% CI 7.908, 190.8]
      -> Weakened: not significant two-sided, but CI excludes zero
 
-  Distance to immune-rich regions, CEACAM-high vs CEACAM-low spots   (Fig 3 (J), Wilcoxon signed-rank (paired))
-     CEACAM-high n=10 mean=572.2   CEACAM-low n=10 mean=393.1
+  Distance to immune-rich regions (µm), CEACAM-high vs CEACAM-low spots   (Fig 3 (J), Wilcoxon signed-rank (paired))
+     CEACAM-high n=10 mean=164.4   CEACAM-low n=10 mean=112.9
      P one-tailed = 0.03223   P two-tailed = 0.06445   BH within family = 0.08398
      smallest two-sided P attainable at n=10 vs 10 = 0.001953
-     matched-pairs rank-biserial r = 0.673   diff of means = 179.1 [95% CI 18.77, 314.1]
+     matched-pairs rank-biserial r = 0.673   diff of means = 51.47 [95% CI 5.394, 90.27]
      -> Weakened: not significant two-sided, but CI excludes zero
 
 
 SUMMARY
 ----------------------------------------------------------------------------------------------------
-  Comparisons rerun                              : 19
-  Significant one-tailed (as published)          : 15
+  Comparisons rerun                              : 20
+  Significant one-tailed (as published)          : 16
   Still significant two-sided                    : 5
   Still significant after BH within family       : 4
-  Bootstrap 95% CI excludes zero                 : 18
-  At the resolution limit of the exact null      : 2
+  Bootstrap 95% CI excludes zero                 : 19
+  At the resolution limit of the exact null      : 3
 
-    Weakened: not significant two-sided, but CI excludes zero: 10
+    Weakened: not significant two-sided, but CI excludes zero: 11
     Robust: significant two-sided: 5
     Not significant either way: 4

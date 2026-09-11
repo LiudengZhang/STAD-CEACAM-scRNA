@@ -25,7 +25,7 @@ from gsea_common import ROOT, OUT
 
 NF = ROOT / "04_Revision_Analyses/07_R1.8_NFkB_Specificity/outputs/nfkb_per_celltype.csv"
 PP = ROOT / "04_Revision_Analyses/08_R2.1_PreTx_Inflammatory/outputs/nfkb_pre_vs_post.csv"
-MOMAC_A = (ROOT.parent / "Round_5" / "02_Preparation_for_Panels" / "GSEA"
+MOMAC_A = (ROOT.parent / "submission-tree" / "02_Preparation_for_Panels" / "GSEA"
            / "MoMac_mast_prerank_gsea.csv")
 G5 = (ROOT / "03_Final_Panels/05_Figure_5/05_GSEA_Summary/"
       "gsea_data/gsea_combined_5types.csv")
@@ -230,7 +230,7 @@ add(claim_id="M21", where_printed="main text, Methods (clean.docx para 120)",
                   "Hallmark 2020 gene sets (min_size = 5, max_size = 500; 1,000 "
                   "permutations; seed = 42)",
     cell_type="all 13", contrast="pre and post", DE_set_it_is_counted_over=LIVE,
-    source_table_path="04_Revision_Analyses/12_R1.8_DEG_Recompute/scripts/recompute_deg.py:351",
+    source_table_path="04_Revision_Analyses/12_R1.8_DEG_Recompute/work/recompute_deg.py:351",
     source_column="gp.prerank(..., min_size=15, max_size=500, seed=42)",
     quoted_value="min_size = 5", value_in_source="min_size = 15",
     checked_by_verify_numbers="NOT CHECKED - verify_numbers.py checks values, not "
@@ -243,7 +243,7 @@ add(claim_id="M22", where_printed="main text, Figure 5 legend",
     claim_type="panel description",
     verbatim_text="(A) Top 9 Hallmark pathways enriched in Monocytes/Macrophages",
     cell_type="MoMac", contrast="post",
-    DE_set_it_is_counted_over="neither - MAST prerank, Round_5 GSEA/MoMac_mast_prerank_gsea.csv",
+    DE_set_it_is_counted_over="neither - MAST prerank, submission-tree GSEA/MoMac_mast_prerank_gsea.csv",
     source_table_path=rel(MOMAC_A), source_column="NES",
     quoted_value="9 bars", value_in_source="35 sets in the table, top 9 by |NES| plotted",
     checked_by_verify_numbers="NOT CHECKED")
@@ -337,15 +337,15 @@ add(claim_id="F01", where_printed="figure panel, Figure 5A (printed letter A; "
     verbatim_text="nine horizontal bars, NES; TNF-alpha Signaling via NF-kB +2.140 "
                   "the largest positive",
     cell_type="MoMac", contrast="post",
-    DE_set_it_is_counted_over="neither - MAST prerank on the Round_5 preparation",
+    DE_set_it_is_counted_over="neither - MAST prerank on the submission-tree preparation",
     source_table_path=rel(MOMAC_A), source_column="NES",
     quoted_value="+2.140, +1.860, +1.750, +1.748; -1.488, -1.803, -1.875, -2.223, -2.450",
     value_in_source="reproduces the printed panel to 0.0001 NES "
-                    "(create_panel_a_momac_enrichment.py docstring, 2026-09-01)",
+                    "(create_panel_a_momac_enrichment.py docstring)",
     checked_by_verify_numbers="NOT CHECKED by verify_numbers.py; checked by "
                               "PROVENANCE.csv reproduces_published=yes",
     note="This panel's NES scale is NOT the same analysis as Fig 5H / S9E: TNFa is "
-         "+2.140 here (MAST prerank, Round_5) and +2.233 there (t-test, module 12).")
+         "+2.140 here (MAST prerank, submission-tree) and +2.233 there (t-test, module 12).")
 
 add(claim_id="F02", where_printed="figure panel, Figure 5H (printed letter H; "
                                   "PROVENANCE build dir 05_F)",

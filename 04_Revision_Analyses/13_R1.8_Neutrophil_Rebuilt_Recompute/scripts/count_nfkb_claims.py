@@ -12,8 +12,20 @@ disagreement here would be a disagreement with the shipped analysis.
 Nothing is written outside the directory given with --out, and no panel is
 drawn.
 
+Run with no arguments it counts the three Hallmark directories the shipped
+tables were counted over, and writes them where the shipped tables sit:
+
+    live     12_R1.8_DEG_Recompute/outputs/gsea          full_dataset.h5ad
+    sound12  the archived sound-input recompute          twelve populations
+    sound13  outputs/gsea_13types                        + rebuilt neutrophils
+
+which reproduces outputs/counted_claims.csv and the three
+outputs/nfkb_per_celltype_<label>.csv. claims.csv rows C061-C096 are checked
+against nfkb_per_celltype_sound13.csv, so this is a reproduction step and not a
+session tool. --gsea overrides the set.
+
 Run:
-    python count_nfkb_claims.py --gsea <dir> [--gsea <dir> ...] [--out DIR]
+    python count_nfkb_claims.py [--gsea LABEL=DIR ...] [--out DIR]
 """
 
 from pathlib import Path
@@ -23,12 +35,26 @@ import sys
 import pandas as pd
 
 HERE = Path(__file__).resolve().parent
+MOD = HERE.parent
 NFKB = HERE.parents[1] / "07_R1.8_NFkB_Specificity" / "scripts"
 sys.path.insert(0, str(NFKB))
+sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
 
 import nfkb_specificity as nf                                    # noqa: E402
+from paths import SOUND_GSEA_DIR                                 # noqa: E402
 
 PRIMARY = nf.PRIMARY
+
+# The three sets the shipped tables were counted over. sound12 is named through
+# paths.py rather than written out here: the directory it points at sits inside
+# 07_Archive/, and an archive path written as a literal is both unresolvable in
+# the deposit and invisible to the input checks.
+DEFAULT_GSEA = [
+    f"live={HERE.parents[1] / '12_R1.8_DEG_Recompute' / 'outputs' / 'gsea'}",
+    f"sound12={SOUND_GSEA_DIR}",
+    f"sound13={MOD / 'outputs' / 'gsea_13types'}",
+]
+DEFAULT_OUT = MOD / "outputs"
 
 
 def claims(g, label):
@@ -69,13 +95,17 @@ def claims(g, label):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--gsea", action="append", required=True,
+    ap.add_argument("--gsea", action="append", default=None,
                     metavar="LABEL=DIR")
     ap.add_argument("--out", default=None)
     args = ap.parse_args()
 
+    specs = args.gsea or DEFAULT_GSEA
+    out_dir = args.out if args.out is not None else (
+        None if args.gsea else str(DEFAULT_OUT))
+
     rows, tables = [], {}
-    for spec in args.gsea:
+    for spec in specs:
         label, d = spec.split("=", 1)
         nf.RECOMPUTE_GSEA = Path(d)
         g = nf.load_gsea()
@@ -92,8 +122,8 @@ def main():
                       f"{r['fdr_q']:>10.4f}{r['rank']:>6} / {r['n_sets']}")
     df = pd.DataFrame(rows)
     print("\n" + df.to_string(index=False))
-    if args.out:
-        o = Path(args.out)
+    if out_dir:
+        o = Path(out_dir)
         o.mkdir(parents=True, exist_ok=True)
         df.to_csv(o / "counted_claims.csv", index=False)
         for label, g in tables.items():

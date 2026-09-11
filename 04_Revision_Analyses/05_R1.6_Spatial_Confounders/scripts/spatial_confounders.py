@@ -22,7 +22,7 @@ spatial cohort is independent of the ICB-treated patients. The claim in the
 manuscript is therefore reduced from immune exclusion being driven by CEACAM to
 CEACAM-high regions co-localising with an immune-excluded architecture.
 
-Input : Round_5/02_Preparation_for_Panels/Spatial/CEACAM_Deconvolution/spot_data.csv
+Input : submission-tree/02_Preparation_for_Panels/Spatial/CEACAM_Deconvolution/spot_data.csv
 Output: spatial_adjusted_models.csv, spatial_stratified.csv,
         spatial_confounders_report.txt, panels S9_A and S9_B
 """
@@ -37,13 +37,13 @@ import pandas as pd
 import statsmodels.formula.api as smf
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
-from paths import SPATIAL_SPOT_DATA, REVISED_PANELS  # noqa: E402
+from paths import ANALYSIS_PANELS, SPATIAL_SPOT_DATA  # noqa: E402
 
 warnings.filterwarnings("ignore")
 
 OUT = Path(__file__).resolve().parents[1] / "outputs"
 OUT.mkdir(parents=True, exist_ok=True)
-S9 = REVISED_PANELS / "Supplementary_New" / "S9_Mechanism_Specificity"
+S9 = ANALYSIS_PANELS / "S9_Mechanism_Specificity"
 
 SCALE, CM, DPI = 4, 1 / 2.54, 300
 OUTCOMES = {

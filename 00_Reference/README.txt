@@ -14,13 +14,13 @@ been used. Pinning removes that.
 What this file is NOT the explanation for
 -----------------------------------------
 It was first pinned on the belief that Enrichr had updated the library between
-two runs. That belief was wrong and is withdrawn. This file was checked against
-the live library on the day it was written and the two are content-identical,
-set for set and gene for gene.
+two runs. That is not what happened. This file was checked against the live
+library on the day it was written and the two are content-identical, set for set
+and gene for gene.
 
 The difference that prompted the investigation - the pre-treatment B cells
-TNFa/NF-kB score reading NES 1.183727 on 2026-08-28 and 1.173631 on 2026-08-29
-from the same differential-expression table - is Monte Carlo error in the NES
+TNFa/NF-kB score reading NES 1.183727 on one run and 1.173631 on the next from
+the same differential-expression table - is Monte Carlo error in the NES
 normalisation, not a change of gene sets. See 00_Data_Audit/FINDINGS.md,
 section 10.2, for the evidence.
 

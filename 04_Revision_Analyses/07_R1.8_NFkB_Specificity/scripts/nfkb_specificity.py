@@ -25,16 +25,16 @@ this cohort and none is generated here; that limitation is stated in the
 manuscript rather than worked around.
 
 Inputs : 12_R1.8_DEG_Recompute/outputs/gsea/*_{pre,post}_{ttest,mast}_hallmark.csv
-         Round_5/01_Raw_Inputs/01_H5AD/Epithelial.h5ad, MoMac.h5ad
+         submission-tree/01_Raw_Inputs/01_H5AD/Epithelial.h5ad, MoMac.h5ad
          13_R1.8_Neutrophil_Rebuilt_Recompute/outputs/nfkb_per_celltype_sound13.csv
-             - PANEL S9_E ONLY, since 2026-09-03. See ADOPTED_GSEA below.
+             - PANEL S9_E ONLY. See ADOPTED_GSEA below.
 Outputs: nfkb_per_celltype.csv, hallmark_specificity.csv,
          epithelial_cytokines.csv, nfkb_specificity_report.txt,
          panels S9_E, S9_F (the regulon panel is S11_C)
 
-The tables this module writes are the live run and are unchanged. Panel S9_E is
-drawn from the adopted sound-input table instead, under the author's ruling of
-2026-09-03. The two disagree in six quantities, listed at ADOPTED_GSEA.
+The tables this module writes are the live run. Panel S9_E is drawn instead
+from the adopted sound-input table, so that the figure and the Results text rest
+on the same matrix. The two disagree in six quantities, listed at ADOPTED_GSEA.
 """
 
 from pathlib import Path
@@ -48,28 +48,28 @@ import scanpy as sc
 from scipy import stats
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
-from paths import EPITHELIAL_H5AD, MOMAC_H5AD, REVISED_PANELS  # noqa: E402
+from paths import ANALYSIS_PANELS, EPITHELIAL_H5AD, MOMAC_H5AD  # noqa: E402
 
 RECOMPUTE_GSEA = (Path(__file__).resolve().parents[2]
                   / "12_R1.8_DEG_Recompute" / "outputs" / "gsea")
 
 # ---------------------------------------------------------------- the adopted table
-# Author's ruling, 2026-09-03. Panel S9E is drawn from the SOUND-INPUT recompute,
-# not from this module's own nfkb_per_celltype.csv.
+# Panel S9E is drawn from the SOUND-INPUT recompute, not from this module's own
+# nfkb_per_celltype.csv.
 #
 # Why the two are different files and why both are kept. RECOMPUTE_GSEA above is
 # the "live" run: module 12, computed on the doubly-normalised .X described in
-# 00_Data_Audit/FINDINGS.md sections 1 and 7. On 2026-09-03 the author adopted
-# the sound-input recompute for every NF-kB number in the Results and the
-# response letter, and then ruled that this panel be redrawn to match, so that a
-# reader is not shown a figure from the damaged matrix beside text from the sound
-# one.
+# 00_Data_Audit/FINDINGS.md sections 1 and 7. Every NF-kB number in the Results
+# and in the response letter comes from the sound-input recompute instead, so
+# this panel is drawn from that same table: a reader must not be shown a figure
+# built on the damaged matrix beside text built on the sound one.
 #
-# The ANALYSIS below is untouched: load_gsea() still reads RECOMPUTE_GSEA and
+# The ANALYSIS below is untouched: load_gsea() still reads RECOMPUTE_GSEA, and
 # nfkb_per_celltype.csv, hallmark_specificity.csv, nfkb_method_concordance.csv
 # and the report are still the live run, byte for byte. Only the table the PANEL
-# is drawn from has moved. That keeps one name for one set of contents - the
-# failure this project already has once, in nfkb_rankings_13types_mast.csv.
+# is drawn from is different. Two sets of contents therefore keep two names -
+# the alternative is nfkb_rankings_13types_mast.csv, a file whose name and
+# contents came apart.
 #
 # Six quantities change between the two, and only these six:
 #     post FDR q < 0.05 count   4  -> 3     rank-1 count      5  -> 3
@@ -84,7 +84,7 @@ sc.settings.verbosity = 0
 
 OUT = Path(__file__).resolve().parents[1] / "outputs"
 OUT.mkdir(parents=True, exist_ok=True)
-S9 = REVISED_PANELS / "Supplementary_New" / "S9_Mechanism_Specificity"
+S9 = ANALYSIS_PANELS / "S9_Mechanism_Specificity"
 PRIMARY, SENSITIVITY = "ttest", "mast"
 
 SCALE, CM, DPI = 4, 1 / 2.54, 300
@@ -335,9 +335,9 @@ def _panel_nfkb(g):
     nfkb_method_concordance.csv and discussed in the response letter, where the
     reason the two tests diverge can be stated; a bar chart cannot carry that.
 
-    Since 2026-09-03 the frame passed in is the ADOPTED sound-input table, not
-    this module's own live one. Nothing about how the panel is drawn changed -
-    same size, same colours, same annotation, same sort - only the numbers.
+    The frame passed in is the ADOPTED sound-input table, not this module's
+    own live one. Nothing about how the panel is drawn depends on which of the
+    two it is - same size, same colours, same annotation, same sort.
     """
     d = (S9 / "S9_E"); d.mkdir(parents=True, exist_ok=True)
     post = (g[(g["method"] == PRIMARY) & (g["phase"] == "post")]
@@ -416,8 +416,8 @@ if __name__ == "__main__":
         "--redraw-adopted-panel", action="store_true",
         help="redraw panel S9E from the adopted sound table and do nothing "
              "else. The full run recomputes the epithelial cytokine means from "
-             "the h5ads and rewrites five outputs; this draws the one panel the "
-             "2026-09-03 ruling covers and touches no analysis output.")
+             "the h5ads and rewrites five outputs; this draws the one panel "
+             "that reads the adopted table, and touches no analysis output.")
     if ap.parse_args().redraw_adopted_panel:
         _panel_nfkb(load_adopted())
     else:

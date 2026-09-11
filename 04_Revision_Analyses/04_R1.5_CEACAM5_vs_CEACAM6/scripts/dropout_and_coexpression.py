@@ -46,7 +46,7 @@ Everything is on pre-treatment stomach epithelial cells, the population the
 manuscript's CEACAM statements are about, with no response filter: this asks
 whether the genes mark one state, not whether that state predicts response.
 
-Inputs : Round_5/01_Raw_Inputs/01_H5AD/Epithelial.h5ad
+Inputs : submission-tree/01_Raw_Inputs/01_H5AD/Epithelial.h5ad
 Outputs: dropout_depth_strata.csv, coexpression_within_sample.csv,
          metacell_sweep.csv, dropout_coexpression_report.txt
          panel S8_H
@@ -63,12 +63,13 @@ from scipy import stats
 from sklearn.neighbors import NearestNeighbors
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
-from paths import EPITHELIAL_H5AD, REVISED_PANELS  # noqa: E402
+from paths import ANALYSIS_PANELS, EPITHELIAL_H5AD  # noqa: E402
+from shared.expression import expression_source  # noqa: E402
 from shared.sample_ids import sample_id_map, to_study_ids  # noqa: E402
 
 OUT = Path(__file__).resolve().parents[1] / "outputs"
 OUT.mkdir(parents=True, exist_ok=True)
-S8 = REVISED_PANELS / "Supplementary_New" / "S8_CEACAM_Metaprogram"
+S8 = ANALYSIS_PANELS / "S8_CEACAM_Metaprogram"
 
 SCALE, CM, DPI = 4, 1 / 2.54, 300
 SEED = 42
@@ -93,9 +94,11 @@ def load():
     ids = sample_id_map(ad.obs)
     ad = ad[(ad.obs["Sample site"] == "Stomach")
             & (ad.obs["Treatment phase"] == "Pre")].copy()
-    if ad.raw is None:
-        raise SystemExit("Epithelial.h5ad has no .raw - refusing to use .X")
-    src = ad.raw
+    # .raw where the object has one; the promoted .X where it is the deposited
+    # clean h5ad, which has no .raw at all. The bare `if ad.raw is None: raise`
+    # that stood here refused the deposit outright. shared.expression owns the
+    # distinction and refuses anything that is neither.
+    src = expression_source(ad, EPITHELIAL_H5AD.name)
     out = {}
     for g in ("CEACAM5", "CEACAM6"):
         i = list(src.var_names).index(g)

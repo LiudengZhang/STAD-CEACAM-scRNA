@@ -10,6 +10,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[4] / "00_Config"))
 from paths import EPITHELIAL_H5AD
+from shared.expression import expression_adata
 from shared.sample_ids import sample_id_map, to_study_ids
 
 import numpy as np
@@ -28,9 +29,11 @@ def main():
     # scale(max_value=10) clip never fired, and a third of it is NaN, in whole
     # cell rows concentrated on the deepest-sequenced cells. Read the
     # log1p CP10K matrix in .raw, which reproduces the counts deposit to 1e-2.
-    if adata.raw is None:
-        raise SystemExit("Epithelial.h5ad has no .raw - refusing to fall back to .X")
-    adata = adata.raw.to_adata()[adata.obs_names]   # .raw.to_adata() carries obs
+    # .raw where the object has one - every analysis input does - and
+    # the promoted .X where it is the deposited clean h5ad, which has
+    # no .raw at all. Anything that is neither is refused rather than
+    # read. shared.expression is the one owner of that decision.
+    adata = expression_adata(adata, EPITHELIAL_H5AD.name)
     # Specimens are named the way Supplementary Table 1 names them, never by the
     # identifier .obs['sample'] carries. Resolved here, from the whole object,
     # so the crosswalk is checked against every specimen in it.

@@ -14,7 +14,7 @@ except what counts as an observation.
 
 The figure is for the response letter, not for the paper.
 
-Inputs : Round_5/02_Preparation_for_Panels/Spatial/CEACAM_Deconvolution/spot_data.csv
+Inputs : submission-tree/02_Preparation_for_Panels/Spatial/CEACAM_Deconvolution/spot_data.csv
 Outputs: spatial_sample_level.csv, R_stratified_sample_level.[svg|pdf|png]
 """
 

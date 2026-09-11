@@ -1,5 +1,37 @@
 #!/usr/bin/env python3
-"""Panel P: NF-kB vs Tex exhaustion score in CD8+ T cells"""
+"""
+Figure 5 panel K - NF-kB score against the Tex exhaustion score in CD8+ T
+cells, one point per sample.
+
+The 200-gene Hallmark NF-kB list, the 19-gene Tex list, the twenty-cell sample
+filter, `sc.tl.score_genes`, the Spearman test and the P-value rounding are
+unchanged.
+
+  printed panel  Figure 5 K       (PROVENANCE.csv; NOT inferred from "05_O")
+
+The axes are square (`set_box_aspect(1)`), and the panel is 22.5 mm wide, so
+the correlation and its P value take a line each and the y axis label takes
+one line rather than two. A title wider than the plotting box it is centred on
+cannot be fitted at all: narrowing the box by a millimetre moves the title's
+edge by half of one. The exponent of the P value is written out rather than set
+as mathtext, which draws superscripts at 70% of their base size - 4.9 pt on a
+7 pt title. All three are declared in 00_Config/shared/labels.py; the
+statistics themselves do not move.
+
+MARK
+    The earlier drawing used a canvas four times the printed size and set its
+    smallest body type - the tick labels - at 5 * SCALE, so
+
+        MARK = style.tick_pt() / (SMALL_PT * SCALE)
+        AREA = MARK ** 2
+
+    The marker area, the marker edge width and the dashed trend line are scaled by those. Tick widths and lengths and spine widths are
+    not: those are style, and cnsplots sets them.
+
+Judgement call: the title's explicit `fontweight='normal'` is dropped so
+cnsplots' bold axis title applies. Its `linespacing=1.4` is kept - that is
+layout of a multi-line string, not type.
+"""
 import warnings, numpy as np, pandas as pd, scanpy as sc
 import matplotlib; matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -8,13 +40,15 @@ from pathlib import Path
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
 from paths import TCD8_H5AD
-from shared.figure_config import use_panel_style
+import panel_style_cns as style
+import slots
 
 warnings.filterwarnings('ignore')
 
 H5AD = TCD8_H5AD
 OUT_DIR = Path(__file__).parent
-SCALE = 4; CM = 1 / 2.54
+SCALE = 4                       # the earlier canvas multiplier, for MARK only
+SMALL_PT = 5.0                  # the earlier smallest body type, before * SCALE
 
 GROUP_COLORS = {
     'Pre-R': '#bde0fe', 'Pre-NR': '#a2d2ff',
@@ -22,6 +56,10 @@ GROUP_COLORS = {
     'Other': '#cccccc',
 }
 MIN_CELLS = 20
+
+PANEL_LETTER = "K"
+PANEL_W_MM, PANEL_H_MM = slots.size_mm(5, PANEL_LETTER)
+LETTER_CELL = slots.letter_cell_mm(5, PANEL_LETTER)
 
 HALLMARK_NFKB = [
     'ABCA1','ACKR3','AREG','ATF3','ATP2B1','B4GALT1','B4GALT5','BCL2A1','BCL3','BCL6',
@@ -66,7 +104,12 @@ def assign_group(row):
 
 
 def main():
-    use_panel_style()
+    family = style.apply(title_fontsize=7, fontsize_legend=6,
+                         legend_fontsize=6)
+    MARK = style.tick_pt() / (SMALL_PT * SCALE)
+    AREA = MARK ** 2
+    print(f"  type set in {family}; body {style.body_pt():g} pt, "
+          f"ticks/legend {style.tick_pt():g} pt; MARK {MARK:.3f}")
 
     adata = sc.read_h5ad(H5AD)
     adata = adata[adata.obs['Sample site'] == 'Stomach'].copy()
@@ -97,15 +140,17 @@ def main():
     rho, pval = stats.spearmanr(sample_df['nfkb'], sample_df['state'])
     print(f"Spearman: rho={rho:.3f}, P={pval:.4f} (n={len(sample_df)})")
 
-    fig, ax = plt.subplots(figsize=(5 * SCALE * CM, 5 * SCALE * CM))
+    fig, ax = style.subplots_mm(PANEL_W_MM, PANEL_H_MM)
 
     for g in ['Other', 'Pre-R', 'Pre-NR', 'Post-R', 'Post-NR']:
         mask = sample_df['group'] == g
         if mask.sum() == 0:
             continue
         ax.scatter(sample_df.loc[mask, 'nfkb'], sample_df.loc[mask, 'state'],
-                  c=GROUP_COLORS[g], edgecolors='white', linewidths=0.3 * SCALE,
-                  s=30 * SCALE, alpha=0.85, zorder=3 if g != 'Other' else 2,
+                  c=GROUP_COLORS[g], edgecolors='white',
+                  linewidths=0.3 * SCALE * MARK,
+                  s=30 * SCALE * AREA, alpha=0.85,
+                  zorder=3 if g != 'Other' else 2,
                   label=f"{g} (n={mask.sum()})")
 
     x = sample_df['nfkb'].values
@@ -114,34 +159,42 @@ def main():
     if valid.sum() > 2:
         z = np.polyfit(x[valid], y[valid], 1)
         x_line = np.linspace(x[valid].min(), x[valid].max(), 100)
-        ax.plot(x_line, np.polyval(z, x_line), 'k--', linewidth=0.8 * SCALE, alpha=0.6, zorder=2)
+        ax.plot(x_line, np.polyval(z, x_line), 'k--', linewidth=0.8 * SCALE * MARK,
+                alpha=0.6, zorder=2)
 
     import math
     _e = math.floor(math.log10(pval)); _c = int(pval / 10**_e)
     if _e >= -3:
         p_str = f'P = {_c * 10**_e:.{-_e}f}'
     else:
-        p_str = f'P = {_c}' + r'$\times 10^{' + str(_e) + r'}$'
+        # Written out rather than as a mathtext power of ten. Mathtext draws a
+        # superscript at 70% of its base size, so an exponent on a 7 pt title
+        # prints at 4.9 pt - below the floor this figure set is set to.
+        p_str = f'P = {_c}e{_e}'
 
-    ax.set_xlabel('NF-\u03baB Score', fontsize=6 * SCALE)
-    ax.set_ylabel('Tex (CD8+)\nScore', fontsize=6 * SCALE)
-    ax.set_title(f'Tex (CD8+)\n\u03c1 = {rho:.2f}, {p_str}', fontsize=6.5 * SCALE, fontweight='normal', linespacing=1.4)
-    ax.tick_params(labelsize=5 * SCALE, width=0.5 * SCALE, length=3 * SCALE)
+    ax.set_xlabel('NF-\u03baB Score')
+    # One line rather than two: a rotated label two lines deep costs twice
+    # its leading in width, and this panel is 22.5 mm wide.
+    ax.set_ylabel('Tex (CD8+) Score')
+    # The correlation and its P value on separate lines. Set on one line they
+    # are wider than the plotting box and the panel cannot be fitted at all.
+    ax.set_title(f'Tex (CD8+)\n\u03c1 = {rho:.2f}\n{p_str}', linespacing=1.4)
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
-    for sp in ['left', 'bottom']:
-        ax.spines[sp].set_linewidth(0.5 * SCALE)
     ax.set_box_aspect(1)
 
-    plt.tight_layout()
+    style.fit_margins(fig, pad_mm=0.6, cell_mm=LETTER_CELL)
+    over = style.overflow_mm(fig)
+    if max(over) > 0:
+        raise RuntimeError(
+            f"ink outside the {PANEL_W_MM} x {PANEL_H_MM} mm canvas "
+            f"(l,r,b,t mm): {over}")
+    intruders = style.letter_clear(fig, LETTER_CELL)
+    if intruders:
+        raise RuntimeError(f"ink under the panel letter cell: {intruders}")
     stem = 'tex_nfkb_scatter_cd8'
-    for ext in ['svg', 'png']:
-        kw = {'bbox_inches': 'tight', 'facecolor': 'white'}
-        if ext == 'png':
-            kw['dpi'] = 300
-        fig.savefig(OUT_DIR / f'{stem}.{ext}', **kw)
-    print(f"Saved: {stem}")
-    plt.close()
+    style.save_panel(fig, OUT_DIR / stem)
+    print(f"Saved: {stem}.[svg|pdf|png] at {PANEL_W_MM} x {PANEL_H_MM} mm")
 
 
 if __name__ == '__main__':

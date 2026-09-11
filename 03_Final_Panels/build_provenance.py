@@ -9,11 +9,13 @@ emits A-Q where the paper prints A-N. So the printed letters come from the
 figure legends, recorded here by hand in PRINTED, and the assemblers supply only
 the directory and filename behind each one.
 
-Getting this wrong has cost two retractions, both on Figure 5A. See
+Getting this wrong is how a sound figure comes to be called irreproducible:
+read a panel's letter off its directory name and the comparison is made against
+the wrong printed panel. Figure 5A is the worked example. See
 00_GROUND_TRUTH/README.md.
 
 Columns
-  figure                1-6, S1-S11
+  figure                1-6, S1-S9
   printed_panel         the letter as the paper prints it
   build_path            patched | built | carried_over | schematic
   source_dir            relative to this file's directory
@@ -100,8 +102,16 @@ def panel_swaps():
     for fm in re.finditer(r'"Figure (\d)":\s*\[(.*?)\n    \]', block.group(1), re.S):
         fig, body = fm.group(1), fm.group(2)
         for em in re.finditer(
-                r'\("([A-Z])",.*?/\s*"([^"]+)"\s*\n\s*/\s*"([^"]+)"\)', body, re.S):
+                # The entry may end at the drawing's name or carry the digest
+                # that pins it, so the filename is followed by either.
+                r'\("([A-Z])",.*?/\s*"([^"]+)"\s*\n\s*/\s*"([^"]+)"\s*(?:,|\))',
+                body, re.S):
             out[(fig, em.group(1))] = (em.group(2), em.group(3))
+    if not out:
+        raise SystemExit(
+            "the PANEL_SWAPS table is present but no entry parsed out of it. "
+            "The table's shape has changed and this pattern has not; a silent "
+            "empty result would drop every spliced panel from the manifest.")
     return out
 
 
@@ -139,52 +149,66 @@ REPRODUCES = {
                         "count of non-NaN rows out of 106,653 and their rho is "
                         "0.9264. From .raw: 0.44 per cell, 0.72 across kNN "
                         "metacells of 10, 0.93 across the 20 samples."),
-    ("5", "A"): ("yes", "Reproduces, and the reason it did not until 2026-09-01 "
-                        "was the script's input path rather than the figure. The "
+    ("5", "A"): ("yes", "Reproduces. Where it appears not to, the cause is the "
+                        "script's input path rather than the figure. The "
                         "twelve per-cell-type *_mast_prerank_gsea.csv were moved "
                         "under GSEA/_archived/ after the figures were made and the "
                         "panel script was repointed at GSEA/post/"
                         "MoMac_gsea_hallmark.csv, a different run built on the "
                         "doubly normalised .X. Against the original table the top "
                         "nine by |NES| are the printed nine, in the printed order, "
-                        "matching the published bars to 0.00014 NES. Two earlier "
-                        "sessions read that disagreement the other way round and "
-                        "called the published panel wrong; both were retracted."),
+                        "matching the published bars to 0.00014 NES. Reading that "
+                        "disagreement the other way round - as evidence the "
+                        "published panel is wrong - is the mistake this row exists "
+                        "to prevent."),
     ("5", "H"): ("yes", "Replaced this round, from 12_R1.8_DEG_Recompute by way of "
                         "07_R1.8_NFkB_Specificity/outputs/nfkb_per_celltype.csv - "
-                        "the table Fig. S9E and S10C also read. The old source "
+                        "the table Fig. S9C also reads. The old source "
                         "differed in sign for B cells post (+1.01 vs -0.99) and "
                         "MoMac pre (-0.98 vs +1.06)."),
 }
 
-# Twenty-one supplementary panels have no script of their own: the analysis
-# module writes the panel directly into its S*/S*_* directory. Recording them as
-# script-less would leave a reader with no way back to the code, so each is
-# attributed to the module that saves it. Verified by the save path in the
-# module, not by a text match - grep alone points S11_A and S11_C at the wrong
-# script, because two other modules mention them in a docstring.
+# The supplementary panels of S7-S9 have no create script inside their own panel
+# directory: each is drawn by a driver under Supplementary_New/_drivers/, which
+# imports the analysis module that owns the numbers and reads the tables that
+# module's main() already wrote. Recording them as script-less would leave a
+# reader with no way back to the code, so each is attributed to both - the
+# driver that saves the panel and the module the values come from. Verified by
+# the save path in the driver, not by a text match: grep alone points a panel at
+# the wrong script whenever another module mentions it in a docstring.
+DRIVERS = "Supplementary_New/_drivers"
+ANALYSES = "04_Revision_Analyses"
 MODULE_PANELS = {
-    ("S7", "C"): "01_R1.3_Cohort_Pairing/scripts/design_defence.py",
-    ("S8", "A"): "03_R1.4_MP_Direction_PrePost/scripts/mp_direction_and_prepost.py",
-    ("S8", "B"): "04_R1.5_CEACAM5_vs_CEACAM6/scripts/ceacam5_vs_ceacam6.py",
-    ("S8", "C"): "03_R1.4_MP_Direction_PrePost/scripts/mp_direction_and_prepost.py",
-    ("S8", "D"): "03_R1.4_MP_Direction_PrePost/scripts/mp_external_validation.py",
-    ("S8", "H"): "04_R1.5_CEACAM5_vs_CEACAM6/scripts/dropout_and_coexpression.py",
-    ("S9", "A"): "05_R1.6_Spatial_Confounders/scripts/spatial_confounders.py",
-    ("S9", "B"): "05_R1.6_Spatial_Confounders/scripts/spatial_confounders.py",
-    ("S9", "C"): "06_R1.7_MoMac_Lineage_Markers/scripts/momac_lineage.py",
-    ("S9", "D"): "06_R1.7_MoMac_Lineage_Markers/scripts/momac_lineage.py",
-    ("S9", "E"): "07_R1.8_NFkB_Specificity/scripts/nfkb_specificity.py",
-    ("S9", "F"): "07_R1.8_NFkB_Specificity/scripts/nfkb_specificity.py",
-    ("S10", "A"): "08_R2.1_PreTx_Inflammatory/scripts/pretreatment_inflammatory.py",
-    ("S10", "B"): "08_R2.1_PreTx_Inflammatory/scripts/pretreatment_inflammatory.py",
-    ("S10", "C"): "08_R2.1_PreTx_Inflammatory/scripts/pretreatment_inflammatory.py",
-    ("S10", "D"): "09_R2.2_Adaptive_Immune/scripts/adaptive_immune_resource.py",
-    ("S10", "E"): "09_R2.2_Adaptive_Immune/scripts/adaptive_immune_resource.py",
-    ("S11", "A"): "05_R1.6_Spatial_Confounders/scripts/spatial_positive_evidence.py",
-    ("S11", "B"): "05_R1.6_Spatial_Confounders/scripts/tcga_immune_exclusion.py",
-    ("S11", "C"): "07_R1.8_NFkB_Specificity/scripts/nfkb_regulon_activity.py",
-    ("S11", "D"): "06_R1.7_MoMac_Lineage_Markers/scripts/celltypist_annotation.py",
+    ("S7", "A"): (f"{DRIVERS}/draw_mp_direction_and_prepost.py; "
+                  f"{ANALYSES}/03_R1.4_MP_Direction_PrePost/scripts/"
+                  f"mp_direction_and_prepost.py"),
+    ("S7", "B"): (f"{DRIVERS}/draw_ceacam5_vs_ceacam6.py; "
+                  f"{ANALYSES}/04_R1.5_CEACAM5_vs_CEACAM6/scripts/"
+                  f"ceacam5_vs_ceacam6.py"),
+    ("S7", "C"): (f"{DRIVERS}/draw_ceacam5_vs_ceacam6.py; "
+                  f"{ANALYSES}/04_R1.5_CEACAM5_vs_CEACAM6/scripts/"
+                  f"ceacam5_vs_ceacam6.py"),
+    ("S8", "A"): (f"{DRIVERS}/draw_spatial_confounders.py; "
+                  f"{ANALYSES}/05_R1.6_Spatial_Confounders/scripts/"
+                  f"spatial_confounders.py"),
+    ("S8", "B"): (f"{DRIVERS}/draw_tcga_immune_exclusion.py; "
+                  f"{ANALYSES}/05_R1.6_Spatial_Confounders/scripts/"
+                  f"tcga_immune_exclusion.py"),
+    ("S9", "A"): (f"{DRIVERS}/draw_momac_lineage.py; "
+                  f"{ANALYSES}/06_R1.7_MoMac_Lineage_Markers/scripts/"
+                  f"momac_lineage.py"),
+    ("S9", "B"): (f"{DRIVERS}/draw_momac_lineage.py; "
+                  f"{ANALYSES}/06_R1.7_MoMac_Lineage_Markers/scripts/"
+                  f"momac_lineage.py"),
+    ("S9", "C"): (f"{DRIVERS}/draw_nfkb_specificity.py; "
+                  f"{ANALYSES}/07_R1.8_NFkB_Specificity/scripts/"
+                  f"nfkb_specificity.py"),
+    ("S9", "D"): (f"{DRIVERS}/draw_nfkb_specificity.py; "
+                  f"{ANALYSES}/07_R1.8_NFkB_Specificity/scripts/"
+                  f"nfkb_specificity.py"),
+    ("S9", "E"): (f"{DRIVERS}/draw_nfkb_regulon_activity.py; "
+                  f"{ANALYSES}/07_R1.8_NFkB_Specificity/scripts/"
+                  f"nfkb_regulon_activity.py"),
 }
 
 DATA_HINT = re.compile(
@@ -314,10 +338,11 @@ def supplementary_rows():
                 note = "rebuilt from this script by assemble_new_supplementaries.py"
             else:
                 mod = MODULE_PANELS.get((fig, letter), "")
-                scripts = f"04_Revision_Analyses/{mod}" if mod else ""
+                scripts = mod
                 data = ""
-                note = ("written directly by the analysis module named in "
-                        "source_script, then assembled by "
+                note = ("drawn at print size by the driver named in "
+                        "source_script, which reads the tables the analysis "
+                        "module beside it already wrote, then assembled by "
                         "assemble_new_supplementaries.py") if mod else \
                        "NO SCRIPT FOUND - attribute this panel before shipping"
             rows.append(dict(
