@@ -54,12 +54,18 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
 from paths import *                                       # noqa: E402,F403
 import panel_style_cns as style                           # noqa: E402
 import slots                                             # noqa: E402
+from cnsfig import legend as cnslegend                    # noqa: E402
 
 BASE_DIR = Path(__file__).parent
 INTERMEDIATE = NMF_INTERMEDIATE                           # noqa: F405
 STOMACH_NMF_DIR = NMF_PER_SAMPLE                          # noqa: F405
 
 DOT_COLOR = '#C62828'
+#: The largest dot on the published page, 3.27 mm across (counted off
+#: 'Figure 2.pdf' geometry, 2026-09-14), as scatter's s = diameter^2 in pt.
+DOT_S_MAX = (3.27 * style.PT_PER_MM) ** 2
+#: The width of the size-key column at the right of the matrix.
+KEY_COLUMN_MM = 12.0
 
 SCALE = 4                           # the earlier canvas multiplier
 SMALL_PT = 5.0                      # the earlier smallest body type
@@ -131,15 +137,26 @@ def create_panel_G():
 
     fig, ax = style.subplots_mm(PANEL_W_MM, PANEL_H_MM)
 
+    # THE DOTS ARE THE PUBLISHED PAGE'S SIZE  (2026-09-14)
+    #   Counted off 'Figure 2.pdf' geometry: 70 circles from 1.00 to 3.27 mm
+    #   across, the largest being a loading of 1.0. scatter's s is the
+    #   diameter squared in points, so the largest is DOT_S_MAX and every
+    #   other dot is the same (score * 200 + 20) / 220 fraction of it the
+    #   earlier drawing used. Loading and alpha are untouched.
+    def dot_s(score):
+        return DOT_S_MAX * (score * 200 + 20) / 220.0
+
     # Dotplot: x=genes, y=MPs
+    drawn = []
     for i, mp_name in enumerate(mp_names):
         for j, gene in enumerate(all_genes):
             score = score_matrix[i, j]
             if score > 0:
-                size = (score * 200 + 20) * SCALE * AREA
+                size = dot_s(score)
+                drawn.append(size)
                 alpha = 0.3 + 0.7 * score
                 ax.scatter(j, i, s=size, c=DOT_COLOR, alpha=alpha,
-                           edgecolors='black', linewidth=0.5 * MARK)
+                           edgecolors='black', linewidth=style.EDGE_PT)
 
     # Styling
     ax.set_xticks(range(len(all_genes)))
@@ -152,27 +169,33 @@ def create_panel_G():
 
     # Vertical dashed line separating MP4 genes from MP5 genes
     ax.axvline(x=n_mp4 - 0.5, color='gray', linestyle='--',
-               linewidth=0.5 * MARK, alpha=0.5)
+               linewidth=style.RULE_PT, alpha=0.8)
 
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
 
-    # Legend for size - upper right corner. See LEGEND KEYS in the header for
-    # the markerscale correction.
-    key = 1.0 / plt.rcParams["legend.markerscale"] ** 2
-    legend_sizes = [0.25, 0.5, 0.75, 1.0]
-    legend_labels = ['25%', '50%', '75%', '100%']
-    legend_elements = []
-    for sz, lab in zip(legend_sizes, legend_labels):
-        legend_elements.append(
-            plt.scatter([], [], s=(sz * 200 + 20) * SCALE * AREA * key,
-                        c=DOT_COLOR, alpha=0.6, edgecolors='black',
-                        linewidth=0.5 * MARK, label=lab))
-
-    ax.legend(handles=legend_elements, title='Loading', loc='upper left',
-              bbox_to_anchor=(1.02, 1.0), frameon=True, ncol=1)
-
+    # THE SIZE KEY IS THE SHARED COMPACT ONE  (2026-09-14)
+    #   The framed ax.legend that was here took a column at the right with
+    #   one circle per line and paper around each; the author read it as
+    #   waste, and asked that this panel and Figure 4E decode their dots the
+    #   same way. cnsfig.legend.compact_key lays the four circles out on a
+    #   pitch taken from their own radii in a KEY_COLUMN_MM column flush with
+    #   the matrix, under the heading the page prints. The circles are drawn
+    #   from dot_s, so the key is the dots' own scale.
     style.fit_margins(fig, pad_mm=0.6, cell_mm=LETTER_CELL)
+    pos = ax.get_position()
+    ax.set_position([pos.x0, pos.y0,
+                     pos.width - (KEY_COLUMN_MM + 1.0) / PANEL_W_MM,
+                     pos.height])
+    key_areas = [dot_s(f) for f in (0.25, 0.5, 0.75, 1.0)]
+    key = cnslegend.compact_key(
+        fig, size_areas=key_areas, size_labels=['25%', '50%', '75%', '100%'],
+        column_mm=KEY_COLUMN_MM, right_mm=0.3,
+        top_mm=(1.0 - pos.y1) * PANEL_H_MM, size_title='Loading',
+        label_pt=style.tick_pt(), title_pt=style.tick_pt(),
+        colour=DOT_COLOR)
+    cnslegend.require_size_key(key, dot_areas=drawn, panel='Figure 2 panel G')
+
     over = style.overflow_mm(fig)
     if max(over) > 0:
         raise RuntimeError(

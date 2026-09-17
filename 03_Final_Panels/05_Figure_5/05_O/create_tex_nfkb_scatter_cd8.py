@@ -42,6 +42,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
 from paths import TCD8_H5AD
 import panel_style_cns as style
 import slots
+from cnsfig import layout as cnslayout, corr_stats, rich_xlabel, rich_ylabel
 
 warnings.filterwarnings('ignore')
 
@@ -60,6 +61,10 @@ MIN_CELLS = 20
 PANEL_LETTER = "K"
 PANEL_W_MM, PANEL_H_MM = slots.size_mm(5, PANEL_LETTER)
 LETTER_CELL = slots.letter_cell_mm(5, PANEL_LETTER)
+#: The y label, its ticks and the box; the box is 18.9 mm tall (the row's
+#: frame line) and as wide as the slot allows.
+LEFT_MM = 7.8
+BOX_W_MM = 13.8
 
 HALLMARK_NFKB = [
     'ABCA1','ACKR3','AREG','ATF3','ATP2B1','B4GALT1','B4GALT5','BCL2A1','BCL3','BCL6',
@@ -140,7 +145,18 @@ def main():
     rho, pval = stats.spearmanr(sample_df['nfkb'], sample_df['state'])
     print(f"Spearman: rho={rho:.3f}, P={pval:.4f} (n={len(sample_df)})")
 
-    fig, ax = style.subplots_mm(PANEL_W_MM, PANEL_H_MM)
+    # THE BOX AT MILLIMETRES, RHO INSIDE, P IN THE LEGEND  (2026-09-14, evening)
+    #   The same rule as Figure 3's scatter pairs: the title is the state
+    #   name alone, rho is drawn inside the box, the P value is written by
+    #   cnsfig.corr_stats and the legend is generated from it. The box is
+    #   placed by cnsfig.layout.scatter_pair_mm with its top at 139.8 mm and
+    #   its bottom at 158.7 mm on the page, the frame line of J and L.
+    fig = style.figure_mm(PANEL_W_MM, PANEL_H_MM)
+    ax, = cnslayout.scatter_pair_mm(fig, left_mm=LEFT_MM, box_mm=BOX_W_MM,
+                                    top_mm=139.8 - 130.0, n=1)
+    _pos = ax.get_position()
+    ax.set_position([_pos.x0, (166.5 - 158.7) / PANEL_H_MM, _pos.width,
+                     (158.7 - 139.8) / PANEL_H_MM])
 
     for g in ['Other', 'Pre-R', 'Pre-NR', 'Post-R', 'Post-NR']:
         mask = sample_df['group'] == g
@@ -148,8 +164,8 @@ def main():
             continue
         ax.scatter(sample_df.loc[mask, 'nfkb'], sample_df.loc[mask, 'state'],
                   c=GROUP_COLORS[g], edgecolors='white',
-                  linewidths=0.3 * SCALE * MARK,
-                  s=30 * SCALE * AREA, alpha=0.85,
+                  linewidths=style.EDGE_PT,
+                  s=(0.48 * style.PT_PER_MM) ** 2, alpha=0.85,  # published 0.47-0.49 mm
                   zorder=3 if g != 'Other' else 2,
                   label=f"{g} (n={mask.sum()})")
 
@@ -159,31 +175,35 @@ def main():
     if valid.sum() > 2:
         z = np.polyfit(x[valid], y[valid], 1)
         x_line = np.linspace(x[valid].min(), x[valid].max(), 100)
-        ax.plot(x_line, np.polyval(z, x_line), 'k--', linewidth=0.8 * SCALE * MARK,
+        ax.plot(x_line, np.polyval(z, x_line), 'k--', linewidth=style.RULE_PT,
                 alpha=0.6, zorder=2)
 
-    import math
-    _e = math.floor(math.log10(pval)); _c = int(pval / 10**_e)
-    if _e >= -3:
-        p_str = f'P = {_c * 10**_e:.{-_e}f}'
-    else:
-        # Written out rather than as a mathtext power of ten. Mathtext draws a
-        # superscript at 70% of its base size, so an exponent on a 7 pt title
-        # prints at 4.9 pt - below the floor this figure set is set to.
-        p_str = f'P = {_c}e{_e}'
-
-    ax.set_xlabel('NF-\u03baB Score')
-    # One line rather than two: a rotated label two lines deep costs twice
-    # its leading in width, and this panel is 22.5 mm wide.
-    ax.set_ylabel('Tex (CD8+) Score')
-    # The correlation and its P value on separate lines. Set on one line they
-    # are wider than the plotting box and the panel cannot be fitted at all.
-    ax.set_title(f'Tex (CD8+)\n\u03c1 = {rho:.2f}\n{p_str}', linespacing=1.4)
+    p_str = corr_stats.p_string(pval)
+    print(f"    Tex (CD8+): rho = {rho:.2f}, {p_str}")
+    corr_stats.write(OUT_DIR, [('NF-\u03baB score', rho, pval, len(sample_df))])
+    # THE TITLE ON THE ROW'S TITLE LINE  (2026-09-16, the author's fifth
+    #   reading: "align the 5K and 5M subtitles with the rest of their row").
+    #   As an axes title it hung 1.4 mm over the plotting box, 2.87 mm below
+    #   J's and L's titles. J and L set theirs through finish_two_group: the
+    #   text's top at 0.4 mm + top_extra_mm below their canvas top, which
+    #   for J's first box (slot top 133.05, top_extra 0.27) is 133.72 mm on
+    #   the page - the same page line for all four J boxes and for L. The
+    #   same top, the same 7 pt and linespacing, drawn on this canvas
+    #   (sweep_pages.check_title_rows holds the row to 0.5 mm).
+    _row_title_top_mm = slots.rect_mm(5, 'J', sub=1)[1] + 0.4 + 0.27
+    _own_top_mm = slots.rect_mm(5, PANEL_LETTER)[1]
+    _pos = ax.get_position()
+    fig.text((_pos.x0 + _pos.x1) / 2,
+             1.0 - (_row_title_top_mm - _own_top_mm) / PANEL_H_MM,
+             'Tex (CD8+)', ha='center', va='top', fontsize=style.body_pt(),
+             linespacing=1.15)
+    cnslayout.corr_annotate(ax, rho)
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
-    ax.set_box_aspect(1)
-
-    style.fit_margins(fig, pad_mm=0.6, cell_mm=LETTER_CELL)
+    rich_xlabel(ax, 'NF-\u03baB Score')
+    rich_ylabel(ax, 'Tex (CD8+) Score')
+    from cnsfig.layout import recover_x
+    recover_x(fig, ax)
     over = style.overflow_mm(fig)
     if max(over) > 0:
         raise RuntimeError(

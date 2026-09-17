@@ -423,19 +423,32 @@ def replace_figure_1a(doc):
     return out
 
 
-#: The figures this still makes. Figures 2 to 5 are redrawn into their printed
-#: slots by assemble_slotted.py; patching them here would write the submitted
-#: layout over the redrawn one. Figure 6 is supplied whole by the author, and
-#: the qualifier its patch removed is absent from that page. All five are
-#: collected by build_shipped_figures.py, which records the mechanism behind
-#: each.
-PATCHED_FIGURES = (1,)
+#: The figures this still makes: none, since 2026-09-15. Figures 2 to 5 are
+#: redrawn into their printed slots by assemble_slotted.py, and Figure 1 joined
+#: them on 2026-09-15 - re-paged from the submitted 254 mm landscape onto the
+#: 171.10 mm page (12_Figure_Refactor/build_grid_v2.REPAGED), its A placed as
+#: a slot and its B and C redrawn at 1:1. Patching Figure 1 here would write
+#: the submitted layout into _patched/ beside the slotted page; the code is
+#: kept, runnable with --figure 1, as the record of how the 2026-09-10 to
+#: 2026-09-14 pages were made. Figure 6 is supplied whole by the author. All
+#: are collected by build_shipped_figures.py, which records the mechanism.
+PATCHED_FIGURES = ()
 
 
 def main():
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--figure", type=int, action="append", default=[],
+                    help="patch this submitted figure anyway (the retired "
+                         "Figure 1 path; nothing ships from it)")
+    args = ap.parse_args()
+    figures = tuple(args.figure) or PATCHED_FIGURES
     OUT.mkdir(parents=True, exist_ok=True)
     total = 0
-    for i in PATCHED_FIGURES:
+    if not figures:
+        print("nothing to patch: every main figure is slotted (Figure 1 since "
+              "2026-09-15) or supplied; see PATCHED_FIGURES")
+    for i in figures:
         name = f"Figure {i}"
         src = SRC / f"{name}.pdf"
         doc = fitz.open(src)

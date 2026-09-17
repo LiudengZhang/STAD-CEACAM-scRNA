@@ -36,13 +36,19 @@ MARK
     by it. Tick widths and lengths and spine widths are not: those are style,
     and cnsplots sets them.
 
-THE COHORT LEAVES THE TITLE, AND THE AXIS LABELS ARE RE-WRAPPED
-    The two axes carry the same cohort name, and so do the two axes of panel D;
-    printed four times over it is four titles saying one thing. The cohort is
-    named once in the caption and each axes keeps its own correlation and its
-    own P value, which are the numbers that differ between them. On one line
-    the pair sets 23.6 mm against a plotting box of about 10 mm, so they take a
-    line each.
+THE COHORT NAME IS BACK IN THE TITLE, AS THE PUBLISHED PAGE PRINTS IT
+    It was dropped on 2026-09-10 because it would not fit: at 23.1 mm of panel
+    height there was no room for a second title line, and the reasoning
+    recorded here was that the caption names the cohort anyway. That was the
+    wrong trade. The published page prints the dataset name over every one of
+    these eight scatter axes, the reader needs it to tell an in-house panel
+    from a TCGA one at a glance, and the fix belonged in the frame rather than
+    in the drawing.
+
+    Since 2026-09-11 the panel is 38.0 mm tall (panel_rects_v2.csv), and the
+    published two-line title fits: 'In house (scRNA-seq)' sets 21.0 mm at 6 pt
+    against a 24.3 mm plotting column. The title is left-aligned and set at
+    normal weight, both as the page prints it.
 
     The y label is re-wrapped onto two lines and keeps every word: it is
     rotated, so its length is vertical, and on one line it sets 35.8 mm against
@@ -50,6 +56,21 @@ THE COHORT LEAVES THE TITLE, AND THE AXIS LABELS ARE RE-WRAPPED
     18.0 mm and the two plotting boxes are about 10 mm wide, so the two axes'
     units would meet between them. The unit is stated on the y label of this
     panel and in the caption. Both are declared in RENAMES_FIGURE_3.
+
+MARKER AND RULE WIDTHS ARE MEASURED OFF THE PUBLISHED PAGE  (2026-09-11)
+    Every one of these scatter panels carried a stray factor of SCALE on its
+    non-type sizes - `s=30*SCALE*AREA`, `linewidth=0.8*SCALE*MARK` - on top of
+    AREA and MARK, which already carry the 4x canvas across. The markers came
+    out about twice as wide as the page prints them and ran together.
+
+    Counted out of `00_GROUND_TRUTH/figures/Figure 3.pdf` geometry:
+
+        panel A   0.520 mm across, 67 marks      panel B   0.421 mm, 445
+        panel D   0.518 mm, 69                   panel E   0.424 mm, 773
+        the dashed regression rule               0.595 pt
+
+    The constants below are those numbers converted through this panel's own
+    MARK. Not one coordinate, colour or statistic moves.
 """
 
 import scanpy as sc
@@ -66,6 +87,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
 from paths import *
 import panel_style_cns as style  # noqa: E402
 import slots  # noqa: E402
+from cnsfig import layout as cnslayout, corr_stats, rich_xlabel, rich_ylabel  # noqa: E402
+from cnsfig import cache, group_key  # noqa: E402
 
 SCALE = 4                       # the earlier canvas multiplier, for MARK only
 SMALL_PT = 5.0                  # the earlier smallest body type, before * SCALE
@@ -76,6 +99,12 @@ AREA = MARK ** 2                              # area multiplier
 PANEL_LETTER = "A"
 PANEL_W_MM, PANEL_H_MM = slots.size_mm(3, PANEL_LETTER)
 LETTER_CELL = slots.letter_cell_mm(3, PANEL_LETTER)
+#: The left column's margin (A over B): a one-line y label and 4-glyph ticks.
+LEFT_MM = 11.8              # box at x = 19.0 mm on the page, as B's
+#: The five-group key's top-left, mm from the canvas corner: right of the
+#: second box, level with its top.
+KEY_X_MM = LEFT_MM + 2 * cnslayout.SCATTER_BOX_MM + cnslayout.SCATTER_GAP_MM + 0.8
+KEY_Y_MM = cnslayout.SCATTER_TOP_MM
 
 EPI = EPITHELIAL_DEPOSIT_H5AD
 OUTPUT_DIR = Path(__file__).parent
@@ -162,7 +191,8 @@ def load_primary():
 
     counts = agg['group'].value_counts()
     print(f"  {len(agg)} stomach samples (after outlier removal): {counts.to_dict()}")
-    return agg
+    # The cached table names samples by study ID only (see OUTLIER_STUDY_ID).
+    return agg[['study_id', 'group', 'CD274', 'CEACAM5', 'CEACAM6']].reset_index(drop=True)
 
 
 def load_tiger():
@@ -198,15 +228,22 @@ def load_tiger():
     return tiger
 
 
-def plot_scatter(ax, x, y, groups, color_map, draw_order, title, xlabel, ylabel, fontscale):
+def plot_scatter(ax, x, y, groups, color_map, draw_order, title, xlabel, ylabel, fontscale, left=True):
     """Generic scatter with Spearman stats."""
     r_val, p_val = stats.spearmanr(x, y)
 
+    # MARKER AREA IS MEASURED OFF THE PUBLISHED PAGE, NOT CHOSEN  (2026-09-11)
+    #   The published panel draws these points at 0.52 mm across - counted
+    #   straight out of 'Figure 3.pdf' geometry, 67 of them. The redraw was
+    #   drawing them at 1.16 mm, which is 2.2 times as wide and enough
+    #   to merge neighbouring samples into one blob. Area is diameter squared,
+    #   so the constant below is (0.52 mm / MARK-scaled point) squared. Not one
+    #   coordinate moves.
     for grp in draw_order:
         mask = groups == grp
         if mask.sum() > 0:
-            ax.scatter(x[mask], y[mask], c=color_map[grp], s=30*SCALE*AREA,
-                       alpha=0.85, edgecolors='white', linewidths=0.3*SCALE*MARK,
+            ax.scatter(x[mask], y[mask], c=color_map[grp], s=24.1*AREA,
+                       alpha=0.85, edgecolors='white', linewidths=style.EDGE_PT,
                        label=grp, zorder=3)
 
     # Regression line
@@ -215,33 +252,29 @@ def plot_scatter(ax, x, y, groups, color_map, draw_order, title, xlabel, ylabel,
     if len(xv) >= 3 and xv.std() > 0:
         slope, intercept = np.polyfit(xv, yv, 1)
         x_line = np.linspace(xv.min(), xv.max(), 100)
-        ax.plot(x_line, slope * x_line + intercept, 'k--', linewidth=0.8*SCALE*MARK, alpha=0.6, zorder=2)
+        ax.plot(x_line, slope * x_line + intercept, 'k--', linewidth=style.RULE_PT, alpha=0.6, zorder=2)
 
-    # Stats text — 1 sig digit (floor). A very small P is written out rather
-    # than set as a mathtext power of ten: mathtext draws a superscript at 70%
-    # of its base, so an exponent on a 7 pt title prints at 4.9 pt, below the
-    # floor this figure set is set to.
-    import math
-    _e = math.floor(math.log10(p_val)); _c = int(p_val / 10**_e)
-    if _e >= -3:
-        p_str = f'P = {_c * 10**_e:.{-_e}f}'
-    else:
-        p_str = f'P = {_c}e{_e}'
-
-    # The cohort is named in the caption; see THE COHORT LEAVES THE TITLE.
+    p_str = corr_stats.p_string(p_val)
     print(f"    {title}: rho = {r_val:.2f}, {p_str}")
-    ax.set_title(f'ρ = {r_val:.2f}\n{p_str}', linespacing=1.4)
-
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel(ylabel)
+    ax.set_title(title, fontsize=style.tick_pt())
+    cnslayout.corr_annotate(ax, r_val)
 
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     for spine in ['bottom', 'left']:
-        ax.spines[spine].set_linewidth(0.5*SCALE*MARK)
-    ax.tick_params(axis='both', width=0.5*SCALE*MARK, length=3*SCALE*MARK)
+        ax.spines[spine].set_linewidth(style.RULE_PT)
+    ax.tick_params(axis='both', width=style.RULE_PT, length=3*SCALE*MARK)
+    # The rich labels last: they measure the tick labels' reach, which the
+    # tick length above changes.
+    rich_xlabel(ax, f"*{xlabel}*")
+    if left:
+        rich_ylabel(ax, ylabel, y=0.32)   # 2.4 mm down: clear of the 10 pt letter cell
+    return r_val, p_val
 
-    ax.set_box_aspect(1)
+    # NOT set_box_aspect(1). The published panel's plotting boxes are wider
+    # than they are tall, and a square box is width-limited here, so it would
+    # leave the 15 mm this panel gained on 2026-09-11 as blank paper under the
+    # axes instead of putting it into the plot.
 
 
 def main():
@@ -250,30 +283,52 @@ def main():
     print(f"  type set in {family}; body {style.body_pt():g} pt, "
           f"ticks/legend {style.tick_pt():g} pt; MARK {MARK:.3f}")
 
-    primary = load_primary()
+    # The per-sample means, from data/primary_samples.csv (cnsfig.cache,
+    # 2026-09-15): the h5ad is read only when the table is absent.
+    primary = cache.table(OUTPUT_DIR, 'primary_samples', load_primary)
 
-    # 1x2 layout (primary cohort only)
-    fig, axes = style.subplots_mm(PANEL_W_MM, PANEL_H_MM, 1, 2)
+    # ONE GEOMETRY FOR THE FOUR SCATTER PAIRS  (2026-09-14, evening)
+    #   The author's ruling: A, B, D and E are the same size, square, the
+    #   dataset name alone in the title, rho inside the box, P in the legend
+    #   (cnsfig.corr_stats writes it; edits.py reads it), and the two rows
+    #   2 mm apart. cnsfig.layout.scatter_pair_mm places the boxes at
+    #   millimetres, so the four panels print one geometry by construction.
+    fig = style.figure_mm(PANEL_W_MM, PANEL_H_MM)
+    axes = cnslayout.scatter_pair_mm(fig, left_mm=LEFT_MM)
 
     # Draw order: Other first (background), then colored groups on top
     primary_order = ['Other', 'Pre-R', 'Pre-NR', 'Post-R', 'Post-NR']
 
+    rows = []
     for col_idx, ceacam in enumerate(['CEACAM5', 'CEACAM6']):
-        plot_scatter(
+        axes[col_idx].set_ylim(0, 0.03)
+        r_val, p_val = plot_scatter(
             ax=axes[col_idx],
             x=primary[ceacam].values.astype(float),
             y=primary['CD274'].values.astype(float),
             groups=primary['group'].values,
             color_map=COLOR_MAP_4GROUP,
             draw_order=primary_order,
-            title='Primary Cohort (scRNA-seq)',
+            title='In house',
             xlabel=ceacam,
-            ylabel='PD-L1 (CD274)\n(mean log expr.)',
+            # One line (2026-09-14, evening): the unit line '(mean log expr.)'
+            # ran into the panel-letter cell on a 13.5 mm box; the legend
+            # states the unit for both axes. Declared in REMOVALS_FIGURE_3.
+            ylabel='PD-L1 (*CD274*)',
             fontscale=SCALE,
+            left=(col_idx == 0),
         )
-        axes[col_idx].set_ylim(0, 0.03)
+        rows.append((ceacam, r_val, p_val, int(np.isfinite(primary[ceacam].values).sum())))
+    corr_stats.write(OUTPUT_DIR, rows)
 
-    style.fit_margins(fig, pad_mm=0.6, cell_mm=LETTER_CELL)
+    # The five-group key, at the right of the second box, as the published
+    # panel prints it. Dropped from the redraw without a declaration and put
+    # back on 2026-09-15; the circles are cnsfig.legend.group_key's fixed
+    # 1.3 mm, not the 0.5 mm data marker.
+    group_key(fig, [(g, COLOR_MAP_4GROUP[g]) for g in
+                    ['Other', 'Pre-R', 'Pre-NR', 'Post-R', 'Post-NR']],
+              x_mm=KEY_X_MM, y_mm=KEY_Y_MM)
+
     over = style.overflow_mm(fig)
     if max(over) > 0:
         raise RuntimeError(

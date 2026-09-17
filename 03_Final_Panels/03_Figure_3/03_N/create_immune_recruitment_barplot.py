@@ -60,6 +60,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
 from paths import SPATIAL_REGION_COMPARISON
 import panel_style_cns as style  # noqa: E402
 import slots  # noqa: E402
+from cnsfig.layout import pin_frame_mm  # noqa: E402
 
 SCALE = 4                       # the earlier canvas multiplier, for MARK only
 SMALL_PT = 7.0                  # the earlier smallest body type, before * SCALE
@@ -104,31 +105,43 @@ def main():
     x_pos = np.arange(len(df_sorted))
     colors = ['#d62728' if d > 0 else '#1f77b4' for d in df_sorted['difference']]
 
+    # Bar outlines at RULE_PT, not EDGE_PT, since 2026-09-15: the author
+    # read the 0.25 pt outline as thinner than every other line on the page.
     bars = ax.bar(x_pos, df_sorted['difference'], color=colors, edgecolor='black',
-                  alpha=0.8, width=0.7, linewidth=1.0 * MARK)
+                  alpha=0.8, width=0.7, linewidth=style.RULE_PT)
 
-    ax.axhline(y=0, color='black', linestyle='-', linewidth=1.0 * MARK)
+    ax.axhline(y=0, color='black', linestyle='-', linewidth=style.RULE_PT)
     ax.set_xticks(x_pos)
     ax.set_xticklabels(df_sorted['label'], rotation=45, ha='right')
-    ax.set_ylabel('Difference in\nProportion\n(CEACAM-high\n- CEACAM-low)')
-    ax.set_title('Immune Recruitment\nby CEACAM Region')
-    ax.tick_params(axis='both', width=1.0 * MARK, length=4 * MARK)
+    # Both strings are the published page's, on the published number of lines,
+    # restored 2026-09-11. The y label is rotated, so its two lines run up a
+    # 46.0 mm panel rather than across a 55.6 mm one; the title sets 39.6 mm at
+    # 6 pt against that same 55.6 mm and needs no wrap at all. At 36.0 mm of
+    # panel the label had been broken into four lines and the title into two.
+    ax.set_ylabel('Difference in Proportion\n(CEACAM-high - CEACAM-low)')
+    ax.set_title('Immune Recruitment by CEACAM Region', fontweight='normal')
+    ax.tick_params(axis='both', width=style.RULE_PT, length=4 * MARK)
     for spine in ax.spines.values():
-        spine.set_linewidth(1.0 * MARK)
+        spine.set_linewidth(style.RULE_PT)
 
-    y_min = df_sorted['difference'].min() - 0.01
+    # The stars for the negative bars hang below them, so the room under the
+    # lowest bar has to hold a star AND clear the rotated tick labels that
+    # start just outside the axes. At -0.01 it did not: measured on the
+    # shipped panel, Plasma's "***" came within 0.19 pt of the word "Plasma"
+    # and printed as part of it. -0.022 puts a clear line of paper between
+    # them. No bar, value or P value moves; only the empty space below them.
+    y_min = df_sorted['difference'].min() - 0.022
     y_max = df_sorted['difference'].max() + 0.02
     ax.set_ylim(y_min, y_max)
 
     for i, (_, row) in enumerate(df_sorted.iterrows()):
         pval = row['pvalue']
-        sig = ''
-        if pval < 0.001:
-            sig = '***'
-        elif pval < 0.01:
-            sig = '**'
-        elif pval < 0.05:
-            sig = '*'
+        # The star ladder is panel_style_cns.p_label's; a bar below 0.05 is
+        # starred at STAR_PT (2026-09-15), one at or above it carries nothing,
+        # as the published panel prints.
+        if not style.p_is_star(pval):
+            continue
+        sig, kw = style.p_text_kw(pval)
 
         diff = row['difference']
         if diff >= 0:
@@ -137,9 +150,14 @@ def main():
         else:
             y_pos_text = diff - 0.002
             va = 'top'
-        ax.text(i, y_pos_text, sig, ha='center', va=va)
+        ax.text(i, y_pos_text, sig, ha='center', va=va, **kw)
 
     style.fit_margins(fig, pad_mm=0.6, cell_mm=LETTER_CELL)
+    # ONE FRAME LINE FOR K, L, M AND N  (2026-09-14, evening): the frame top
+    # at 117.5 mm and its bottom at 143.5 mm on the page, whatever the slot.
+    # The slot starts at 110.0 since 2026-09-15 (it was 112.8, and the
+    # letter printed 2.8 mm below K-M's), so the offsets are 7.5 and 33.5.
+    pin_frame_mm(fig, ax, top_mm=7.5, bottom_mm=PANEL_H_MM - 33.5)
     over = style.overflow_mm(fig)
     if max(over) > 0:
         raise RuntimeError(

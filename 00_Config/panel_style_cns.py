@@ -201,6 +201,7 @@ __all__ = [
     "figsize_mm", "figure_mm", "subplots_mm", "margins_mm", "overflow_mm",
     "fit_margins", "letter_clear", "LETTER_CELL_MM", "dump_snapshot",
     "save_panel", "body_pt", "tick_pt", "letter_pt", "self_test",
+    "RULE_PT", "EDGE_PT", "p_label", "p_is_star", "STAR_PT", "p_text_kw",
 ]
 
 # ---------------------------------------------------------------------------
@@ -211,6 +212,151 @@ __all__ = [
 # the setting rather than writing 540 here, so the two cannot drift apart.
 MM_TO_INCH = 1.0 / 25.4
 PT_PER_MM = 72.0 / 25.4
+
+# ---------------------------------------------------------------------------
+# Line weights. Two numbers, owned here, since 2026-09-14.
+# ---------------------------------------------------------------------------
+# Measured on the pages shipped on 2026-09-11 with PyMuPDF get_drawings():
+# twelve distinct stroke widths per page, 0.04-0.63 mm, because seventeen
+# expressions of the form `0.5 * MARK` were in use and MARK itself ran from
+# 0.107 to 1.8 pt from one script to the next. The author's ruling of
+# 2026-09-14 is one visual weight for every line-like thing on the page.
+#
+#   RULE_PT  every line that is a line: axis spines, tick marks, box and
+#            whisker and median, significance brackets, regression rules,
+#            zero lines, colour-bar outlines, separators, error bars.
+#            0.6 pt = 0.21 mm was already the modal structural width on all
+#            four shipped pages and is cnsplots' own tick width.
+#   EDGE_PT  the outline of a filled thing: scatter-marker edges, heatmap cell
+#            grid, hexagon outlines on the spatial maps, violin bodies, strip
+#            points. 0.25 pt is the marker edge measured off the published
+#            Figure 3 scatter panels on 2026-09-11 (03_A docstring).
+#
+# A panel script may name these two and nothing else. sweep_pages.py and
+# check_restyled_panel.py hold the drawn pages to them (a 4B network edge,
+# whose width is a Jaccard weight, is the declared exception).
+RULE_PT = 0.6
+EDGE_PT = 0.25
+
+#: rcParams that cnsplots leaves at matplotlib's 10-pt defaults (1.5, 1.0,
+#: 0.8 ...) and that apply() therefore sets itself, all to RULE_PT.
+_RULE_RC = (
+    "axes.linewidth", "lines.linewidth", "patch.linewidth", "grid.linewidth",
+    "hatch.linewidth",
+    "xtick.major.width", "ytick.major.width",
+    "xtick.minor.width", "ytick.minor.width",
+    "boxplot.boxprops.linewidth", "boxplot.whiskerprops.linewidth",
+    "boxplot.capprops.linewidth", "boxplot.medianprops.linewidth",
+    "boxplot.meanprops.linewidth", "boxplot.flierprops.markeredgewidth",
+)
+
+
+def p_label(p: float) -> str:
+    """The one place a P value is turned into the text a panel prints.
+
+    Since 2026-09-14 (evening), the author's ruling: a significant P is a
+    star, not a number. Below 0.05 the label is "*", below 0.01 "**", below
+    0.001 "***", and every figure legend carries that key. At or above 0.05
+    the value is printed to two decimals ("P = 0.06", "P = 0.08"), as the
+    submitted pages set them, with one exception: a value that two decimals
+    would print as "0.05" - anything from 0.05 to 0.055 - prints three,
+    because "P = 0.05" claims a borderline the number does not hold
+    (Figure 5J prints 0.052 and 0.055). The manuscript text quotes three
+    decimals throughout; nothing here disagrees with it, it rounds it.
+
+    Nineteen panel scripts carried their own `f'P = {p:.3f}'`; three carried a
+    one-significant-figure variant; four carried their own star ladders. One
+    owner now (RULES.md rule 5).
+    """
+    p = float(p)
+    if p != p or p < 0 or p > 1:
+        raise ValueError(f"not a P value: {p!r}")
+    if p < 0.001:
+        return "***"
+    if p < 0.01:
+        return "**"
+    if p < 0.05:
+        return "*"
+    two = f"{p:.2f}"
+    if two == "0.05":
+        return f"P = {p:.3f}"
+    return f"P = {two}"
+
+
+def p_is_star(p: float) -> bool:
+    """Whether p_label prints a star for this value (the scripts size a star
+    at body_pt and a printed value at tick_pt)."""
+    return p_label(p).startswith("*")
+
+
+#: The size a star prints at, since 2026-09-15. Every star on the shipped
+#: pages of 2026-09-15 was already 7 pt, and the author still read them as
+#: small: an asterisk's ink is about 55% of the cap height, so a 7 pt star
+#: is a 1.2 mm mark beside 1.8 mm digits. At 9 pt the mark is 1.6 mm. One
+#: number, used through p_text_kw(); sweep_pages.check_stars holds every
+#: page to it.
+STAR_PT = 9.0
+
+
+def p_text_kw(p: float) -> tuple[str, dict]:
+    """(the label p_label prints, the text kwargs that size it).
+
+    A star is set at STAR_PT; a printed value at tick_pt(), the size of the
+    tick labels beside it. Call sites write
+        s, kw = style.p_text_kw(p); ax.text(x, y, s, **kw)
+    and name no size of their own.
+    """
+    label = p_label(p)
+    return label, {"fontsize": STAR_PT if label.startswith("*") else tick_pt()}
+
+
+def _p_label_controls() -> list[str]:
+    """Positive cases, then a mutation. A formatter that cannot be shown
+    to differ from the naive one is not a decision, it is a habit."""
+    fails = []
+    want = [(0.057143, "P = 0.06"), (0.082817, "P = 0.08"),
+            (0.188080, "P = 0.19"), (0.013672, "*"),
+            (0.005, "**"), (0.0005, "***"), (0.924, "P = 0.92"),
+            (0.051948, "P = 0.052"), (0.054681, "P = 0.055"),
+            (0.0499, "*"), (0.0551, "P = 0.06"), (0.0500, "P = 0.050"),
+            (0.0449, "*"), (0.01, "*"), (0.0099, "**")]
+    for p, s in want:
+        got = p_label(p)
+        if got != s:
+            fails.append(f"p_label({p}) = {got!r}, want {s!r}")
+    # MUTATION 1: the naive two-decimal formatter must be caught printing the
+    # borderline that p_label refuses to print.
+    naive = f"P = {0.054681:.2f}"
+    if naive != "P = 0.05":
+        fails.append("mutation control broken: naive formatter did not print "
+                     f"'P = 0.05' ({naive!r})")
+    elif p_label(0.054681) == naive:
+        fails.append("MUTANT PASSED: p_label agrees with the naive formatter "
+                     "at 0.0547; the 0.05 exception is not in force")
+    # MUTATION 2: a formatter that prints a number below 0.05 is the one the
+    # author rejected ("P = 0.01" on Figure 3H); p_label must not agree with it.
+    if p_label(0.0137) == f"P = {0.0137:.2f}":
+        fails.append("MUTANT PASSED: p_label printed a number below 0.05")
+    if not p_is_star(0.03) or p_is_star(0.06):
+        fails.append("p_is_star disagrees with p_label")
+    try:
+        p_label(float("nan"))
+        fails.append("MUTANT PASSED: p_label accepted NaN")
+    except ValueError:
+        pass
+    # p_text_kw: a star is STAR_PT, a value is the tick size, and the two
+    # sizes differ (MUTATION 3: a STAR_PT equal to tick_pt would be no ruling).
+    s_lab, s_kw = p_text_kw(0.03)
+    v_lab, v_kw = p_text_kw(0.19)
+    if s_lab != "*" or s_kw["fontsize"] != STAR_PT:
+        fails.append(f"p_text_kw sized a star at {s_kw}")
+    if v_lab != "P = 0.19" or v_kw["fontsize"] != tick_pt():
+        fails.append(f"p_text_kw sized a value at {v_kw}")
+    if STAR_PT <= tick_pt():
+        fails.append(f"MUTANT PASSED: STAR_PT {STAR_PT} is not above tick_pt "
+                     f"{tick_pt()}; the star would print at the size the author "
+                     f"read as small")
+    return fails
 
 
 def _page_width_pt() -> float:
@@ -322,6 +468,17 @@ def apply(palette: bool = False, **setting_overrides) -> str:
     # type change.
     cns.settings.savefig_transparent = False
 
+    # Since 2026-09-14: cnsplots' bold axis titles are off. The submitted pages
+    # set every title, ρ/P annotation and legend heading in regular weight and
+    # reserved bold for the panel letters (cnsplots' panel_label_fontweight,
+    # untouched here). Its 0.5 pt spines become RULE_PT, so the frame and the
+    # ticks are one weight. A caller may still override either, and sweep_pages
+    # will then say so.
+    setting_overrides.setdefault("title_fontweight", "normal")
+    setting_overrides.setdefault("axes_linewidth", RULE_PT)
+    setting_overrides.setdefault("xtick_major_width", RULE_PT)
+    setting_overrides.setdefault("ytick_major_width", RULE_PT)
+
     # The author's spec puts tick labels and legend text together at 7 pt.
     # cnsplots drives tick labels from fontsize_legend (7) but lets legend text
     # inherit title_fontsize (8) unless legend_fontsize is set. Set it.
@@ -349,6 +506,15 @@ def apply(palette: bool = False, **setting_overrides) -> str:
     # ps.fonttype is not in cnsplots' contract but the project's panels write
     # EPS in a few places and Type 3 there would undo pdf.fonttype=42.
     matplotlib.rcParams["ps.fonttype"] = 42
+
+    # Every width cnsplots has no opinion about, to the one rule width. Done
+    # after setup_matplotlib() so the snapshot path (which replays recorded
+    # rcParams) ends in the same state as the live one.
+    for key in _RULE_RC:
+        matplotlib.rcParams[key] = RULE_PT
+    # A line marker's outline is an edge. matplotlib's default is 1.0 pt,
+    # which the radar of Figure 5H printed on twenty-eight markers.
+    matplotlib.rcParams["lines.markeredgewidth"] = EDGE_PT
 
     return resolved_family()
 
@@ -400,6 +566,14 @@ def describe() -> str:
         f"  legend text         {rc['legend.fontsize']:g} pt, "
         f"frameon={rc['legend.frameon']}, markerscale={rc['legend.markerscale']}",
         f"  axes.linewidth      {rc['axes.linewidth']:g}",
+        f"  rule width          {RULE_PT:g} pt (spines, ticks, boxes, "
+        f"brackets, rules; lines.linewidth {rc['lines.linewidth']:g}, "
+        f"patch {rc['patch.linewidth']:g}, boxplot "
+        f"{rc['boxplot.boxprops.linewidth']:g})",
+        f"  edge width          {EDGE_PT:g} pt (marker edges, cell grids, "
+        f"hex outlines, violin bodies)",
+        f"  P values            {p_label(0.057143)}, {p_label(0.054681)}, "
+        f"{p_label(0.005)}",
         f"  ticks               size {rc['xtick.major.size']:g}, "
         f"width {rc['xtick.major.width']:g}, pad {rc['xtick.major.pad']:g}",
         f"  spines top/right    {rc['axes.spines.top']} / {rc['axes.spines.right']}",
@@ -486,7 +660,18 @@ def _ink_artists(fig):
     out = list(fig.texts)                       # suptitle, supxlabel, supylabel
     for ax in fig.axes:
         out.append(ax)
-        out.extend([ax.title, ax.xaxis.label, ax.yaxis.label])
+        # ax.title is the CENTRED title only. set_title(loc='left') and
+        # loc='right' write to two separate Text artists, and leaving them out
+        # made this function blind to them: Figure 3 panel A's restored
+        # 'In house / (scRNA-seq)' title was laid out at y = -1.47 mm, printed
+        # nowhere, and fit_margins reserved no room for it because it could not
+        # see it. overflow_mm returned (0, 0, 0, 0) on a panel with a title off
+        # the top of the canvas. Found 2026-09-11; the self-test control below
+        # is the one that would have caught it.
+        out.extend([ax.title,
+                    getattr(ax, "_left_title", None),
+                    getattr(ax, "_right_title", None),
+                    ax.xaxis.label, ax.yaxis.label])
         out.extend(ax.texts)
         leg = ax.get_legend()
         if leg is not None:
@@ -747,6 +932,37 @@ def _fit_controls():
         out.append("letter_clear cannot see ink in the cell it guards")
     plt.close(fig)
 
+    # A LEFT-ALIGNED TITLE IS INK TOO
+    #   set_title(loc='left') writes to ax._left_title, not to ax.title, and
+    #   for a while _ink_artists collected only the latter. The symptom was
+    #   silent: Figure 3 panel A's four-line title was laid out above the top
+    #   of the canvas, overflow_mm returned all zeros, fit_margins reserved
+    #   nothing, and the panel shipped with its dataset name printed nowhere.
+    #   Both controls run, because a fix that only reserved room would still
+    #   leave the detector blind.
+    #   The title has to be the ONLY thing outside the canvas, or the control
+    #   is met by the x and y labels and passes whatever it can see. So this
+    #   panel carries no labels and its axes are inset well clear of every
+    #   edge, and the assertion is on the top side alone.
+    for loc in ("center", "left", "right"):
+        fig, ax = subplots_mm(38, 34)
+        ax.plot([0, 1], [0, 1])
+        ax.set_xticks([]); ax.set_yticks([])
+        fig.subplots_adjust(left=0.1, right=0.9, bottom=0.1, top=0.98)
+        before = overflow_mm(fig)
+        if max(before) > 0.01:
+            out.append(f"the {loc} title control starts dirty: {before}")
+        ax.set_title("In house\n(scRNA-seq)\nrho = 0.36\nP = 0.04",
+                     loc=loc, fontsize=7)
+        after = overflow_mm(fig)
+        if after[3] <= 0.5:
+            out.append(f"overflow_mm cannot see a {loc}-aligned title "
+                       f"off the top of the canvas: top {after[3]} mm")
+        if max(fit_margins(fig)) != 0.0:
+            out.append(f"fit_margins leaves a {loc}-aligned title outside "
+                       f"the canvas")
+        plt.close(fig)
+
     fig = panel(w=12, h=10,
                 ylabel="Monocytes and macrophages expressing IL-1B")
     try:
@@ -790,6 +1006,14 @@ def self_test(tmpdir=None) -> int:
     check("xtick.major.width", rc["xtick.major.width"],
           cns.settings.xtick_major_width)
     check("xtick.major.pad", rc["xtick.major.pad"], cns.settings.xtick_major_pad)
+    check("axes.titleweight is regular", rc["axes.titleweight"], "normal")
+    check("panel letters stay bold", str(cns.settings.panel_label_fontweight),
+          "bold")
+    for key in _RULE_RC:
+        check(f"{key} is RULE_PT", float(rc[key]), RULE_PT)
+    check("lines.markeredgewidth is EDGE_PT", float(rc["lines.markeredgewidth"]),
+          EDGE_PT)
+    fails += _p_label_controls()
     check("axes.spines.top", rc["axes.spines.top"], False)
     check("axes.spines.right", rc["axes.spines.right"], False)
     check("legend.frameon", rc["legend.frameon"], False)

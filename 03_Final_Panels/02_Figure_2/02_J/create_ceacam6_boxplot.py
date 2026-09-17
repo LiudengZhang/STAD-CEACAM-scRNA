@@ -38,6 +38,7 @@ import sys
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+from matplotlib.ticker import MultipleLocator
 import numpy as np
 import scanpy as sc
 from scipy import stats
@@ -48,6 +49,7 @@ from shared.figure_config import (RESPONSE_COLORS,                   # noqa: E40
                                   RESPONSE_MEDIAN_COLORS)
 import panel_style_cns as style                                      # noqa: E402
 import slots                                                         # noqa: E402
+from cnsfig.boxes import box_xlim, frame_fixed, draw_boxes, bracket, ylim_above, assert_no_points  # noqa: E402
 
 COLORS = RESPONSE_COLORS
 MEDIAN_COLORS = RESPONSE_MEDIAN_COLORS
@@ -116,75 +118,40 @@ def main():
     data = [responder_vals, non_responder_vals]
     positions = [1, 2]
 
-    # Create boxplot - line widths held at their earlier size relative to type
-    bp = ax.boxplot(
-        data,
-        positions=positions,
-        widths=0.6,
-        patch_artist=True,
-        showfliers=True,
-        boxprops=dict(linewidth=0.5 * MARK),
-        whiskerprops=dict(color='black', linewidth=0.5 * MARK),
-        capprops=dict(color='black', linewidth=0.5 * MARK),
-        flierprops=dict(marker='o', markerfacecolor='white',
-                        markersize=4 * MARK,
-                        linestyle='none', markeredgecolor='black',
-                        markeredgewidth=0.5 * MARK)
-    )
-
-    # Style boxes
-    bp['boxes'][0].set_facecolor(COLORS['Responsed'])
-    bp['boxes'][0].set_edgecolor('black')
-    bp['boxes'][1].set_facecolor(COLORS['No-response'])
-    bp['boxes'][1].set_edgecolor('black')
-
-    # Color median lines
-    bp['medians'][0].set_color(MEDIAN_COLORS['Responsed'])
-    bp['medians'][0].set_linewidth(0.8 * MARK)
-    bp['medians'][1].set_color(MEDIAN_COLORS['No-response'])
-    bp['medians'][1].set_linewidth(0.8 * MARK)
-
-    # Add significance bracket
+    # ONE BOX (2026-09-16, the author's fifth reading: "box plots should
+    # look alike throughout"): cnsfig.boxes.draw_boxes - the 2H/I box, black
+    # median (the per-group median colour is the one thing given up). The
+    # bracket keeps its vertices (line at 1.15 x y_max, arms 5% of that);
+    # the P string's ink sits 0.4 mm above the line (cnsfig.boxes.bracket).
+    bp = draw_boxes(ax, data, positions,
+                    [COLORS['Responsed'], COLORS['No-response']], width=0.6)
     y_max = max(np.max(responder_vals), np.max(non_responder_vals))
-    y_bracket = y_max * 1.15
-    ax.plot([1, 1, 2, 2], [y_bracket, y_bracket*1.05, y_bracket*1.05, y_bracket],
-            'k-', linewidth=0.5 * MARK)
-    pval_text = f'P = {pval:.3f}' if pval >= 0.001 else 'P < 0.001'
-    ax.text(1.5, y_bracket*1.08, pval_text, ha='center', va='bottom',
-            fontsize=style.tick_pt())
+    _, p_text, _ = bracket(fig, ax, 1, 2, y_max, y_max, pval, kind="pair",
+                           lift=0.15, arm=0.05 * 1.15)
 
     # Labels - sizes now come from cnsplots' rcParams
     # The gene symbol is set in italic, as the shipped page sets it and as
     # the rest of this figure sets one. Style only; the string is unchanged.
-    ax.set_title('CEACAM6', fontstyle='italic')
-    ax.set_ylabel('Expression')
+    # ONE FRAME FOR THE FOUR BOXES OF K AND L  (2026-09-14, evening)
+    #   The author asked for K and L to align with each other and with J.
+    #   The four boxes name the same margins in millimetres (cnsfig.boxes
+    #   frame_fixed: left 9.0 mm for a box with a y label, 5.4 mm without;
+    #   3.8 mm below for the tick labels; one title line above), so their
+    #   frames print at the same x, the pairs at the same y, and the x
+    #   limits come from box_xlim so the boxes stand off the spines.
     ax.set_xticks(positions)
-    # The two response labels stand 5.5 mm apart on this box and set 5.52 and
-    # 7.05 mm at 6 pt, so drawn horizontally they run into one another - by
-    # 1.08 mm on the narrowest of the four boxes of panels K and L. They are
-    # set at 45 degrees instead, which is what the printed page's own narrow
-    # panels do: the same two strings, the same tick positions, a different
-    # angle.
-    ax.set_xticklabels(['Pre-R', 'Pre-NR'],
-                       rotation=45, ha='right')
-    ax.set_ylim(0, y_max * 1.40)
-    # Three gradations rather than five: on a 19.3 mm box the fourth
-    # prints against the bracket's P value. The scale, the limits and
-    # the data are untouched; only how finely the ruler is marked
-    # changes.
-    ax.locator_params(axis='y', nbins=3)
-
-    # Styling (no grid per user preference)
+    ax.set_xticklabels(['Pre-R', 'Pre-NR'])
+    ax.set_xlim(*box_xlim(positions, 0.6, clear=0.3))   # 14 mm frame: the two group names need the pitch
+    ax.set_ylim(0, y_max * 1.75)   # headroom: the P string clears the title
+    ylim_above(ax, p_text)
+    assert_no_points(ax, bp)
+    # The published ruler: 0.0 to 2.0 in steps of 0.5 (2026-09-14).
+    ax.yaxis.set_major_locator(MultipleLocator(0.5))
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
-
-    # Margins in millimetres of paper, not fractions of a 4x canvas
-    style.fit_margins(fig, pad_mm=0.6, reserve_letter=False)
-    over = style.overflow_mm(fig)
-    if max(over) > 0:
-        raise RuntimeError(
-            f"ink outside the {PANEL_W_MM} x {PANEL_H_MM} mm canvas "
-            f"(l,r,b,t mm): {over}")
+    frame_fixed(fig, ax, title='*CEACAM6*', ylabel='Expression',
+                left_mm=9.0, right_mm=0.6, bottom_mm=3.8,
+                panel_w_mm=PANEL_W_MM, panel_h_mm=PANEL_H_MM)
 
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     style.save_panel(fig, Path(OUTPUT_DIR) / "ceacam6_pre_boxplot")

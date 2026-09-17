@@ -1,6 +1,13 @@
 #!/usr/bin/env python3
 """
-Draw S8B - TCGA-STAD immune exclusion (Reviewer 1, point R1.6).
+Draw S9D and S9E - TCGA-STAD immune exclusion (Reviewer 1, point R1.6).
+
+The analysis's `_panel(d, t, purity_col)` draws one figure with
+two axes - the scatter with its purity-adjusted fit on the left, the six
+exposure coefficients with their CIs on the right. Each axis is its own panel
+at half the width: S9D the scatter and S9E the coefficients. `--check` compares each
+against ITS axes of the original (`keep_axes`), so scatter is checked against
+scatter and bars against bars; nothing plotted moves, the canvas is cut.
 
 Analysis: 04_Revision_Analyses/05_R1.6_Spatial_Confounders/scripts/tcga_immune_exclusion.py
 
@@ -52,12 +59,12 @@ base.apply_style()
 
 A = base.analysis("05_R1.6_Spatial_Confounders/scripts/tcga_immune_exclusion.py")
 OUT = base.outputs_of(A)
-FIG = "S8_Spatial_Confounders"
+FIG = "S9_Spatial_Confounders"
 
-# The printed box, millimetres. Half-page width, which is what the two axes
-# need: the left one carries a two-line title and a two-line x label, the right
-# one a three-line x label under six exposure rows.
-W, H = 118.0, 50.0
+# The printed boxes, millimetres, one per panel since 2026-09-16 (the two axes
+# shared one 171 x 54 mm canvas until then). Side by side on one row of the
+# 171.10 mm page: 80 + 5 (gutter) + 80.
+W, H = 80.0, 54.0
 
 # Previously 8.0 x 4.0 cm drawn at four times print size and fitted into a
 # 118 x 42 mm box at 0.2625; the smallest type was the exposure tick labels and
@@ -67,6 +74,9 @@ A_TYPE = 5.5 * 4 * A_FIT
 MARK = (style.tick_pt() / A_TYPE) * A_FIT
 AREA = MARK ** 2
 
+# Line weights since 2026-09-16: the fit and the zero line are lines
+# (RULE_PT), the bar outlines are outlines of filled things (EDGE_PT) -
+# panel_style_cns names those two and nothing else.
 # `main()` hardcodes this; it is not chosen from the columns found.
 PURITY_COL = "ABSOLUTE_purity"
 
@@ -74,14 +84,14 @@ PURITY_COL = "ABSOLUTE_purity"
 def frames():
     """`d` and `t` as `main()` built them. No model is refitted, ESTIMATE is not re-run."""
     t = pd.read_csv(base.require(
-        OUT / "tcga_immune_exclusion.csv", "S8B purity-adjusted model table"))
+        OUT / "tcga_immune_exclusion.csv", "S9D purity-adjusted model table"))
 
     est = pd.read_csv(base.require(
-        OUT / "tcga_estimate_scores.csv", "S8B stored ESTIMATE scores"),
+        OUT / "tcga_estimate_scores.csv", "S9D stored ESTIMATE scores"),
         index_col=0)
     epi = pd.read_csv(base.require(
         A.TCGA / "tcga_bayesprism_epithelial_expression.tsv",
-        "S8B BayesPrism deconvolved epithelial expression"),
+        "S9D BayesPrism deconvolved epithelial expression"),
         sep="\t", index_col=0)
 
     # The assembly main() performs, verbatim.
@@ -98,7 +108,7 @@ def frames():
     # The panel never reads this column, but `d` is the frame main() built and
     # the driver does not quietly hand the panel a different one.
     absolute = pd.read_csv(base.require(
-        A.ABSOLUTE_PURITY, "S8B PanCanAtlas ABSOLUTE purity"), sep="\t")
+        A.ABSOLUTE_PURITY, "S9D PanCanAtlas ABSOLUTE purity"), sep="\t")
     absolute["patient"] = absolute["array"].astype(str).str[:12]
     ab = (absolute.dropna(subset=["purity"])
           .groupby("patient")["purity"].mean())
@@ -106,12 +116,17 @@ def frames():
     return dict(d=d, t=t)
 
 
-def draw_B(fr, save=True):
+def _finish(ax):
+    ax.tick_params(axis="both", width=0.6, length=2)
+    for s_ in ("top", "right"):
+        ax.spines[s_].set_visible(False)
+
+
+def draw_D(fr, save=True):
+    """S9D - the scatter and its purity-adjusted fit (axes 0 of the original)."""
     base.apply_style()
     d, t = fr["d"], fr["t"]
-    fig, axes = style.subplots_mm(W, H, 1, 2)
-
-    ax = axes[0]
+    fig, ax = style.subplots_mm(W, H)
     ax.scatter(d["CEACAM"], d["ImmuneScore"], s=4 * 4 * AREA, c="#4d4d4d",
                alpha=0.45, edgecolors="none")
     # The fit is the analysis's own line, copied verbatim so the check can
@@ -119,44 +134,53 @@ def draw_B(fr, save=True):
     z = np.polyfit(d["CEACAM"].dropna(),
                    d.loc[d["CEACAM"].notna(), "ImmuneScore"], 1)
     xs = np.linspace(d["CEACAM"].min(), d["CEACAM"].max(), 50)
-    ax.plot(xs, np.polyval(z, xs), color="#B2182B", linewidth=1.2 * MARK)
+    ax.plot(xs, np.polyval(z, xs), color="#B2182B", linewidth=style.RULE_PT)
     ax.set_xlabel("Epithelial CEACAM5/6\n(log2, deconvolved)")
     ax.set_ylabel("ESTIMATE immune score")
     row = t[(t["exposure"] == "CEACAM") & (t["outcome"] == "ImmuneScore")]
     ax.set_title(f"TCGA-STAD, n = {int(row['n'].iloc[0])}\n"
                  f"purity-adjusted P = {row['p_purity_adjusted'].iloc[0]:.3g}")
+    _finish(ax)
+    base.fit(fig)
+    if save:
+        base.save(fig, FIG, "S9_D", "S9_D_tcga_immune_exclusion")
+    return fig
 
-    ax = axes[1]
+
+def draw_E(fr, save=True):
+    """S9E - the six purity-adjusted coefficients with their CIs (axes 1)."""
+    base.apply_style()
+    t = fr["t"]
+    fig, ax = style.subplots_mm(W, H)
     sub = t[t["outcome"] == "ImmuneScore"]
     y = np.arange(len(sub))
     cols = ["#B2182B" if v < 0 else "#2166AC" for v in sub["beta_purity_adjusted"]]
     ax.barh(y, sub["beta_purity_adjusted"], color=cols, edgecolor="#333",
-            linewidth=0.4, height=0.6)
+            linewidth=style.EDGE_PT, height=0.6)
     ax.errorbar(sub["beta_purity_adjusted"], y,
                 xerr=[sub["beta_purity_adjusted"] - sub["ci_lo"],
                       sub["ci_hi"] - sub["beta_purity_adjusted"]],
-                fmt="none", ecolor="#333", elinewidth=0.8 * MARK,
+                fmt="none", ecolor="#333", elinewidth=style.RULE_PT,
                 capsize=2 * MARK)
     ax.set_yticks(y)
     ax.set_yticklabels(sub["exposure"])
-    ax.axvline(0, color="#666", linewidth=0.5)
+    ax.axvline(0, color="#666", linewidth=style.RULE_PT)
     ax.set_xlabel("Immune score change\nper log2 CEACAM\n(purity-adjusted)")
-
-    for ax in axes:
-        ax.tick_params(axis="both", width=0.6, length=2)
-        for s_ in ("top", "right"):
-            ax.spines[s_].set_visible(False)
-    base.fit(fig, wspace=0.60)
+    _finish(ax)
+    base.fit(fig)
     if save:
-        base.save(fig, FIG, "S8_B", "S8_B_tcga_immune_exclusion")
+        base.save(fig, FIG, "S9_E", "S9_E_tcga_immune_exclusion_coefficients")
     return fig
 
 
 def main():
     fr = frames()
+    # Each panel is checked against its own axes of the two-axes original
+    # (`keep_axes`): S9D against axes 0, S9E against axes 1.
+    original = lambda: A._panel(fr["d"], fr["t"], PURITY_COL)   # noqa: E731
     return base.run({
-        "S8_B": (lambda: draw_B(fr),
-                 lambda: A._panel(fr["d"], fr["t"], PURITY_COL)),
+        "S9_D": (lambda: draw_D(fr), original, None, [0]),
+        "S9_E": (lambda: draw_E(fr), original, None, [1]),
     })
 
 

@@ -108,13 +108,13 @@ def main():
 
     y_pos = np.arange(len(top9))
     ax.barh(y_pos, top9['NES'], color=colors, edgecolor='black',
-            linewidth=0.5 * MARK)
+            linewidth=style.EDGE_PT)
 
     ax.set_yticks(y_pos)
     ax.set_yticklabels(top9['clean_name'])
-    ax.set_xlabel('NES')
+    ax.set_xlabel('NES (Post-NR/Post-R)')   # the page's label (2026-09-14)
 
-    ax.axvline(x=0, color='black', linewidth=0.8 * MARK)
+    ax.axvline(x=0, color='black', linewidth=style.RULE_PT)
 
     max_abs = max(abs(top9['NES'].min()), abs(top9['NES'].max()))
     ax.set_xlim(-max_abs - 0.3, max_abs + 0.3)

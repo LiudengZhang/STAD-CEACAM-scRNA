@@ -1,7 +1,7 @@
 Signature,N_genes,Genes,Reference
 "T cell exhaustion (Tex), 19-gene state score (Fig. 5K)",19,PDCD1; CTLA4; HAVCR2; LAG3; TIGIT; CD244; CD160; TOX; TOX2; EOMES; PRDM1; NR4A1; NR4A2; NR4A3; ENTPD1; CD38; CXCL13; LAYN; TNFRSF9,"Wherry & Kurachi, Nat Rev Immunol 2015"
 "T cell exhaustion (Tex), 18-gene ssGSEA signature (Fig. 3E)",18,PDCD1; HAVCR2; LAG3; TIGIT; CTLA4; TOX; ENTPD1; CXCL13; LAYN; CD38; BATF; IRF4; PRDM1; TOX2; ITGAE; NR4A1; NR4A2; NR4A3,"Wherry & Kurachi, Nat Rev Immunol 2015; this study"
-"T cell exhaustion (Tex), 10-gene composite score (Fig. S3D)",10,PDCD1; HAVCR2; LAG3; TIGIT; CTLA4; TOX; ENTPD1; LAYN; CXCL13; BATF,"Wherry & Kurachi, Nat Rev Immunol 2015; this study"
+"T cell exhaustion (Tex), 10-gene composite score (Fig. S4D)",10,PDCD1; HAVCR2; LAG3; TIGIT; CTLA4; TOX; ENTPD1; LAYN; CXCL13; BATF,"Wherry & Kurachi, Nat Rev Immunol 2015; this study"
 EMT (Mesenchymal),18,VIM; CDH2; FN1; SNAI1; SNAI2; ZEB1; ZEB2; TWIST1; SPARC; MMP2; SERPINE1; ACTA2; COL1A1; COL3A1; TAGLN; THY1; S100A4; LGALS1,Comprehensive EMT marker panel
 EMT (Epithelial),13,CDH1; EPCAM; KRT8; KRT18; KRT19; CLDN1; CLDN3; CLDN4; CLDN7; OCLN; TJP1; DSP; PKP3,Comprehensive EMT marker panel
 MDSC core,10,S100A8; S100A9; S100A12; VCAN; LYZ; ARG1; CYBB; IL1B; CD33; MNDA,"Veglia et al., Nat Rev Immunol 2021"

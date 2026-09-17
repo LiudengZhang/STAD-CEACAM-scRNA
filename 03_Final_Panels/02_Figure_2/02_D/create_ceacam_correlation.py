@@ -88,8 +88,8 @@ def main():
                edgecolors='none', rasterized=False)
 
     # Labels (italic gene names)
-    ax.set_xlabel(r'$\it{CEACAM5}$')
-    ax.set_ylabel(r'$\it{CEACAM6}$')
+    ax.set_xlabel('CEACAM5', fontstyle='italic')   # whole symbol italic, digit too (cnsfig.rich)
+    ax.set_ylabel('CEACAM6', fontstyle='italic')
 
     # Stats annotation — 1 sig digit (floor), scientific for very small P
     import math

@@ -70,9 +70,19 @@ echo "========================================"
 # =====================================================================
 run_fig1() {
     echo -e "\n=== FIGURE 1 (A-C) ==="
-    run_script "$BASE/01_Figure_1/01_B/generate_stomach_umap.py"
-    run_script "$BASE/01_Figure_1/01_C/generate_stomach_stacked_bar.py"
-    run_script "$BASE/01_Figure_1/assemble_figure_1.py"
+    # B and C are drawn at 1:1 by the create_*.py scripts (renamed from
+    # generate_*.py on 2026-09-15 when the panels were redrawn; the old
+    # names no longer exist). A is the study-overview artwork under
+    # _panel_1A/. The shipped page - A across the top, B and C on one row
+    # at one height, on the 171.10 x 229.31 mm page every main figure uses
+    # since 2026-09-15 - is assembled from the slot tables
+    # (panel_rects_v2.csv) by 03_Final_Panels/assemble_slotted.py, which
+    # is not part of this release (RELEASE_GAPS.csv; the author's ruling).
+    # assemble_figure_1.py beside these scripts is the pre-submission
+    # assembler of the submitted 254 mm landscape page and is NOT run: it
+    # would print a page the revised article does not.
+    run_script "$BASE/01_Figure_1/01_B/create_stomach_umap.py"
+    run_script "$BASE/01_Figure_1/01_C/create_stomach_stacked_bar.py"
 }
 
 # =====================================================================
@@ -236,11 +246,41 @@ run_revision() {
     for s in "$BASE"/../04_Revision_Analyses/*/scripts/*.py; do
         [ -e "$s" ] || continue
         case "$(basename "$s")" in _*) continue ;; esac
+        case "$s" in
+            */01_R1.3_Cohort_Pairing/*)
+                echo "SKIPPED private clinical-audit/reference module 01_R1.3_Cohort_Pairing (de-identified outputs are deposited)"; continue ;;
+            */14_MAST_Specification/*|*/16_GSEA_Metric_Sensitivity/*|*/17_NFkB_Claim_Ledger/*)
+                echo "SKIPPED internal audit module $(basename "$(dirname "$(dirname "$s")")")"; continue ;;
+            */15_Pseudobulk_Sample_Level/*)
+                echo "SKIPPED full-workflow reference module 15_Pseudobulk_Sample_Level (use its run_all.sh)"; continue ;;
+        esac
         # CellTypist and pyDESeq2 require numpy>=2; the main environment is
         # pinned to numpy 1.23.5, so they run in their own. See the Dockerfile.
         case "$(basename "$s")" in
             celltypist_annotation.py)
-                STAD_CONDA_ENV="${STAD_NUMPY2_ENV:-stad_numpy2}" run_script "$s" ;;
+                if [ "${STAD_RUN_OPTIONAL:-0}" = "1" ]; then
+                    STAD_CONDA_ENV="${STAD_NUMPY2_ENV:-stad_numpy2}" run_script "$s"
+                else
+                    echo "SKIPPED optional $(basename "$s") (set STAD_RUN_OPTIONAL=1 to run)"
+                fi ;;
+            ceacam_family_and_interactions.py)
+                if [ "${STAD_RUN_OPTIONAL:-0}" = "1" ]; then
+                    run_script "$s"
+                else
+                    echo "SKIPPED optional $(basename "$s") (set STAD_RUN_OPTIONAL=1 to run)"
+                fi ;;
+            pin_gene_sets.py)
+                echo "SKIPPED preparation-only pin_gene_sets.py (the pinned GMT is deposited)" ;;
+            rescore_mast_gsea.py)
+                echo "SKIPPED audit/preparation-only rescore_mast_gsea.py (the adopted sound13 outputs are deposited)" ;;
+            momac_lineage.py)
+                if [ "${STAD_RUN_PREPARATION:-0}" = "1" ]; then
+                    run_script "$s"
+                else
+                    echo "SKIPPED preparation/reference-only momac_lineage.py (the approved lineage-score tables are deposited; set STAD_RUN_PREPARATION=1 to recompute from a matching source object)"
+                fi ;;
+            spatial_positive_evidence.py)
+                echo "SKIPPED audit/reference-only spatial_positive_evidence.py (its internal S11 output is not submitted)" ;;
             *)  run_script "$s" ;;
         esac
     done
@@ -263,6 +303,21 @@ run_revision() {
     for s in "$BASE"/Supplementary_New/_drivers/draw_*.py; do
         [ -e "$s" ] || continue
         run_script "$s"
+    done
+    # S1-S7, since 2026-09-15 (evening): every panel of the six submitted
+    # pages is redrawn at print size by a create_*.py in its own panel
+    # directory (the immune-module and PD-L1 figures by one script at the
+    # figure level), reading the deposited h5ads and tables. They must run
+    # before the assembler too. Since 2026-09-16 the directories carry the
+    # printed numbers S1-S10 (S1 split into S1 and S2, S2-S9 renumbered
+    # S3-S10), so the glob takes every S*_ directory rather than a fixed
+    # range; the drivers above draw the S8-S10 panels.
+    for s in $(ls -d "$BASE"/Supplementary_New/S*_*/ \
+               | sed 's#\(.*/S\([0-9]*\)_[^/]*/\)$#\2 \1#' | sort -n | cut -d" " -f2); do
+        for c in "$s"S*_?/create_*.py "$s"create_*.py; do
+            [ -e "$c" ] || continue
+            run_script "$c"
+        done
     done
     run_script "$BASE/Supplementary_New/assemble_new_supplementaries.py"
 }

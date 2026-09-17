@@ -45,6 +45,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
 from paths import TIGER_BAYESPRISM_EPI, TIGER_META       # noqa: E402
 import panel_style_cns as style                          # noqa: E402
 import slots                                             # noqa: E402
+from cnsfig.boxes import box_xlim, frame_fixed          # noqa: E402
 
 OUTPUT_DIR = Path(__file__).parent
 
@@ -102,58 +103,55 @@ def main():
     for i, body in enumerate(vp['bodies']):
         body.set_facecolor(colors[i])
         body.set_edgecolor('black')
-        body.set_linewidth(0.5 * MARK)
+        body.set_linewidth(style.EDGE_PT)
         body.set_alpha(0.7)
 
     # Boxplot
     bp = ax.boxplot(data, positions=positions, widths=0.15, patch_artist=True,
                     showfliers=False,
-                    boxprops=dict(facecolor='white', linewidth=0.5 * MARK),
-                    whiskerprops=dict(color='black', linewidth=0.5 * MARK),
-                    capprops=dict(color='black', linewidth=0.5 * MARK),
-                    medianprops=dict(color='black', linewidth=0.8 * MARK))
+                    boxprops=dict(facecolor='white', linewidth=style.RULE_PT),
+                    whiskerprops=dict(color='black', linewidth=style.RULE_PT),
+                    capprops=dict(color='black', linewidth=style.RULE_PT),
+                    medianprops=dict(color='black', linewidth=style.RULE_PT))
 
     # Jittered points
     np.random.seed(42)
     for i, (pos, vals, color) in enumerate(zip(positions, data, colors)):
         jitter = np.random.uniform(-0.08, 0.08, len(vals))
-        ax.scatter(pos + jitter, vals, c=color, s=6 * AREA, alpha=0.8,
-                   edgecolors='white', linewidths=0.3 * MARK, zorder=3)
+        ax.scatter(pos + jitter, vals, c=color,
+                   s=(0.76 * style.PT_PER_MM) ** 2,  # published 0.76 mm across
+                   alpha=0.8,
+                   edgecolors='white', linewidths=style.EDGE_PT, zorder=3)
 
     # Significance bracket
     y_max = max(np.max(r_vals), np.max(nr_vals))
     y_bracket = y_max * 1.1
     ax.plot([1, 1, 2, 2],
             [y_bracket, y_bracket * 1.03, y_bracket * 1.03, y_bracket],
-            'k-', linewidth=0.5 * MARK)
-    p_text = f'P = {pval:.3f}' if pval >= 0.001 else 'P < 0.001'
+            'k-', linewidth=style.RULE_PT)
+    p_text = style.p_label(pval)
     ax.text(1.5, y_bracket * 1.05, p_text, ha='center', va='bottom',
             fontsize=style.tick_pt())
 
-    # Labels
-    ax.set_title('$\\it{CEACAM6}$')
-    ax.set_ylabel('Expression\n(log2)')
+    # ONE FRAME FOR THE FOUR BOXES OF K AND L  (2026-09-14, evening)
+    #   The author asked for K and L to align with each other and with J.
+    #   The four boxes name the same margins in millimetres (cnsfig.boxes
+    #   frame_fixed: left 9.0 mm for a box with a y label, 5.4 mm without;
+    #   3.8 mm below for the tick labels; one title line above), so their
+    #   frames print at the same x, the pairs at the same y, and the x
+    #   limits come from box_xlim so the boxes stand off the spines.
     ax.set_xticks([1, 2])
-    # The two response labels stand 5.5 mm apart on this box and set 5.52 and
-    # 7.05 mm at 6 pt, so drawn horizontally they run into one another - by
-    # 1.08 mm on the narrowest of the four boxes of panels K and L. They are
-    # set at 45 degrees instead, which is what the printed page's own narrow
-    # panels do: the same two strings, the same tick positions, a different
-    # angle.
-    ax.set_xticklabels(['Pre-R', 'Pre-NR'],
-                       rotation=45, ha='right')
-    ax.set_ylim(0, y_max * 1.35)
-
-    style.fit_margins(fig, pad_mm=0.6, cell_mm=LETTER_CELL)
-    over = style.overflow_mm(fig)
-    if max(over) > 0:
-        raise RuntimeError(
-            f"ink outside the {PANEL_W_MM} x {PANEL_H_MM} mm canvas "
-            f"(l,r,b,t mm): {over}")
-    intruders = style.letter_clear(fig, LETTER_CELL)
-    if intruders:
-        raise RuntimeError(
-            f"ink under the panel letter cell: {intruders}")
+    ax.set_xticklabels(['Pre-R', 'Pre-NR'])
+    ax.set_xlim(*box_xlim([1, 2], 0.7, clear=0.25))   # 14 mm frame: the two group names need the pitch
+    ax.set_ylim(0, y_max * 1.70)   # headroom: the P string clears the title
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    # The y label on one line: 'Expression (log2)' sets 19.5 mm at 7 pt
+    # against a 21 mm frame, so the two rows' left boxes share a margin.
+    frame_fixed(fig, ax, title='*CEACAM6* (Epi)', ylabel='Expression (log2)',
+                left_mm=9.0, right_mm=0.6, bottom_mm=3.8,
+                panel_w_mm=PANEL_W_MM, panel_h_mm=PANEL_H_MM,
+                letter_cell=LETTER_CELL)
 
     style.save_panel(fig, OUTPUT_DIR / "ceacam6_prjeb25780_boxplot")
     print(f"Saved: {OUTPUT_DIR / 'ceacam6_prjeb25780_boxplot'}.[svg|pdf|png] "

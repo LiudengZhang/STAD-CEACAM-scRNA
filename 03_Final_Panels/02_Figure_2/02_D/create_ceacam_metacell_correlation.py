@@ -162,8 +162,8 @@ def main():
     fig, ax = style.subplots_mm(PANEL_W_MM, PANEL_H_MM)
     ax.scatter(mc["CEACAM5"], mc["CEACAM6"], s=1.4 * AREA, alpha=0.45,
                c="#3498db", edgecolors="none")
-    ax.set_xlabel(r"$\it{CEACAM5}$")
-    ax.set_ylabel(r"$\it{CEACAM6}$")
+    ax.set_xlabel('CEACAM5', fontstyle='italic')   # whole symbol italic, digit too (cnsfig.rich)
+    ax.set_ylabel('CEACAM6', fontstyle='italic')
 
     hi = float(np.ceil(max(mc["CEACAM5"].max(), mc["CEACAM6"].max())))
     ax.set_xlim(0, hi)

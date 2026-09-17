@@ -1,0 +1,2 @@
+table,file,md5,rows,columns,source_script
+proportions,proportions.csv,0290aee8de7b3e0ee4159f3758c60c04,9,3,create_S2_E_liver_ceacam_proportion.py

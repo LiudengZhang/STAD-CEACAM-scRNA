@@ -66,6 +66,21 @@ THE COHORT LEAVES THE TITLE, AND THE AXIS LABELS ARE RE-WRAPPED
     wide enough to take them the right axes' title prints into the shared
     legend instead. Both are declared in RENAMES_FIGURE_3, and the x unit is
     stated in the caption.
+
+MARKER AND RULE WIDTHS ARE MEASURED OFF THE PUBLISHED PAGE  (2026-09-11)
+    Every one of these scatter panels carried a stray factor of SCALE on its
+    non-type sizes - `s=30*SCALE*AREA`, `linewidth=0.8*SCALE*MARK` - on top of
+    AREA and MARK, which already carry the 4x canvas across. The markers came
+    out about twice as wide as the page prints them and ran together.
+
+    Counted out of `00_GROUND_TRUTH/figures/Figure 3.pdf` geometry:
+
+        panel A   0.520 mm across, 67 marks      panel B   0.421 mm, 445
+        panel D   0.518 mm, 69                   panel E   0.424 mm, 773
+        the dashed regression rule               0.595 pt
+
+    The constants below are those numbers converted through this panel's own
+    MARK. Not one coordinate, colour or statistic moves.
 """
 
 import scanpy as sc
@@ -82,6 +97,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
 from paths import TCD8_H5AD, EPITHELIAL_DEPOSIT_H5AD
 import panel_style_cns as style  # noqa: E402
 import slots  # noqa: E402
+from cnsfig import layout as cnslayout, corr_stats, rich_xlabel, rich_ylabel  # noqa: E402
+from cnsfig import cache, group_key  # noqa: E402
 
 SCALE = 4                       # the earlier canvas multiplier, for MARK only
 SMALL_PT = 4.5                  # the earlier smallest body type, before * SCALE
@@ -98,7 +115,20 @@ PAD_MM = 0.6                    # paper left between the ink and every edge
 # bottom the two-line x label and its tick labels, top the two-line title, and
 # right the strip the shared legend is drawn in. wspace leaves the right axes
 # its own y label and tick column between the two plotting boxes.
-MARGIN = dict(left=10.0, right=14.0, top=6.5, bottom=7.4, wspace=0.8)
+#
+# wspace was 0.8 until 2026-09-11 and that was 0.13 pt too little. The right
+# axes' rotated y label sits in this gutter and the LEFT axes' x label
+# ("CEACAM5", wider than its own plotting box) overhangs into it from the
+# other side; measured on the shipped panel the two came within 0.13 pt of
+# each other and printed as one string. Nothing caught it, because two strings
+# that abut share no area and the collision test measured shared area - see
+# 10_Reproduction/check_restyled_panel.py, which now measures clearance and
+# convicts this panel at its old setting.
+# right 14.0 -> 11.5 and wspace 0.8 -> 1.0 on 2026-09-14: the legend is set
+# tighter (below) and the two titles' third lines, 17 mm each, need the
+# plots 19 mm apart centre to centre.
+#: The right column's margin (D over E): E's two-line y label sets it.
+LEFT_MM = 12.5   # E uses the same; frames align (2026-09-15)
 
 EPI = EPITHELIAL_DEPOSIT_H5AD
 OUTPUT_DIR = Path(__file__).parent
@@ -196,7 +226,8 @@ def load_primary():
 
     counts = merged['group'].value_counts()
     print(f"  Merged: {len(merged)} samples: {counts.to_dict()}")
-    return merged
+    # The cached table carries what the drawing reads and no specimen number.
+    return merged[['group', 'CEACAM5', 'CEACAM6', 'tex_fraction']].reset_index(drop=True)
 
 
 def main():
@@ -205,11 +236,20 @@ def main():
     print(f"  type set in {family}; body {style.body_pt():g} pt, "
           f"ticks/legend {style.tick_pt():g} pt; MARK {MARK:.3f}")
 
-    data = load_primary()
+    # From data/samples.csv (cnsfig.cache, 2026-09-15): the two h5ads are
+    # read only when the table is absent or --recompute is passed.
+    data = cache.table(OUTPUT_DIR, 'samples', load_primary)
 
-    # 1x2 layout
-    fig, axes = style.subplots_mm(PANEL_W_MM, PANEL_H_MM, 1, 2)
+    # ONE GEOMETRY FOR THE FOUR SCATTER PAIRS  (2026-09-14, evening)
+    #   The author's ruling: A, B, D and E are the same size, square, the
+    #   dataset name alone in the title, rho inside the box, P in the legend
+    #   (cnsfig.corr_stats writes it; edits.py reads it), and the two rows
+    #   2 mm apart. cnsfig.layout.scatter_pair_mm places the boxes at
+    #   millimetres, so the four panels print one geometry by construction.
+    fig = style.figure_mm(PANEL_W_MM, PANEL_H_MM)
+    axes = cnslayout.scatter_pair_mm(fig, left_mm=LEFT_MM)
 
+    rows = []
     for col_idx, ceacam in enumerate(['CEACAM5', 'CEACAM6']):
         ax = axes[col_idx]
         x = data[ceacam].values.astype(float)
@@ -221,8 +261,8 @@ def main():
         for grp in DRAW_ORDER:
             mask = groups == grp
             if mask.sum() > 0:
-                ax.scatter(x[mask], y[mask], c=COLOR_MAP[grp], s=30*SCALE*AREA,
-                           alpha=0.85, edgecolors='white', linewidths=0.3*SCALE*MARK,
+                ax.scatter(x[mask], y[mask], c=COLOR_MAP[grp], s=19.4*AREA,
+                           alpha=0.85, edgecolors='white', linewidths=style.EDGE_PT,
                            label=grp, zorder=3)
 
         # Regression line
@@ -231,41 +271,38 @@ def main():
         if len(xv) >= 3 and xv.std() > 0:
             slope, intercept = np.polyfit(xv, yv, 1)
             x_line = np.linspace(xv.min(), xv.max(), 100)
-            ax.plot(x_line, slope * x_line + intercept, 'k--', linewidth=0.8*SCALE*MARK, alpha=0.6, zorder=2)
+            ax.plot(x_line, slope * x_line + intercept, 'k--', linewidth=style.RULE_PT, alpha=0.6, zorder=2)
 
-        # Stats text — 1 sig digit (floor). A very small P is written out rather
-        # than set as a mathtext power of ten: mathtext draws a superscript at
-        # 70% of its base, so an exponent on a 7 pt title prints at 4.9 pt,
-        # below the floor this figure set is set to.
-        import math
-        _e = math.floor(math.log10(p_val)); _c = int(p_val / 10**_e)
-        if _e >= -3:
-            p_str = f'P = {_c * 10**_e:.{-_e}f}'
-        else:
-            p_str = f'P = {_c}e{_e}'
-
-        # The cohort is named in the caption; see THE COHORT LEAVES THE TITLE.
-        print(f"    Primary Cohort (scRNA-seq): rho = {r_val:.2f}, {p_str}")
-        ax.set_title(f'ρ = {r_val:.2f}\n{p_str}', linespacing=1.4)
-
-        ax.set_xlabel(ceacam)
-        ax.set_ylabel('Tex in CD8+ (%)')
-
+        p_str = corr_stats.p_string(p_val)
+        print(f"    In house: rho = {r_val:.2f}, {p_str}")
+        rows.append((ceacam, r_val, p_val, int(valid.sum())))
+        ax.set_title('In house', fontsize=style.tick_pt())
+        cnslayout.corr_annotate(ax, r_val)
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
         for spine in ['bottom', 'left']:
-            ax.spines[spine].set_linewidth(0.5*SCALE*MARK)
-        ax.tick_params(axis='both', width=0.5*SCALE*MARK, length=3*SCALE*MARK)
+            ax.spines[spine].set_linewidth(style.RULE_PT)
+        ax.tick_params(axis='both', width=style.RULE_PT, length=3*SCALE*MARK)
+        rich_xlabel(ax, f"*{ceacam}*")
+        # One y label, on the left axes: SUPERSEDED.md beside this script
+        # records that as a deliberate divergence from the printed panel,
+        # under the author's ruling of 2026-09-11.
+        if col_idx == 0:
+            # The plus is a plain character, not $^+$: mathtext draws a
+            # superscript at 70% of its base, below the 6 pt floor.
+            # Two lines (2026-09-14, evening): on one it sets 21.6 mm against
+            # a 13.5 mm box and leaves the canvas. Declared in labels.py.
+            rich_ylabel(ax, 'CD8+ Tex\nfraction (%)')
+    corr_stats.write(OUTPUT_DIR, rows)
 
-        ax.set_box_aspect(1)
+    # The shared key, right of the second box. Until 2026-09-15 it was built
+    # from the scatter handles, so each key circle printed at the data
+    # marker's 0.5 mm and could not be seen; cnsfig.legend.group_key draws
+    # them at a fixed 1.3 mm.
+    group_key(fig, [(g, COLOR_MAP[g]) for g in DRAW_ORDER],
+              x_mm=LEFT_MM + 2 * cnslayout.SCATTER_BOX_MM + cnslayout.SCATTER_GAP_MM + 0.8,
+              y_mm=cnslayout.SCATTER_TOP_MM)
 
-    # The shared legend, in the reserved strip at the right edge.
-    handles, labels = axes[1].get_legend_handles_labels()
-    fig.legend(handles, labels, loc='center right',
-               bbox_to_anchor=(1.0 - PAD_MM / PANEL_W_MM, 0.5),
-               framealpha=0, edgecolor='none', markerscale=0.8)
-
-    style.margins_mm(fig, **MARGIN)
     over = style.overflow_mm(fig)
     if max(over) > 0:
         raise RuntimeError(
@@ -274,7 +311,6 @@ def main():
     intruders = style.letter_clear(fig, LETTER_CELL)
     if intruders:
         raise RuntimeError(f"ink under the panel letter cell: {intruders}")
-
     style.save_panel(fig, OUTPUT_DIR / 'ceacam_tex_scatter')
     print(f"\nSaved: {OUTPUT_DIR / 'ceacam_tex_scatter'}.[svg|pdf|png] "
           f"at {PANEL_W_MM} x {PANEL_H_MM} mm")

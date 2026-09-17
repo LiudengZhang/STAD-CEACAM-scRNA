@@ -1,0 +1,2 @@
+table,file,md5,rows,columns,source_script
+box_stats,box_stats.csv,6523ab92c016451a1cb9bbb65f75a5b0,96,9,create_S1_B_qc_metrics.py

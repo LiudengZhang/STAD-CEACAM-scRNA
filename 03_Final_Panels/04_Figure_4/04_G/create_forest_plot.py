@@ -58,6 +58,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
 from paths import *                       # noqa: E402,F401,F403
 import panel_style_cns as style           # noqa: E402
 import slots                              # noqa: E402
+from cnsfig.layout import pin_frame_mm    # noqa: E402
 
 SCALE = 4                       # the earlier canvas multiplier, for MARK only
 SMALL_PT = 5.0                  # the earlier tick type, before * SCALE
@@ -151,23 +152,23 @@ def main():
         marker_size = 35 * SCALE * AREA
 
         # Plot whisker (CI)
-        ax.plot([ci_l, ci_u], [idx, idx], color=color, linewidth=line_width,
+        ax.plot([ci_l, ci_u], [idx, idx], color=color, linewidth=style.RULE_PT,
                 alpha=0.85, zorder=2, solid_capstyle='butt')
 
         # Add caps
         cap_height = 0.15
         ax.plot([ci_l, ci_l], [idx - cap_height, idx + cap_height], color=color,
-                linewidth=line_width, alpha=0.85, zorder=2)
+                linewidth=style.RULE_PT, alpha=0.85, zorder=2)
         ax.plot([ci_u, ci_u], [idx - cap_height, idx + cap_height], color=color,
-                linewidth=line_width, alpha=0.85, zorder=2)
+                linewidth=style.RULE_PT, alpha=0.85, zorder=2)
 
         # Plot square marker (same style for all, edge = fill color)
         ax.scatter(fc, idx, s=marker_size, marker='s', color=color, alpha=0.85,
-                  edgecolors=color, linewidths=1.2 * SCALE * MARK, zorder=4)
+                  edgecolors=color, linewidths=style.EDGE_PT, zorder=4)
 
     # Reference line at FC=1.0
     ax.axvline(x=1, color='black', linestyle='--',
-               linewidth=1.0 * SCALE * MARK, alpha=0.7, zorder=1)
+               linewidth=style.RULE_PT, alpha=0.7, zorder=1)
 
     # Y-axis labels
     short_labels = [get_short_label(state) for state in results_df['Cell_State']]
@@ -175,7 +176,9 @@ def main():
     ax.set_yticklabels(short_labels)
 
     # X-axis label
-    ax.set_xlabel('Fold Change (Post-R/Post-NR)',
+    # Two lines since 2026-09-15 (labels.py RENAMES_FIGURE_4): on one line
+    # the label was wider than the slot's frame by 9 mm a side.
+    ax.set_xlabel('Fold Change\n(Post-R/Post-NR)',
                   labelpad=5 * SCALE * MARK)
 
     # X-axis settings
@@ -191,6 +194,11 @@ def main():
     ax.spines['right'].set_visible(False)
 
     style.fit_margins(fig, pad_mm=0.6, cell_mm=LETTER_CELL)
+    # The frame on the row's line (2026-09-14, evening; slot 154-211 since
+    # 2026-09-15, slot 154-214): top at 159.0 mm and bottom at 203.5 mm on the page, shared
+    # with H's two boxes. The 10.5 mm below the frame hold the tick labels and
+    # the two-line x label.
+    pin_frame_mm(fig, ax, top_mm=5.0, bottom_mm=10.5)
     over = style.overflow_mm(fig)
     if max(over) > 0:
         raise RuntimeError(

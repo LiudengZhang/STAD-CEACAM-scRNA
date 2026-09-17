@@ -277,7 +277,7 @@ def resolve(figure, rel):
         # Twenty-one supplementary panels are written by an analysis module
         # rather than by a script beside them.
         return ROOT / rel
-    if rel.startswith(("Supplementary_New/", "Supplementary_Fixes/")):
+    if rel.startswith("Supplementary_New/"):
         return HERE / rel
     return FIG_DIR.get(figure, HERE) / rel
 
@@ -326,8 +326,12 @@ def check_coverage(rows):
     mapped = {p for r in rows if r["figure"].startswith("S")
               for p in r["source_dir"].split("; ") if p}
     for s in sorted((HERE / "Supplementary_New").glob("S*/")):
+        # `data/` is cnsfig.cache's table directory: S5 and S6 are drawn by one
+        # script at the figure level, whose cache sits beside it. It holds no
+        # panel and is named by no row.
         for d in sorted(p for p in s.iterdir()
-                        if p.is_dir() and not p.name.startswith("_")):
+                        if p.is_dir() and not p.name.startswith("_")
+                        and p.name != "data"):
             rel = f"Supplementary_New/{s.name}/{d.name}"
             if rel not in mapped:
                 fail(f"{rel} holds a panel directory that no row in "
@@ -345,11 +349,97 @@ def check_coverage(rows):
 
 
 def markers_of(row):
-    """Which of the two "no" markers sit beside a row's script."""
+    """Which of the two "no" markers sit beside a row's script.
+
+    A marker is scoped to a PANEL, not to a directory. That distinction is
+    RULES.md rule 2 and it is load-bearing here: `04_E` holds two printed
+    panels, D and E, drawn by two different scripts. Panel E was superseded on
+    2026-09-11 and panel D was not, so a directory-scoped marker convicted
+    panel D of a divergence that never happened - the marker said `04_E` and
+    the reader heard "panel E".
+
+    So a marker may name the printed letters it covers, with a line
+
+        Applies-to: E
+
+    and then it applies to those and to nothing else. A marker with no such
+    line covers every panel in its directory, which is the older behaviour and
+    remains correct wherever a directory holds one panel.
+    """
     d = panel_dir(row)
     if d is None:
         return d, []
-    return d, [m for m in MARKERS if (d / m).exists()]
+    letter = row["printed_panel"].strip()
+    present = []
+    for m in MARKERS:
+        p = d / m
+        if not p.exists():
+            continue
+        scope = None
+        for line in p.read_text(errors="replace").splitlines():
+            if line.strip().lower().startswith("applies-to:"):
+                scope = {s.strip() for s in
+                         line.split(":", 1)[1].replace(",", " ").split()}
+                break
+        if scope is None or letter in scope:
+            present.append(m)
+    return d, present
+
+
+def mutate_marker_scope():
+    """Show the `Applies-to:` scoping working, in the same command that used it.
+
+    Scoping a marker to a panel is a way of making a check see LESS, and a
+    check that has been taught to see less is exactly the kind that quietly
+    stops firing. So the controls run both directions: a scoped marker must
+    not reach a panel it does not name, an unscoped one must still reach
+    every panel in its directory, and a scoped one must still reach the panel
+    it does name. If any of those is wrong the scoping is a hole, not a fix.
+
+    Returns a list of reasons, empty when the scoping behaves.
+    """
+    import tempfile
+    problems = []
+    with tempfile.TemporaryDirectory() as tmp:
+        d = Path(tmp)
+        marker = d / SUPERSEDED_MARKER
+
+        def look(letter):
+            row = {"printed_panel": letter}
+            scope = None
+            for line in marker.read_text(errors="replace").splitlines():
+                if line.strip().lower().startswith("applies-to:"):
+                    scope = {s.strip() for s in
+                             line.split(":", 1)[1].replace(",", " ").split()}
+                    break
+            return scope is None or row["printed_panel"] in scope
+
+        marker.write_text("# superseded\nApplies-to: E\n")
+        if look("D"):
+            problems.append("marker scoping: a marker scoped 'Applies-to: E' "
+                            "still reached panel D - the scope is not being "
+                            "read, and every panel sharing a directory with a "
+                            "superseded one would be convicted with it")
+        if not look("E"):
+            problems.append("marker scoping: a marker scoped 'Applies-to: E' "
+                            "did NOT reach panel E - the scope is narrowing "
+                            "away the panel it exists for")
+
+        marker.write_text("# superseded\nRuling-date: 2026-09-11\n")
+        if not (look("D") and look("E")):
+            problems.append("marker scoping: an UNSCOPED marker stopped "
+                            "covering its directory - that is the old "
+                            "behaviour and it must survive, or every marker "
+                            "written before today silently stops applying")
+
+        marker.write_text("# superseded\nApplies-to: D, E\n")
+        if not (look("D") and look("E")):
+            problems.append("marker scoping: a marker scoped to two letters "
+                            "did not reach both")
+    if not problems:
+        note("marker scoping: a scoped marker reaches only the panels it "
+             "names, an unscoped one still covers its directory")
+    return problems
 
 
 def check_known_broken(rows):
@@ -387,6 +477,165 @@ def check_known_broken(rows):
                  f"warning both present")
 
 
+def check_marker_matches_verdict(rows):
+    """The mirror of check 3: a marker beside a row that does not claim "no".
+
+    Check 3 asks a `no` to produce its marker. Nothing asked the other
+    direction, and that is the hole the round-30 audit fell through. A
+    `SUPERSEDED.md` sits beside a script precisely because the panel it draws
+    no longer reproduces the printed one and never will again; a
+    `KNOWN_BROKEN.md` because it does not reproduce it yet. Either way the row
+    beside that marker cannot honestly read `yes`, and a one-directional check
+    lets it.
+
+    It was not hypothetical. On 2026-09-10 `verify_panel_reproduction.py`
+    re-adjudicated the main figures and wrote its machine verdict back into the
+    manifest. Its guard for a standing `no` resolves `KNOWN_BROKEN.md` and
+    knows nothing about `SUPERSEDED.md`, which was introduced the day before,
+    so Figure 5F and Figure 3I, J, K and L - all five superseded under the
+    author's rulings of 9 and 10 September - were rewritten from `no` to `yes`
+    in one run. This file exited 0 throughout, because with no `no` rows left
+    checks 3 and 10 were gating an empty set. The package shipped a false
+    provenance claim for a day.
+
+    `na` is exempt: a row that is not judged against a printed panel at all -
+    a supplementary panel with no published counterpart - is not making the
+    claim this check is about.
+    """
+    for r in rows:
+        verdict = r["reproduces_published"]
+        if verdict in ("no", "na"):
+            continue
+        tag = f"Figure {r['figure']} panel {r['printed_panel']}"
+        d, present = markers_of(r)
+        if not present:
+            continue
+        fail(f"{tag} is marked reproduces_published={verdict} but carries "
+             f"{' and '.join(present)} beside its script - a marker is the "
+             f"record of a panel that does not reproduce the printed one, so "
+             f"either the verdict is stale or the marker should have been "
+             f"lifted; both together is the package claiming something its "
+             f"own working tree contradicts")
+
+
+def mutate_placement_rect(rows):
+    """Show check_placement can tell WHERE a panel is, in the same command.
+
+    Since 2026-09-11 the shipped grid moves panels down the page, and the
+    check clips at the slot the assembler used rather than at the published
+    rectangle. A check that was taught a new rectangle has to be shown it
+    would have failed with the old one - otherwise it may simply be finding
+    the panel's words anywhere on the page. So: take a panel that moved, and
+    require that its words are all inside the slot rect and that at least one
+    is missing from the published rect. If both rects pass, the check cannot
+    see position at all.
+
+    Returns a list of reasons, empty when the check discriminates.
+    """
+    import slots
+    problems = []
+    moved = None
+    for r in rows:
+        if r["figure"] not in ("2", "3", "4", "5") or not r["printed_rect_mm"]:
+            continue
+        if r["reproduces_published"] != "yes":
+            continue
+        try:
+            slot = slots.rect_mm(int(r["figure"]), r["printed_panel"])
+        except KeyError:
+            continue
+        pub = tuple(float(v) for v in r["printed_rect_mm"].split(","))
+        if abs(slot[1] - pub[1]) > 20.0:          # moved a long way down
+            moved = (r, slot, pub)
+            break
+    if moved is None:
+        return ["placement mutation: no panel has moved more than 20 mm, so "
+                "the mutation has nothing to bite on"]
+    r, slot, pub = moved
+    tag = f"Figure {r['figure']} panel {r['printed_panel']}"
+    shipped = PATCHED / f"Figure_{r['figure']}.pdf"
+    d = panel_dir(r)
+    src = None
+    for cand in (d.glob("*.pdf") if d and d.is_dir() else []):
+        if r["source_file"] and cand.stem == Path(r["source_file"]).stem:
+            src = cand
+    if src is None or not shipped.exists():
+        return [f"placement mutation: cannot find the files for {tag}"]
+    page = fitz.open(shipped)[0]
+    panel = toks("\n".join(pg.get_text() for pg in fitz.open(src)))
+    at = lambda rc: toks(page.get_text(clip=fitz.Rect(rc[0] * MM, rc[1] * MM,
+                                                       rc[2] * MM, rc[3] * MM)))
+    if panel - at(slot):
+        problems.append(f"placement mutation: {tag}'s words are not all inside "
+                        f"its slot rect - the check would fail the real panel")
+    if not (panel - at(pub)):
+        problems.append(f"placement mutation: {tag}'s words are ALL still found "
+                        f"inside the published rect {r['printed_rect_mm']} after "
+                        f"it moved {slot[1] - pub[1]:.0f} mm - the check cannot "
+                        f"see where a panel is")
+    return problems
+
+
+def mutate_marker_matches_verdict(rows):
+    """Show check 22 failing, in the same command that ran it.
+
+    A check written after the thing works encodes how it currently looks. The
+    mutation is what asks the second question. This one takes the manifest as
+    it stands, finds a row that a marker legitimately holds at `no`, flips only
+    that row's verdict to `yes` in memory - exactly the edit the 2026-09-10 run
+    made on disk - and requires the check to convict it.
+
+    Returns a list of reasons the mutation did not work, which is a list of
+    reasons not to believe the real run.
+    """
+    global failures
+    broken = []
+    held = [r for r in rows
+            if r["reproduces_published"] == "no" and markers_of(r)[1]]
+    if not held:
+        return ["no row is held at reproduces_published=no by a marker, so "
+                "check 22 had nothing to be shown convicting - the mutation "
+                "cannot run and the check must not be trusted"]
+    victim = dict(held[0])
+    tag = f"Figure {victim['figure']} panel {victim['printed_panel']}"
+    for flipped in ("yes", "unknown"):
+        victim["reproduces_published"] = flipped
+        real, failures = failures, []
+        try:
+            check_marker_matches_verdict([victim])
+            caught = list(failures)
+        finally:
+            failures = real
+        if not caught:
+            broken.append(f"check 22 passed {tag} with its marker still in "
+                          f"place and its verdict mutated to {flipped!r}")
+        else:
+            print(f"  control  {tag} mutated to reproduces_published="
+                  f"{flipped!r} with {MARKERS_SEEN(victim)} still beside it "
+                  f"-> convicted, as it must be")
+    # and the converse: the unmutated row must NOT be convicted, or the check
+    # is failing everything and its conviction above means nothing.
+    victim["reproduces_published"] = "no"
+    real, failures = failures, []
+    try:
+        check_marker_matches_verdict([victim])
+        caught = list(failures)
+    finally:
+        failures = real
+    if caught:
+        broken.append(f"check 22 convicted {tag} at its real verdict 'no' - "
+                      f"a check that fails everything has not been shown to "
+                      f"fail anything")
+    else:
+        print(f"  control  {tag} left at reproduces_published='no' "
+              f"-> not convicted, as it must not be")
+    return broken
+
+
+def MARKERS_SEEN(row):
+    return " and ".join(markers_of(row)[1]) or "no marker"
+
+
 def check_placement(rows):
     for r in rows:
         rect = r["printed_rect_mm"]
@@ -410,7 +659,20 @@ def check_placement(rows):
             fail(f"{tag}: cannot identify the panel PDF in {d}")
             continue
 
-        x0, y0, x1, y1 = (float(v) for v in rect.split(","))
+        # WHERE THE PANEL IS, NOT WHERE THE PUBLISHED PAGE HAD IT  (2026-09-11)
+        #   `printed_rect_mm` is the published measurement and stays one. Since
+        #   2026-09-11 the shipped grid keeps its x and moves its y
+        #   (panel_rects_v2.csv, read through slots), so the words of a panel
+        #   are found at the slot the assembler put it in. Clipping at the
+        #   published rect on the new grid looked in the wrong place and blamed
+        #   the panel: Figure 3 H's 'CEACAM region' and Figure 5 N's
+        #   'Significance' were called absent from pages that printed both.
+        try:
+            import slots
+            x0, y0, x1, y1 = slots.rect_mm(int(fig), r["printed_panel"])
+            rect = f"{x0:g},{y0:g},{x1:g},{y1:g}"
+        except (KeyError, ValueError, ImportError):
+            x0, y0, x1, y1 = (float(v) for v in rect.split(","))
         page = fitz.open(shipped)[0]
         in_rect = toks(page.get_text(clip=fitz.Rect(x0 * MM, y0 * MM,
                                                     x1 * MM, y1 * MM)))
@@ -463,7 +725,6 @@ def check_lookup(rows):
         scan(root, by_path=False)
     for root in sorted((HERE / "Supplementary_New").glob("S*")):
         scan(root, by_path=True)
-    scan(HERE / "Supplementary_Fixes", by_path=True)
     note(f"{checked} panel directories are named in PROVENANCE.csv")
 
 
@@ -1143,6 +1404,7 @@ def main():
     check_structure(rows)
     check_coverage(rows)
     check_known_broken(rows)
+    check_marker_matches_verdict(rows)
     check_placement(rows)
     check_guard_rails()
     check_freshness(rows)
@@ -1151,6 +1413,19 @@ def main():
     check_inputs(rows)
     check_upstream_inputs()
     check_broken_expires(rows)
+
+    print("check 22 mutation - a marker beside a verdict that is not 'no':")
+    mutant = mutate_marker_matches_verdict(rows)
+    for m in mutant:
+        fail(m)
+
+    print("marker scoping mutation - Applies-to must narrow, and only narrow:")
+    for m in mutate_marker_scope():
+        fail(m)
+
+    print("placement mutation - the words must be at the slot, not the old rect:")
+    for m in mutate_placement_rect(rows):
+        fail(m)
 
     print(f"PROVENANCE.csv: {len(rows)} rows")
     for tag in ("yes", "no", "unknown", "na"):

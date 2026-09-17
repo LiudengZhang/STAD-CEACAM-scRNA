@@ -154,11 +154,6 @@ def outputs_of(mod):
     return Path(mod.OUT)
 
 
-#: Where a panel that is spliced into a carried-over page is written, rather
-#: than into a figure of its own.
-FIXES = SUPP.parent / "Supplementary_Fixes"
-
-
 def panel_dir(figure, panel, root=None):
     """Where a panel is written. `figure` may be None for a loose panel."""
     d = (root or SUPP)

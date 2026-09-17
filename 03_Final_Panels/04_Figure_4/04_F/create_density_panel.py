@@ -110,7 +110,10 @@ def main():
     # GridSpec: 2×2 grid with small colorbar row
     gs = gridspec.GridSpec(3, 2, figure=fig,
                            height_ratios=[1, 1, 0.08],
-                           hspace=0.12 * SCALE, wspace=0.08 * SCALE)
+                           # Closed up 2026-09-14 (evening): the four maps
+                           # were 0.48/0.32 apart, and the row gave the
+                           # width saved to D and G (build_grid_v2.X_NEW).
+                           hspace=0.18, wspace=0.04)
 
     print("\nCreating density plots...")
     scatter_handles = []

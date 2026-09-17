@@ -73,6 +73,7 @@ from paths import SPATIAL_SPOT_DATA
 from spatial_scale import cohort_um_per_unit  # noqa: E402
 import panel_style_cns as style  # noqa: E402
 import slots  # noqa: E402
+from cnsfig.layout import pin_frame_mm  # noqa: E402
 
 SCALE = 4                       # the earlier canvas multiplier, for MARK only
 SMALL_PT = 6.0                  # the earlier smallest body type, before * SCALE
@@ -119,19 +120,26 @@ def main():
     print("\n[2/2] Creating visualization...")
     fig, ax = style.subplots_mm(PANEL_W_MM, PANEL_H_MM)
 
+    # THE MAP IS A FIELD OF SPOTS, NOT A WASH  (2026-09-11)
+    #   At 6 * AREA the markers are wide enough to touch their neighbours, and
+    #   the section prints as a smear of colour. The published panel shows
+    #   every Visium spot separately, with paper between them, which is what
+    #   lets a reader see the tissue holes and the spot grid at all. Area is
+    #   the square of diameter, so 2.5 * AREA is a marker about two thirds as
+    #   wide. Not one spot, coordinate or value moves.
     sc = ax.scatter(sample_df['x'], sample_df['y'],
                     c=sample_df['distance_to_immune'],
-                    cmap='plasma', s=6 * AREA, alpha=0.8)
+                    cmap='plasma', s=2.5 * AREA, alpha=0.8)
     cbar = plt.colorbar(sc, ax=ax, fraction=0.046, pad=0.04)
     cbar.solids.set_rasterized(False)
     # The shipped page prints no label on the colour bar; the quantity is
     # named by the panel title above the map. Declared in
     # REMOVALS_FIGURE_3.
     cbar.set_label('')
-    cbar.ax.tick_params(width=1.0 * MARK, length=4 * MARK)
-    cbar.outline.set_linewidth(1.0 * MARK)
+    cbar.ax.tick_params(width=style.RULE_PT, length=4 * MARK)
+    cbar.outline.set_linewidth(style.RULE_PT)
 
-    ax.set_title('Distance to Immune\n(µm)')
+    ax.set_title('Distance to Immune\n(µm)', fontweight='normal')
     # The shipped page prints neither axis label nor either ruler on this map:
     # the coordinates are Visium pixel positions within one section and carry
     # nothing the reader reads off them. The two labels are declared in
@@ -140,12 +148,19 @@ def main():
     ax.set_ylabel('')
     ax.set_xticks([])
     ax.set_yticks([])
-    ax.tick_params(axis='both', width=1.0 * MARK, length=4 * MARK)
+    ax.tick_params(axis='both', width=style.RULE_PT, length=4 * MARK)
+    # All four spines, which is how the published maps are framed; cnsplots
+    # hides top and right by default and the redraw inherited that, leaving
+    # these sections with an L-shaped rule instead of a box.
     for spine in ax.spines.values():
-        spine.set_linewidth(1.0 * MARK)
-    ax.set_aspect('equal')
+        spine.set_linewidth(style.RULE_PT)
+        spine.set_visible(True)
+    ax.set_aspect('equal', adjustable='datalim')   # frame = axes box; pinned below
 
     style.fit_margins(fig, pad_mm=0.6, cell_mm=LETTER_FIT)
+    # ONE FRAME LINE FOR K, L, M AND N  (2026-09-14, evening): the frame top
+    # at 117.5 mm and its bottom at 143.5 mm on the page, whatever the slot.
+    pin_frame_mm(fig, ax, top_mm=7.5, bottom_mm=PANEL_H_MM - 33.5)
     over = style.overflow_mm(fig)
     if max(over) > 0:
         raise RuntimeError(

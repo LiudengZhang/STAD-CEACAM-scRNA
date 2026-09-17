@@ -59,6 +59,7 @@ SMALL_PT = 6.0                      # the earlier smallest body type
 from paths import IHC_COLOR_DECONV_CSV  # noqa: E402
 import panel_style_cns as style         # noqa: E402
 import slots                            # noqa: E402
+from cnsfig.boxes import draw_boxes, bracket, ylim_above, assert_no_points  # noqa: E402
 
 PANEL_LETTER = "N"
 PANEL_W_MM, PANEL_H_MM = slots.size_mm(2, PANEL_LETTER)
@@ -92,49 +93,21 @@ def main():
     print(f"Fold: {NR_VALS.mean() / R_VALS.mean():.2f}x")
     print(f"Mann-Whitney U (two-sided): U={stat:.1f}, P={pval:.4f}")
 
-    # Boxplot
-    bp = ax.boxplot(
-        [R_VALS, NR_VALS],
-        positions=[1, 2],
-        widths=0.6,
-        patch_artist=True,
-        boxprops=dict(linewidth=0.5 * MARK),
-        whiskerprops=dict(color='black', linewidth=0.5 * MARK),
-        capprops=dict(color='black', linewidth=0.5 * MARK),
-        flierprops=dict(markersize=0),  # hide outliers, show strip points instead
-    )
+    # ONE BOX, NO POINTS (2026-09-16, the author's fifth reading: "box
+    # plots should look alike throughout; don't show every point"). The
+    # eight patients' strip points (default_rng(42)) are no longer drawn -
+    # the author's ruling, a declared departure from the published panel -
+    # and the fliers the strip had replaced are back as the family's 0.79 mm
+    # open circles; the median is black like every other box. The bracket
+    # keeps its vertices (line at 1.15 x y_max, arms 5% of that) and prints
+    # through p_text_kw, the paper's one P-label owner ("P = 0.06" for the
+    # 0.0571 this panel used to print as "P = 0.057"); its ink 0.4 mm above.
+    bp = draw_boxes(ax, [R_VALS, NR_VALS], [1, 2], [COLOR_R, COLOR_NR],
+                    width=0.6)
 
-    bp['boxes'][0].set_facecolor(COLOR_R)
-    bp['boxes'][0].set_edgecolor('black')
-    bp['boxes'][1].set_facecolor(COLOR_NR)
-    bp['boxes'][1].set_edgecolor('black')
-    bp['medians'][0].set_color(MEDIAN_R)
-    bp['medians'][0].set_linewidth(0.8 * MARK)
-    bp['medians'][1].set_color(MEDIAN_NR)
-    bp['medians'][1].set_linewidth(0.8 * MARK)
-
-    # Strip points (essential with small n)
-    rng = np.random.default_rng(42)
-    jitter_r = rng.uniform(-0.12, 0.12, len(R_VALS))
-    jitter_nr = rng.uniform(-0.12, 0.12, len(NR_VALS))
-
-    ax.scatter(1 + jitter_r, R_VALS, c=COLOR_R, s=20 * AREA, zorder=5,
-               edgecolors='black', linewidths=0.3 * MARK)
-    ax.scatter(2 + jitter_nr, NR_VALS, c=COLOR_NR, s=20 * AREA, zorder=5,
-               edgecolors='black', linewidths=0.3 * MARK)
-
-    # Significance bracket
     y_max = max(np.max(R_VALS), np.max(NR_VALS))
-    y_bracket = y_max * 1.15
-
-    ax.plot([1, 1, 2, 2],
-            [y_bracket, y_bracket * 1.05, y_bracket * 1.05, y_bracket],
-            'k-', linewidth=0.5 * MARK)
-
-    p_text = f'P = {pval:.3f}' if pval >= 0.001 else 'P < 0.001'
-
-    ax.text(1.5, y_bracket * 1.08, p_text, ha='center', va='bottom',
-            fontsize=style.tick_pt())
+    _, p_text, _ = bracket(fig, ax, 1, 2, y_max, y_max, pval, kind="pair",
+                           lift=0.15, arm=0.05 * 1.15)
 
     # Labels
     ax.set_title('IHC (CEACAM5+6)')
@@ -142,6 +115,8 @@ def main():
     ax.set_xticks([1, 2])
     ax.set_xticklabels(['Pre-R', 'Pre-NR'])
     ax.set_ylim(0, y_max * 1.40)
+    ylim_above(ax, p_text)
+    assert_no_points(ax, bp)
 
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)

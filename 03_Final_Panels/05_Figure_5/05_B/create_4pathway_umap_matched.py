@@ -52,6 +52,7 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
 from paths import *
 import panel_style_cns as style
+from cnsfig.layout import umap_grid_mm
 import slots
 
 BASE_DIR = Path(__file__).parent
@@ -61,6 +62,9 @@ SMALL_PT = 5.0                  # the earlier smallest body type, before * SCALE
 
 PANEL_LETTER = "B"
 PANEL_W_MM, PANEL_H_MM = slots.size_mm(5, PANEL_LETTER)
+#: The grid B and C share: a 12.8 mm map, the letter cell and 0.6 mm to its
+#: left, 1.0 mm above. The same three numbers in both scripts.
+MAP_MM, GRID_LEFT_MM, GRID_TOP_MM = 12.8, 4.3, 1.0
 LETTER_CELL = slots.letter_cell_mm(5, PANEL_LETTER)
 
 PATHWAYS = [
@@ -129,8 +133,16 @@ def main():
         sc.tl.score_genes(adata, genes_in_data, score_name=score_name)
         print(f"  {pathway_name}: {len(genes_in_data)} genes")
 
-    fig, axes = style.subplots_mm(PANEL_W_MM, PANEL_H_MM, 2, 2)
-    axes = axes.flatten()
+    # ONE GRID FOR B AND C  (2026-09-14)
+    #   Panels B and C are the same drawing twice, and tight_layout gave them
+    #   maps of different sizes (12.88 x 14.32 vs 13.23 x 13.31 mm). Both now
+    #   call cnsfig.layout.umap_grid_mm with the same numbers, so the maps are
+    #   the same square on the page. The slot is C's width for both.
+    fig = style.figure_mm(PANEL_W_MM, PANEL_H_MM)
+    cells = umap_grid_mm(fig, n_rows=2, n_cols=2, map_mm=MAP_MM,
+                         left_mm=GRID_LEFT_MM, top_mm=GRID_TOP_MM)
+    axes = [ax for ax, _ in cells]
+    caxes = [cax for _, cax in cells]
 
     for idx, (pathway_name, display_name) in enumerate(PATHWAYS):
         ax = axes[idx]
@@ -146,17 +158,15 @@ def main():
         scatter = ax.scatter(umap[:, 0], umap[:, 1], c=scores, cmap='Purples',
                              s=1 * AREA, alpha=0.8, rasterized=True,
                              vmin=np.percentile(scores, 2), vmax=np.percentile(scores, 98))
-        ax.set_title(display_name)
+        ax.set_title(display_name, pad=2.0)
         ax.set_xticks([]); ax.set_yticks([])
         ax.set_xlabel(''); ax.set_ylabel('')
 
-        cbar = plt.colorbar(scatter, ax=ax, shrink=0.8, pad=0.02)
+        cbar = plt.colorbar(scatter, cax=caxes[idx])
+        cbar.ax.tick_params(labelsize=style.tick_pt(), width=style.RULE_PT, length=1.5, pad=1.0)
+        cbar.outline.set_linewidth(style.RULE_PT)
 
-    # The panel letter is drawn over the panel's top-left corner by the
-    # assembler, so that corner is kept free. Reserving a left band of the
-    # letter cell's width costs less paper here than a top band of its height,
-    # which is the choice `style.fit_margins` makes for a panel it can move.
-    plt.tight_layout(rect=(LETTER_CELL[0] / PANEL_W_MM, 0.0, 1.0, 1.0))
+    # No tight_layout: every axes is at its millimetres already.
 
     over = style.overflow_mm(fig)
     if max(over) > 0:

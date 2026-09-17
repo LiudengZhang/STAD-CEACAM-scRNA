@@ -220,7 +220,7 @@ MAIN_FIGURES = REVISED_PANELS
 # is a working copy and is kept out of the published set.
 ANALYSIS_PANELS = REVISED_PANELS / "Supplementary_New" / "_analysis_panels"
 
-# Supplementary tables ST1-ST10, shipped with the code because several revision
+# Supplementary tables ST1-ST8, shipped with the code because several revision
 # analyses read the cohort and signature definitions out of them.
 MANUSCRIPT = PROJECT_ROOT / "05_Manuscript"
 

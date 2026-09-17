@@ -57,6 +57,7 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
 import panel_style_cns as style
 import slots
+from cnsfig.layout import pin_frame_mm
 
 BASE_DIR = Path(__file__).resolve().parent
 # The two GSEA tables are inputs, not outputs: this script reads them and
@@ -123,13 +124,27 @@ CELL_LABELS = {
 }
 
 
+#: THE THREE DOT SIZES ARE THE PUBLISHED PAGE'S  (2026-09-14)
+#:   Counted off 'Figure 5.pdf' geometry: 1.20 mm (14 dots), 0.98 mm (4) and
+#:   0.76 mm (14) across. The largest is pinned to that measurement; the
+#:   other two keep the earlier drawing's exact area ratio 150 : 100 : 60,
+#:   which the measured 0.98 and 0.76 mm reproduce to 0.01 mm. scatter's s
+#:   is the diameter squared in points.
+# 1.20 mm was the page's; the author asked for the dots a little larger
+# (2026-09-14, evening): x1.3 across, the 150:100:60 ratio unchanged.
+# On the fifth reading (2026-09-16: "the p > 0.10 dots could also be
+# smaller") the third class halved, 60 -> 30 of 150 (0.70 mm across); the
+# other two and the class boundaries are unchanged.
+DOT_S_MAX = (1.56 * style.PT_PER_MM) ** 2
+
+
 def assign_dot_size(p_value):
     if p_value <= 0.05:
-        return 150 * SCALE * AREA
+        return DOT_S_MAX
     elif p_value <= 0.10:
-        return 100 * SCALE * AREA
+        return DOT_S_MAX * 100.0 / 150.0
     else:
-        return 60 * SCALE * AREA
+        return DOT_S_MAX * 30.0 / 150.0
 
 
 def main():
@@ -192,12 +207,11 @@ def main():
 
         scatter = ax.scatter(
             x_positions, nes_vals, s=sizes, c=nes_vals, cmap=cmap, alpha=0.85,
-            edgecolors='black', linewidths=0.5 * MARK, vmin=vmin, vmax=vmax, zorder=3
+            edgecolors='black', linewidths=style.EDGE_PT, vmin=vmin, vmax=vmax, zorder=3
         )
 
         # Reference line at NES=0
-        ax.axhline(y=0, color='gray', linestyle='--', linewidth=0.5 * MARK, alpha=0.7)
-        ax.grid(True, axis='y', alpha=0.3, linestyle=':', linewidth=0.3 * MARK)
+        ax.axhline(y=0, color='gray', linestyle='--', linewidth=style.RULE_PT, alpha=0.7)
 
         # X-axis — sorted labels
         ax.set_xticks(x_positions)
@@ -211,7 +225,7 @@ def main():
         ax.set_xlim(-0.8, len(rows) - 0.2)
 
         # Y-axis
-        ax.set_ylim(0.5, 2.2)
+        ax.set_ylim(0.7, 2.25)   # the page's range (2026-09-14)
         ax.set_ylabel('NES')
 
         # Title
@@ -230,6 +244,12 @@ def main():
         first = SUB_OF[ct] == 1
         style.fit_margins(fig, pad_mm=0.6, cell_mm=LETTER_CELL,
                           reserve_letter=first)
+        # The four frames on one line (2026-09-14, evening): the first box's
+        # two-line title puts its frame top at 178.2 mm on the page, and the
+        # other three take the same line.
+        _sy0 = slots.rect_mm(5, PANEL_LETTER, sub=SUB_OF[ct])[1]
+        pin_frame_mm(fig, ax, top_mm=178.2 - _sy0,
+                     bottom_mm=ax.get_position().y0 * panel_h_mm)
         over = style.overflow_mm(fig)
         if max(over) > 0:
             raise RuntimeError(
@@ -263,27 +283,36 @@ def _make_legend(cmap, vmin, vmax):
     # dots are drawn artists, and moving one would be a content change. Only
     # the strings beside them are set closer, which is what makes them fit.
     y_start = 0.92
-    ax.text(0.05, y_start + 0.05, 'P value', fontsize=style.body_pt(),
+    # The two published headings, restored 2026-09-11. They are set at the
+    # tick size, not the body size: this legend strip is 12.0 mm wide and at
+    # 7 pt 'Significance' sets 13.4 mm, which the strip's own overflow check
+    # caught at 1.81 mm over the right edge.
+    # Flush to the left edge of the 12.0 mm strip: 'Significance' sets 11.5 mm
+    # at the tick size and the 0.05 indent put it 0.09 mm over the right edge.
+    ax.text(0.00, y_start + 0.05, 'Significance', fontsize=style.tick_pt(),
             transform=ax.transAxes, va='top')
     for i, (label, size) in enumerate([
-        ('p ≤ 0.05', 150 * SCALE * AREA),
-        ('p ≤ 0.10', 100 * SCALE * AREA),
-        ('p > 0.10', 60 * SCALE * AREA),
+        ('p ≤ 0.05', assign_dot_size(0.05)),
+        ('p ≤ 0.10', assign_dot_size(0.10)),
+        ('p > 0.10', assign_dot_size(0.50)),
     ]):
         y = y_start - 0.12 * (i + 1)
         ax.scatter(0.15, y, s=size, c='gray', alpha=0.6, edgecolors='black',
-                   linewidths=0.5 * MARK, transform=ax.transAxes, zorder=3)
+                   linewidths=style.EDGE_PT, transform=ax.transAxes, zorder=3)
         ax.text(0.30, y, label, fontsize=style.tick_pt(), va='center',
                 transform=ax.transAxes)
 
     # Colour legend. The heading names the scale, so the colorbar is not
     # labelled a second time underneath it.
-    ax.text(0.05, 0.38, 'NES', fontsize=style.body_pt(),
+    ax.text(0.00, 0.38, 'Enrichment', fontsize=style.tick_pt(),
             transform=ax.transAxes, va='top')
     sm = plt.cm.ScalarMappable(cmap=cmap, norm=plt.Normalize(vmin=vmin, vmax=vmax))
     sm.set_array([])
-    cax = fig.add_axes([0.15, 0.15, 0.6, 0.04])
-    cbar = fig.colorbar(sm, cax=cax, orientation='horizontal')
+    # Three ticks at the strip's width: the -1 0 1 of a 7 mm bar ran together.
+    cax = fig.add_axes([0.05, 0.15, 0.90, 0.04])
+    cbar = fig.colorbar(sm, cax=cax, orientation='horizontal', ticks=[-1, 0, 1])
+    cax.tick_params(labelsize=style.tick_pt(), width=style.RULE_PT, length=1.5, pad=1.0)
+    cbar.outline.set_linewidth(style.RULE_PT)
 
     # The legend strip places its items itself, in axes fractions, and its
     # colorbar sits in an add_axes rectangle that subplots_adjust does not

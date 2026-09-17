@@ -133,6 +133,11 @@ COLORS = {
     'C8_Epi_CD74': '#8DD3C7',
 }
 
+#: The colour each printed label is set in - the cluster's own, as the
+#: published panel prints it. Keyed on the short label so the lookup happens
+#: after the rename, and derived from COLORS rather than typed again.
+LABEL_COLOUR = {}
+
 SHORT_LABELS = {
     'C0_Epi_PTMA': 'PTMA',
     'C1_Epi_KRT19': 'KRT19',
@@ -144,6 +149,9 @@ SHORT_LABELS = {
     'C7_Epi_MT1E': 'MT1E',
     'C8_Epi_CD74': 'CD74',
 }
+
+LABEL_COLOUR.update({SHORT_LABELS[k]: v for k, v in COLORS.items()
+                     if k in SHORT_LABELS})
 
 # ---------------------------------------------------------------------------
 # Measured off the earlier drawing by measure_version_a_labels.py.
@@ -237,8 +245,12 @@ def main():
         legend_loc='none',
         title='',
         frameon=False,
-        size=4 * AREA,
-        alpha=0.6,
+        # Half the diameter that shipped: the published panel prints the
+        # nine clusters as pastel fields with paper showing between cells, and
+        # 4 * AREA overplots them to a flat block of colour. Same treatment as
+        # Figure 3C; not one cell moves.
+        size=1 * AREA,
+        alpha=0.55,
     )
 
     # Remove legend if scanpy created one anyway
@@ -264,10 +276,17 @@ def main():
 
     for cluster_name in adata.obs['minor_cell_state'].cat.categories:
         cx, cy = PINNED_LABELS[cluster_name]
+        # BOLD AND BLACK, STRAIGHT ON THE EMBEDDING  (2026-09-11)
+        #   The published panel sets these in each cluster's own colour, and
+        #   that was tried first: on this drawing it made them vanish, because
+        #   at 4 * AREA the clusters overplot to full saturation and a label in
+        #   the same hue has nothing to stand against. Black is legible on all
+        #   nine, and it is how Figure 3C of this same paper sets its cluster
+        #   labels. The rounded white plate that was here before is on no
+        #   version of this page.
         ax.text(cx, cy, cluster_name, fontsize=style.tick_pt(),
-                ha='center', va='center',
-                bbox=dict(boxstyle='round,pad=0.15', facecolor='white',
-                          alpha=0.8, edgecolor='none', linewidth=0))
+                ha='center', va='center', fontweight='bold', zorder=10,
+                color='black')
 
     # The leader lines, in the same order the labels are drawn in.
     for cluster_name in adata.obs['minor_cell_state'].cat.categories:
@@ -278,7 +297,7 @@ def main():
             posA=posA, posB=posB,
             arrowstyle='-', connectionstyle='arc3,rad=0.0',
             shrinkA=0, shrinkB=0,
-            color='0.4', lw=0.4 * SCALE * MARK,
+            color='0.4', lw=style.RULE_PT,
             transform=ax.transData))
 
     # Rasterize scatter dots (keeps axes/legend as vectors, dots as embedded raster)

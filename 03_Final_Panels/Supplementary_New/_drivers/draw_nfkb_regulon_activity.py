@@ -35,9 +35,12 @@ and never read at all. Dropping the right block therefore changes no value the
 left block draws, and `--check` compares this panel against exactly the left
 axes of the original to prove it.
 
-`_box` is copied in below as a local helper. It is drawing code only - it
-computes nothing except the jitter, from its own seeded generator - and its
-behaviour is unchanged.
+`_box` is copied in below as a local helper. It is drawing code only. Since
+2026-09-16 (the author's fifth reading) it sets its boxes with
+`cnsfig.boxes.draw_boxes` - the one box of the paper - and no longer jitters
+the individual samples on top; the data reach ax.boxplot untouched, so every
+box statistic is the original's, and the comparator sees the removed point
+collections and the added 0.79 mm fliers and nothing else.
 
     python draw_nfkb_regulon_activity.py --check
     python draw_nfkb_regulon_activity.py
@@ -48,27 +51,33 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-import numpy as np
 import pandas as pd
 
 import _driver_base as base
 import panel_style_cns as style
+from cnsfig import boxes
+from cnsfig.rich import rich_ylabel
 
 base.apply_style()
 
 A = base.analysis("07_R1.8_NFkB_Specificity/scripts/nfkb_regulon_activity.py")
 OUT = base.outputs_of(A)
-FIG = "S9_MoMac_Identity_NFkB"
+FIG = "S10_MoMac_Identity_NFkB"
 
 # The printed box, millimetres. Four sample-level boxes, each with a two-line
 # tick label under it, a two-line y axis label and a P value as the title. Half
 # the width of the two-block original, because half of it is what is drawn.
-W, H = 64.0, 50.0
+# W 64 -> 37 on 2026-09-16 (the author's fifth reading): E shares a row with C
+# and D under B, so the page reads A, B, C-D-E in order; four boxes at a 0.55
+# width still clear the spines (cnsfig.boxes.box_xlim).
+W, H = 37.0, 60.0
 
 # Previously 9.0 x 4.6 cm drawn at four times print size and fitted into a
 # 171 x 44 mm box at 0.2391; the smallest type, `_box`'s x tick labels, was set
-# at 5.0 x that scale and printed at 4.782 pt. Every mark and stroke below is
-# rescaled by the factor that keeps its size relative to the type unchanged.
+# at 5.0 x that scale and printed at 4.782 pt. Until 2026-09-16 every mark and
+# stroke was rescaled by the factor that keeps its size relative to the type;
+# the boxes now come from cnsfig.boxes at the paper's one weight, and MARK is
+# kept for the record of what the marks were rescaled by until then.
 A_FIT = 0.2391
 A_TYPE = 5.0 * 4 * A_FIT
 MARK = (style.tick_pt() / A_TYPE) * A_FIT
@@ -88,29 +97,18 @@ def frames():
 
 
 def _box(ax, series, colors, ylabel, title=None):
-    """`nfkb_regulon_activity._box`, redrawn. Same marks, same numbers.
+    """`nfkb_regulon_activity._box`, redrawn in the one box style.
 
-    One sample-level box per group with every sample drawn on top. The groups
-    here have five or six samples, so the points are the honest display and the
-    box is only there to carry the median and the spread.
+    ONE BOX, NO POINTS (2026-09-16, the author's fifth reading): the boxes are
+    cnsfig.boxes.draw_boxes (Figure 2 H/I's: RULE_PT black lines, 0.79 mm open
+    fliers, solid R/NR faces as Figure 5 J/L print them) and the jittered
+    samples the original drew on top are no longer drawn. Same numbers: the
+    data go to ax.boxplot untouched; only the marks changed.
     """
-    rng = np.random.default_rng(0)
     labels = [lab for lab, _ in series]
     data = [vals for _, vals in series]
-    bp = ax.boxplot(data, widths=0.55, showfliers=False, patch_artist=True,
-                    medianprops=dict(color="#333333", linewidth=1.0 * MARK),
-                    whiskerprops=dict(color="#666666", linewidth=0.8 * MARK),
-                    capprops=dict(color="#666666", linewidth=0.8 * MARK),
-                    boxprops=dict(linewidth=0.6 * MARK, edgecolor="#333333"))
-    for patch, c in zip(bp["boxes"], colors):
-        patch.set_facecolor(c)
-        patch.set_alpha(0.35)
-    for i, (vals, c) in enumerate(zip(data, colors), start=1):
-        if not len(vals):
-            continue
-        jitter = rng.uniform(-0.13, 0.13, len(vals))
-        ax.scatter(np.full(len(vals), i) + jitter, vals, s=9 * 4 * AREA, c=c,
-                   edgecolors="white", linewidths=0.4 * MARK, zorder=3)
+    bxp = boxes.draw_boxes(ax, data, range(1, len(data) + 1), colors, width=0.55)
+    ax.set_xlim(*boxes.box_xlim(range(1, len(data) + 1), 0.55))
     ax.set_xticks(range(1, len(labels) + 1))
     ax.set_xticklabels([f"{lab}\nn = {len(v)}" for lab, v in zip(labels, data)])
     ax.set_ylabel(ylabel)
@@ -119,6 +117,7 @@ def _box(ax, series, colors, ylabel, title=None):
         ax.spines[s_].set_visible(False)
     if title:
         ax.set_title(title)
+    boxes.assert_no_points(ax, bxp)
 
 
 def draw_E(fr, save=True):
@@ -143,12 +142,12 @@ def draw_E(fr, save=True):
                   & (reg_df["phase"] == "Post")]
     title = (f"post-treatment P = {post['p_two_tailed'].iloc[0]:.3f}"
              if len(post) else None)
-    _box(ax, series, colors,
-         "NFKB1 regulon activity (AUCell)\nmonocytes/macrophages", title)
+    _box(ax, series, colors, "", title)
+    rich_ylabel(ax, "*NFKB1* regulon activity (AUCell)\nmonocytes/macrophages")
 
     base.fit(fig)
     if save:
-        base.save(fig, FIG, "S9_E", "S9_E_nfkb_regulon_momac")
+        base.save(fig, FIG, "S10_E", "S10_E_nfkb_regulon_momac")
     return fig
 
 
@@ -157,7 +156,7 @@ def main():
     return base.run({
         # Axis 0 of the original is the block this panel keeps; the comparison
         # is made over that axis and says nothing about the one withdrawn.
-        "S9_E": (lambda: draw_E(fr),
+        "S10_E": (lambda: draw_E(fr),
                  lambda: A._panel(fr["reg_df"], fr["fb"], fr["sv"]),
                  None, [0]),
     })

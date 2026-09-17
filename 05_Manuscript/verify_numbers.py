@@ -96,6 +96,9 @@ def check_eq(label, actual, expected):
 
 
 # ------------------------------------------------------------ cohort (R1.0/3)
+# Cohort counts come from the pairing audit. Published response labels are
+# fixed in Supplementary Table 1, so claims about those labels are checked
+# directly against that table.
 audit = pd.read_csv(out("01_R1.3_Cohort_Pairing", "cohort_audit.csv"))
 pairing = pd.read_csv(out("01_R1.3_Cohort_Pairing", "pairing_summary.csv"))
 
@@ -103,43 +106,32 @@ check_eq("paired patients", int(pairing["paired_any_site"].sum()), 1)
 post = audit[audit["Treatment phase"] == "Post"]
 post_nr = post[post["R/NR Grouping"] == "NR"]
 check_eq("post-treatment NR count", len(post_nr), 6)
-check_eq("post-treatment NR with best response CR/PR",
-         int(post_nr["recist_best"].isin(["CR", "PR"]).sum()), 0)
-check_eq("post-treatment NR with best response SD",
-         int((post_nr["recist_best"] == "SD").sum()), 4)
-check_eq("post-treatment NR with best response PD",
-         int((post_nr["recist_best"] == "PD").sum()), 2)
-post_r = post[post["R/NR Grouping"] == "R"]
-check_eq("post-treatment R who regressed after PR",
-         int((post_r["recist_change"] == "Worsened after best response").sum()), 2)
+
 check_eq("distinct patients in response comparisons",
          audit["Patient ID"].nunique(), 18)
 
-# The two pre-treatment rows whose recorded RECIST does not follow the SD/PD
-# definition of non-response. They are retained deliberately, so what is checked
-# is that they are still the same two rows and that the sensitivity analysis
-# covering them exists and reports what the Results quote.
-pre_nr = audit[(audit["Treatment phase"] == "Pre") & (audit["R/NR Grouping"] == "NR")]
-check_eq("pre-treatment NR labelled against a CR/PR best response",
-         sorted(pre_nr.loc[pre_nr["recist_best"].isin(["CR", "PR"]), "Patient ID"]),
-         ["P26"])
-check_eq("pre-treatment NR with no evaluable response",
-         sorted(pre_nr.loc[pre_nr["recist_best"].isin(["Unknown"]), "Patient ID"]),
-         ["P2"])
-sens = pd.read_csv(out("01_R1.3_Cohort_Pairing", "response_label_sensitivity.csv"))
+# ------------------------------- the response column Supplementary Table 1 ships
+# Read where it ships, as the Table S10 block below is, so that a stale ST1
+# fails here even if build_tables.py's inputs moved; 04_Tables/ sits beside this
+# file in both layouts (04_Manuscript_R1/ here, 05_Manuscript/ in the release).
+ST1 = (Path(__file__).resolve().parent / "04_Tables"
+       / "ST1_patient_sample_characteristics.csv")
+if not ST1.exists():
+    skipped.append(f"the two Supplementary Table 1 response checks: {ST1} is "
+                   f"not part of this layout")
+else:
+    st1 = pd.read_csv(ST1)
+    st1.columns = [c.strip() for c in st1.columns]
+    st1_nr = st1[st1["R/NR Grouping"] == "NR"]
 
+    check_eq("post-treatment NR with a CR/PR response in Table S1",
+             int(st1_nr.loc[st1_nr["Treatment phase"] == "Post",
+                            "RECIST 1.1 response"].isin(["CR", "PR"]).sum()), 0)
 
-def sens_p(comparison_fragment, scenario_fragment):
-    hit = sens[sens["Comparison"].str.contains(comparison_fragment, regex=False)
-               & sens["Scenario"].str.contains(scenario_fragment, regex=False)]
-    return None if hit.empty else hit["P, two-sided"].iloc[0]
-
-
-check("double-positive P as published", sens_p("double-positive", "as published"), 0.057)
-check("double-positive P with P26 reclassified",
-      sens_p("double-positive", "reclassified as responder"), 0.393, tol=0.006)
-check("IHC summed P with P26 reclassified",
-      sens_p("IHC CEACAM5 + CEACAM6", "reclassified as responder"), 0.143, tol=0.006)
+    st1_pre_nr = st1_nr[st1_nr["Treatment phase"] == "Pre"]
+    check_eq("Table S1 adjudicated response of the pre-treatment non-responders",
+             dict(zip(st1_pre_nr["Patient ID"], st1_pre_nr["RECIST 1.1 response"])),
+             {"P1": "SD", "P2": "PD", "P25": "PD", "P26": "PD"})
 
 # ------------------------------------------------------- two-sided sweep (R1.3c)
 sweep = pd.read_csv(out("02_R1.3_TwoSided_Stats_Sweep", "twosided_sweep.csv"))
@@ -186,6 +178,10 @@ def mp_p(prog, contains):
 
 
 check("MP4 pre-R vs rest P", mp_p("S-MP4", "published test"), 0.083)
+# Round 41 (2026-09-16): the Results no longer quote the direct NR-vs-R null
+# (the author's ruling that negative results live on the panel and in the
+# table); Fig. S8A prints both values and Table S6 carries the rows, so the
+# two checks stay as checks on the record rather than on a sentence.
 check("MP4 direct NR vs R P", mp_p("S-MP4", "Pre-treatment NR vs R"), 0.486)
 check("MP5 direct NR vs R P", mp_p("S-MP5", "Pre-treatment NR vs R"), 0.686)
 # 2026-09-10: was 0.064 here, because the response letter said 0.064. The
@@ -355,8 +351,10 @@ if int((post_n["nes"] < 0).sum()) != 1:
 # The label map is read out of the analysis module rather than copied, so the
 # two cannot drift apart; importing that module would run scanpy and create
 # directories, so its LABELS literal is parsed instead.
-S9C_SVG = (REVISED_PANELS / "Supplementary_New" / "S9_MoMac_Identity_NFkB"
-           / "S9_C" / "S9_C_nfkb_per_celltype.svg")
+# S10 C since the renumbering of 2026-09-16 (S9 C until then; the S9C_ names
+# below are the panel's name in the analysis and the archive notes).
+S9C_SVG = (REVISED_PANELS / "Supplementary_New" / "S10_MoMac_Identity_NFkB"
+           / "S10_C" / "S10_C_nfkb_per_celltype.svg")
 S9C_ANALYSIS = (NEW_ANALYSES / "07_R1.8_NFkB_Specificity" / "scripts"
                 / "nfkb_specificity.py")
 S9C_ANNOT = re.compile(r"q=(\d+\.\d\d)\s+#(\d+)/(\d+)")
@@ -518,26 +516,28 @@ if int((_pre_i["nes"] > 0).sum()) != 5 or int((_post_i["nes"] > 0).sum()) != 12:
     failures.append("the letter's para-98 sentence no longer holds: it says 5 of "
                     "13 populations positive before treatment and 12 of 13 after")
 
-# ------------------------------------------------- Table S10 (pseudobulk, R1.8)
+# -------------------------------------------------- Table S8 (pseudobulk, R1.8)
 # The per-cell analysis is primary and the sample-level pseudobulk analysis
 # ships as Supplementary Table 10,
 # written by 04_Tables/build_tables.py from
-# 15_Pseudobulk_Sample_Level/outputs/nfkb_comparison.csv. The Results cite it
-# for "between six and nine" (both pseudobulk methods give 8 at q < 0.05 after
-# treatment), for "five to nine positive" (the nine is DESeq2 before treatment)
-# and for the MoMac pre-treatment hedge (DESeq2 q = 0.031). The table is read
+# 15_Pseudobulk_Sample_Level/outputs/nfkb_comparison.csv. Until 2026-09-16 the
+# Results quoted it for "between six and nine" (both pseudobulk methods give 8
+# at q < 0.05 after treatment), for "five to nine positive" (the nine is DESeq2
+# before treatment) and for the MoMac pre-treatment hedge (DESeq2 q = 0.031);
+# since Round 41 the Results cite the table for its sample-level analyses
+# without quoting these, so the checks below hold the TABLE. It is read
 # where it ships, so a stale ST10 fails here even if the module output moved.
 # 04_Tables/ sits beside this file in both layouts (04_Manuscript_R1/ here,
 # 05_Manuscript/ in the release), and the release's paths.py has no constant
 # for it, so the directory is taken relative to this file.
-ST10 = Path(__file__).resolve().parent / "04_Tables" / "ST10_nfkb_pseudobulk_sensitivity.csv"
+ST10 = Path(__file__).resolve().parent / "04_Tables" / "ST8_nfkb_pseudobulk_sensitivity.csv"
 if not ST10.exists():
-    skipped.append(f"the Table S10 checks: {ST10} is not part of this layout")
+    skipped.append(f"the Table S8 checks: {ST10} is not part of this layout")
 else:
     st10 = pd.read_csv(ST10)
     pb_post = st10[st10["Timepoint"] == "Post-treatment"]
     pb_pre = st10[st10["Timepoint"] == "Pre-treatment"].set_index("Cell type")
-    check_eq("Table S10 rows (13 cell types x 2 timepoints)", len(st10), 26)
+    check_eq("Table S8 rows (13 cell types x 2 timepoints)", len(st10), 26)
     check_eq("Table S10 limma-voom post NES > 0 and FDR q < 0.05",
              int(((pb_post["limma-voom NES"] > 0)
                   & (pb_post["limma-voom FDR q"] < 0.05)).sum()), 8)
@@ -553,7 +553,7 @@ else:
     # The per-cell columns must be the adopted table's, or the table would put
     # two different "primary" values in front of the reader.
     check("Table S10 per-cell MoMac pre NES equals the adopted table",
-          pb_pre.loc["MoMac", "Per-cell NES (primary analysis; Fig. S9C)"],
+          pb_pre.loc["MoMac", "Per-cell NES (primary analysis; Fig. S10C)"],
           -1.00, tol=0.01)
 
 # ------------------------------------------------------------- adaptive (R2.2)
@@ -682,6 +682,25 @@ for gene, expected in (("CEACAM6", 0.007), ("CEACAM5", 0.014)):
                   & (comb.Method == "Stouffer, unweighted")]["P, combined two-sided"]
     check(f"{gene} combined value as stored", float(stated.iloc[0]), expected,
           tol=0.001)
+
+# Round 41 (2026-09-16): the Results cite "alternative combinations in Table S9"
+# instead of quoting the sqrt(n)-weighted and Fisher values, so the shipped
+# table is held to the analysis output here (the text gate no longer pins them).
+ST9 = Path(__file__).resolve().parent / "04_Tables" / "ST9_crosscohort_convergence.csv"
+if not ST9.exists():
+    skipped.append(f"the Table S9 alternative-combination checks: {ST9} is not part of this layout")
+else:
+    st9 = pd.read_csv(ST9)
+    for gene, method, expected in (("CEACAM6", "Stouffer, weighted by sqrt(n)", 0.012),
+                                   ("CEACAM6", "Fisher", 0.013),
+                                   ("CEACAM5", "Stouffer, weighted by sqrt(n)", 0.019),
+                                   ("CEACAM5", "Fisher", 0.025)):
+        row = st9[(st9["Measurement"] == gene) & (st9["Statistic"] == method)]
+        check(f"Table S9 {gene} {method}",
+              None if row.empty else row["P, two-sided"].iloc[0], expected, tol=0.001)
+        src = comb[(comb.Gene == gene) & (comb.Method == method)]["P, combined two-sided"]
+        check(f"{gene} {method} as stored in the analysis output",
+              None if src.empty else float(src.iloc[0]), expected, tol=0.001)
 
 loo = pd.read_csv(out("10_R1.3_CrossCohort_Convergence", "loo_stability.csv"))
 drops = loo[loo.Dropped != "none (as published)"]
@@ -848,6 +867,64 @@ else:
             f"unexpected script(s) in {LETTER_DIR.name}: {', '.join(stray_py)}. "
             "Only apply_consistency_fixes.py and build_clean_response.py build the "
             "shipped letter")
+
+# ------------------------------------------- the letter's expected drawing bytes
+# The clean letter has fourteen drawings. Every analysis also shown in the paper
+# uses the final paper artwork; R3--R6 preserve the PI-reviewed reviewer-only
+# artwork. apply_consistency_fixes.expected_media() supplies
+# that deterministic byte-level contract. Rule 4: one byte is corrupted in the
+# same run, and the comparison must catch it.
+if not LETTER_DIR.is_dir():
+    skipped.append("the letter-drawings check: no letter directory in this layout")
+else:
+    import hashlib
+    import importlib.util
+    import zipfile
+    _spec = importlib.util.spec_from_file_location(
+        "apply_consistency_fixes", LETTER_DIR / "apply_consistency_fixes.py")
+    _acf = importlib.util.module_from_spec(_spec)
+    _spec.loader.exec_module(_acf)
+    _clean = LETTER_DIR / "Response_to_Reviewers_CIR260753ET_v3_clean.docx"
+    _expected = _acf.expected_media()
+    with zipfile.ZipFile(_clean) as _z:
+        _carried = {name: _z.read(name) for name in _expected if name in _z.namelist()}
+
+    def _compare(carried, expected):
+        """One line per drawing that is missing or differs from its render."""
+        bad = []
+        for name, png in expected.items():
+            if name not in carried:
+                bad.append(f"letter drawing {name}: not in the clean letter")
+            elif hashlib.md5(carried[name]).hexdigest() != hashlib.md5(png).hexdigest():
+                bad.append(
+                    f"letter drawing {name}: the clean letter carries a different "
+                    f"image from the shipped page's render "
+                    f"({len(carried[name])} vs {len(png)} bytes). Rebuild: "
+                    f"apply_consistency_fixes.py then build_clean_response.py")
+        return bad
+
+    checks += len(_expected)
+    failures.extend(_compare(_carried, _expected))
+    # the mutation: the same comparison, on a letter whose first drawing has one
+    # byte flipped, must report exactly that drawing
+    checks += 1
+    _name = next(iter(_expected))
+    _mut = dict(_carried)
+    _bytes = bytearray(_mut[_name]); _bytes[len(_bytes) // 2] ^= 0xFF
+    _mut[_name] = bytes(_bytes)
+    _caught = _compare(_mut, _expected)
+    if len(_caught) != 1 or _name not in _caught[0]:
+        failures.append("letter-drawings mutation NOT convicted: a one-byte "
+                        f"corruption of {_name} was reported as {_caught!r}")
+    # and rendering twice must give the same bytes, or the check cannot hold
+    checks += 1
+    _again = _acf.expected_media()
+    if any(_again[k] != _expected[k] for k in _expected):
+        failures.append("letter-drawings render is not deterministic: two "
+                        "renders of the same page differ, so the check cannot "
+                        "hold the letter to it")
+    print(f"  letter drawings: {len(_expected)} expected media parts compared; "
+          f"mutation and determinism controls run")
 
 # ------------------------------------------------------------------- report
 print(f"Checked {checks} claims against the analysis outputs.")

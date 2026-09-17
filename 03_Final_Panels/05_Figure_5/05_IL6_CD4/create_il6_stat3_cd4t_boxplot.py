@@ -36,6 +36,7 @@ Judgement calls, stated plainly:
 import warnings, numpy as np, pandas as pd, scanpy as sc
 import matplotlib; matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+from matplotlib.ticker import MaxNLocator
 from scipy import stats
 from pathlib import Path
 import sys
@@ -43,6 +44,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
 from paths import TCD4_H5AD
 import panel_style_cns as style
 import slots
+from cnsfig.boxes import finish_two_group, draw_boxes, bracket, ylim_above, assert_no_points
 
 warnings.filterwarnings('ignore')
 
@@ -53,6 +55,7 @@ SMALL_PT = 5.0                  # the earlier smallest body type, before * SCALE
 PANEL_LETTER = "L"
 PANEL_W_MM, PANEL_H_MM = slots.size_mm(5, PANEL_LETTER)
 LETTER_CELL = slots.letter_cell_mm(5, PANEL_LETTER)
+#: The letter cell, then two lines of body type, given up by the axes.
 
 BOX_COLORS = {'R': '#2166AC', 'NR': '#B2182B'}
 MIN_CELLS = 20
@@ -115,66 +118,50 @@ def main():
     print(f"  R mean: {np.mean(r_data):.4f}, NR mean: {np.mean(nr_data):.4f}")
 
     fig, ax = style.subplots_mm(PANEL_W_MM, PANEL_H_MM)
-    bp = ax.boxplot([r_data, nr_data], positions=[0, 1], widths=0.5,
-                   patch_artist=True, showfliers=False,
-                   medianprops=dict(color='black', linewidth=1.5 * SCALE * MARK),
-                   whiskerprops=dict(linewidth=1.0 * SCALE * MARK),
-                   capprops=dict(linewidth=1.0 * SCALE * MARK),
-                   boxprops=dict(linewidth=1.0 * SCALE * MARK))
-    bp['boxes'][0].set_facecolor(BOX_COLORS['R']); bp['boxes'][0].set_alpha(0.6)
-    bp['boxes'][1].set_facecolor(BOX_COLORS['NR']); bp['boxes'][1].set_alpha(0.6)
-
-    rng = np.random.default_rng(42)
-    for k, (data, color) in enumerate(zip([r_data, nr_data], [BOX_COLORS['R'], BOX_COLORS['NR']])):
-        jitter = rng.uniform(-0.08, 0.08, len(data))
-        ax.scatter([k] * len(data) + jitter, data, c=color, s=20 * SCALE * AREA,
-                  edgecolors='white', linewidths=0.3 * SCALE * MARK, alpha=0.85, zorder=3)
+    # ONE BOX, NO POINTS (2026-09-16, the author's fifth reading: "box
+    # plots should look alike throughout; don't show every point"). The
+    # box is cnsfig.boxes.draw_boxes (the 2H/I box, 0.79 mm open fliers);
+    # the jittered points (default_rng(42)) are no longer drawn - the
+    # author's ruling, a declared departure from the published panel.
+    bp = draw_boxes(ax, [r_data, nr_data], [0, 1],
+                    [BOX_COLORS['R'], BOX_COLORS['NR']], width=0.5)
+    bp['boxes'][0].set_alpha(0.6); bp['boxes'][1].set_alpha(0.6)
 
     _, pval = stats.mannwhitneyu(nr_data, r_data, alternative='two-sided')
     print(f"  P-value (two-sided): {pval:.4f}")
 
-    p_str = f'P = {pval:.3f}' if pval >= 0.001 else 'P < 0.001'
-    is_star = pval < 0.05
     y_max = max(np.max(r_data), np.max(nr_data))
     y_range = y_max - min(np.min(r_data), np.min(nr_data))
-    bracket_y = y_max + 0.10 * y_range
-    ax.plot([0, 0, 1, 1], [bracket_y - 0.02 * y_range, bracket_y,
-            bracket_y, bracket_y - 0.02 * y_range], color='black',
-            linewidth=0.8 * SCALE * MARK)
-    ax.text(0.5, bracket_y + 0.02 * y_range, p_str, ha='center',
-            fontsize=style.body_pt() if is_star else style.tick_pt())
+    # 0.22 of the range above the data, not 0.10: this panel is 18.5 mm wide,
+    # its axes box about 10, and 'P = 0.030' sets 9.5 mm at 6 pt, so the
+    # string overhangs the box on both sides. At 0.10 it sat level with the top
+    # y tick and the sweep convicted it against '0.22' at 0.55 mm2; lifted, it
+    # clears the last tick label. The bracket and the P value do not change.
+    bracket_y = y_max + 0.22 * y_range
+    # Same vertices (top line at +0.22, arms 0.02 down), the label's ink
+    # 0.4 mm above the line (cnsfig.boxes.bracket, 2026-09-16).
+    _, p_text, _ = bracket(fig, ax, 0, 1, y_max, y_range, pval, kind="pair",
+                           lift=0.20, arm=0.02)
+    # Headroom (2026-09-15): the bracket and star sit lower in the frame, so
+    # the star clears the title's second line.
+    ax.set_ylim(top=bracket_y + 0.42 * y_range)
+    ylim_above(ax, p_text)
+    assert_no_points(ax, bp)
 
-    ax.set_xticks([0, 1])
-    # The two response groups, named without their sample counts: at
-    # 6 pt "(n=5)" sets 5.0 mm and the two ticks are about 3 mm apart,
-    # so the counts cannot be printed here without overprinting each
-    # other. They are stated in the figure legend instead.
-    ax.set_xticklabels(['R', 'NR'])
+    # ONE FAMILY, ONE FRAME LINE  (2026-09-14, evening)
+    #   The four boxes of J and the box of L are framed by
+    #   cnsfig.boxes.finish_two_group: the tick labels with their counts, the
+    #   y label as a rich run at the tick size, the title on the canvas in a
+    #   two-line band, the frame's top at 139.8 mm and its bottom at 158.7
+    #   mm on the page (sweep_pages.ROW_ALIGN), the boxes off the spines.
+    finish_two_group(
+        fig, ax, title='IL-6/JAK/STAT3\nCD4+ T cells',
+        tick_labels=[f'R\n(n={len(r_data)})', f'NR\n(n={len(nr_data)})'],
+        positions=[0, 1], width=0.5, ylabel_markup='IL-6/JAK/STAT3 score',
+        letter_cell=LETTER_CELL, panel_w_mm=PANEL_W_MM, panel_h_mm=PANEL_H_MM,
+        top_extra_mm=3.32, bottom_mm=6.30)
     print(f"  tick labels R, NR; counts R n={len(r_data)}, "
           f"NR n={len(nr_data)} -> figure legend")
-    # One line rather than two: a rotated label two lines deep costs twice
-    # its leading in width, and this panel is 18.5 mm wide.
-    ax.set_ylabel('IL-6/JAK/STAT3 Score')
-    # The gene set is named in full in the axis label, so the title carries
-    # the cell type alone, as the box titles of panel J do. A title wider than
-    # the plotting box cannot be fitted at all: it is centred on that box, so
-    # every millimetre the box is narrowed only moves the title's edge by half
-    # a millimetre.
-    ax.set_title('CD4+ T')
-    ax.spines['top'].set_visible(False)
-    ax.spines['right'].set_visible(False)
-
-    ax.set_ylim(ax.get_ylim()[0], bracket_y + 0.15 * y_range)
-
-    style.fit_margins(fig, pad_mm=0.6, cell_mm=LETTER_CELL)
-    over = style.overflow_mm(fig)
-    if max(over) > 0:
-        raise RuntimeError(
-            f"ink outside the {PANEL_W_MM} x {PANEL_H_MM} mm canvas "
-            f"(l,r,b,t mm): {over}")
-    intruders = style.letter_clear(fig, LETTER_CELL)
-    if intruders:
-        raise RuntimeError(f"ink under the panel letter cell: {intruders}")
     stem = 'il6_stat3_cd4t_boxplot'
     style.save_panel(fig, OUT_DIR / stem)
     print(f"  Saved: {stem}.[svg|pdf|png] at {PANEL_W_MM} x {PANEL_H_MM} mm")

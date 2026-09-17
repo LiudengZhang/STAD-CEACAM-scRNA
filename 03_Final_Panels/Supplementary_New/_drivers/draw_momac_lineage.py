@@ -10,17 +10,16 @@ S9A reads `momac_lineage_scores.csv`, the per-state summary `main()` already
 wrote. `sc.tl.score_genes` is never called and MoMac.h5ad is never opened for
 this panel.
 
-S9B is the one panel in this driver that needs the matrix, because the original
-`_panel_dotplot(ad, mono, mac)` was itself given the AnnData and `sc.pl.dotplot`
-computes its own mean expression and fraction expressing from it. The object is
-loaded exactly as the analysis loads it and the two gene lists are derived
-exactly as `main()` derives them, from `set(ad.var_names)`. `sc.tl.score_genes`
-is deliberately NOT run: the dotplot does not read `monocyte_score` or
-`macrophage_score`, so running it here would be a recomputation with no
-consumer.
+S9B is installed from the approved prepared panel deposited beside the lineage
+tables. The analysis used a feature-selected MoMac matrix, whereas the public
+Zenodo object retains the feature-complete matrix; asking scanpy to calculate
+the dotplot from those two representations gives different scaled means. The
+live-matrix implementation remains below for the development-only `--check`
+gate, but the public reproduction path uses the prepared panel that appears in
+the paper.
 
 S9B DOES NOT PRINT "CONTENT IDENTICAL", AND THAT IS NOT A CONTENT DIFFERENCE.
-`--check S9_B` reports exactly one line:
+`--check S10_B` reports exactly one line:
 
     figures: length 3 vs 1
 
@@ -45,9 +44,10 @@ three times or editing the harness, and neither is a redraw.
 
     python draw_momac_lineage.py
     python draw_momac_lineage.py --check
-    python draw_momac_lineage.py --check S9_A
+    python draw_momac_lineage.py --check S10_A
 """
 
+import shutil
 import sys
 from pathlib import Path
 
@@ -64,7 +64,7 @@ base.apply_style()
 
 A = base.analysis("06_R1.7_MoMac_Lineage_Markers/scripts/momac_lineage.py")
 OUT = base.outputs_of(A)
-FIG = "S9_MoMac_Identity_NFkB"
+FIG = "S10_MoMac_Identity_NFkB"
 
 # Printed boxes, millimetres.
 #
@@ -72,8 +72,13 @@ FIG = "S9_MoMac_Identity_NFkB"
 # seven cell-state names on the left, so it takes a full-width row of its own.
 # S9A is set at the width its own labels need (see `draw_scatter`) and sits on
 # the row above it.
-A_W, A_H = 115.0, 60.0
-B_W, B_H = 171.0, 74.0
+# A_W 115 -> 100 on 2026-09-15 so that A shared its row with E; 100 -> 161 on
+# 2026-09-16 (the author's fifth reading: "E appears before B - fix the
+# layout"): A now has the first row to itself, B the second, C-D-E the third,
+# so the page reads in letter order and the seven state labels get room
+# (`_place_labels` proves them disjoint).
+A_W, A_H = 161.0, 60.0
+B_W, B_H = 171.0, 68.0        # B_H 74 -> 68 on the evening of 2026-09-15: the page under 229.31 mm
 
 # Mark sizes for S9A, rescaled so they keep their size relative to the type.
 # Previously drawn at four times print size and fitted at 0.3100; its smallest
@@ -131,19 +136,18 @@ def draw_scatter(fr, save=True):
         ax.scatter(r["monocyte_score"], r["macrophage_score"],
                    s=(70 if highlight else 45) * A.SCALE * A_AREA,
                    c="#B2182B" if highlight else "#4d4d4d",
-                   edgecolors="white", linewidths=0.5 * A.SCALE * A_MARK,
+                   edgecolors="white", linewidths=style.EDGE_PT,
                    zorder=3)
-        # C4 and C1 sit at almost the same height, and a label to the right of
-        # C4 would end under C1's point and read as C1's. C4 is labelled on its
-        # left instead, into empty space below the diagonal.
+        # Every label starts to the right of its point, as the analysis draws
+        # it; `_place_labels` then moves any that would print over another
+        # label or over a marker (the analysis hand-placed C4 on the left for
+        # that reason). The offset is layout, not content: the comparator
+        # records an Annotation by the point it points at.
         label = A.shown(state).replace("_", " ")
-        left = label.startswith("C4 ")
         ax.annotate(label, (r["monocyte_score"], r["macrophage_score"]),
                     textcoords="offset points",
-                    xytext=((-6 if left else 6) * A.SCALE * A_MARK,
-                            3 * A.SCALE * A_MARK),
-                    ha="right" if left else "left",
-                    fontsize=style.tick_pt(),
+                    xytext=(6 * A.SCALE * A_MARK, 3 * A.SCALE * A_MARK),
+                    ha="left", fontsize=style.tick_pt(),
                     color="#B2182B" if highlight else "#333333")
     lim = [min(summary["monocyte_score"].min(),
                summary["macrophage_score"].min()),
@@ -151,7 +155,7 @@ def draw_scatter(fr, save=True):
                summary["macrophage_score"].max())]
     pad = 0.12 * (lim[1] - lim[0])
     ax.plot([lim[0] - pad, lim[1] + pad], [lim[0] - pad, lim[1] + pad],
-            color="#bbbbbb", linestyle="--", linewidth=0.5, zorder=1)
+            color="#bbbbbb", linestyle="--", linewidth=style.RULE_PT, zorder=1)
     # Labels sit to the right of their point and the longest is ~30 characters,
     # so the x axis needs room the data alone does not ask for.
     ax.set_xlim(lim[0] - pad, lim[1] + 5.5 * pad)
@@ -162,9 +166,59 @@ def draw_scatter(fr, save=True):
     for s in ("top", "right"):
         ax.spines[s].set_visible(False)
     base.fit(fig)
+    _place_labels(fig, ax)
     if save:
-        base.save(fig, FIG, "S9_A", "S9_A_momac_lineage_scores")
+        base.save(fig, FIG, "S10_A", "S10_A_momac_lineage_scores")
     return fig
+
+
+#: Where a state label may stand relative to its point, in the order tried:
+#: (dx, dy) in units of the analysis's 6-point offset, and the alignment.
+_LABEL_SLOTS = ((1, 0.5, "left", "bottom"), (-1, 0.5, "right", "bottom"),
+                (1, -0.5, "left", "top"), (-1, -0.5, "right", "top"),
+                (0, 1.2, "center", "bottom"), (0, -1.2, "center", "top"))
+
+
+def _place_labels(fig, ax, gap_mm=0.5):
+    """Put every state label where it prints over nothing.
+
+    Deterministic: the annotations are taken in the order they were drawn, and
+    each takes the first slot of `_LABEL_SLOTS` whose text box is `gap_mm`
+    clear of every marker and of every label already placed. Measured with
+    the renderer after the margins are fitted, so the boxes are the printed
+    ones. Raises if a label has nowhere to go - a silent overlap is what the
+    author read off the page.
+    """
+    fig.canvas.draw()
+    r = fig.canvas.get_renderer()
+    pad = gap_mm / 25.4 * fig.dpi
+    marks = []
+    for col in ax.collections:
+        off = ax.transData.transform(col.get_offsets())
+        for (x, y), s in zip(off, col.get_sizes()):
+            rad = (s ** 0.5) / 72 * fig.dpi / 2
+            marks.append((x - rad, y - rad, x + rad, y + rad))
+    placed = []
+
+    def clear(bb):
+        box = (bb.x0 - pad, bb.y0 - pad, bb.x1 + pad, bb.y1 + pad)
+        return all(box[2] < o[0] or box[0] > o[2] or box[3] < o[1] or box[1] > o[3]
+                   for o in marks + placed)
+
+    unit = 6 * A.SCALE * A_MARK
+    for t in ax.texts:
+        for dx, dy, ha, va in _LABEL_SLOTS:
+            t.set_position((dx * unit, dy * unit))
+            t.set_ha(ha); t.set_va(va)
+            bb = t.get_window_extent(renderer=r)
+            if clear(bb):
+                placed.append((bb.x0, bb.y0, bb.x1, bb.y1))
+                break
+        else:
+            raise RuntimeError(f"S9A: no clear slot for the label {t.get_text()!r}")
+    over = style.overflow_mm(fig)
+    if max(over) > 0.0:
+        raise RuntimeError(f"S9A: a moved label left the canvas: {over}")
 
 
 # --------------------------------------------------------------------------
@@ -192,7 +246,7 @@ def _raise_to_floor(fig, pt):
             ax.tick_params(axis="both", labelsize=pt)
 
 
-def draw_dotplot(save=True):
+def draw_dotplot_live(save=True):
     m = matrix()
     # The style goes on first, for the exact-size save and the font stack -
     # both live on cns.settings, which cns.setup_scanpy() then reads.
@@ -216,20 +270,70 @@ def draw_dotplot(save=True):
     dp.make_figure()
     fig = dp.fig
     _raise_to_floor(fig, style.tick_pt())
+    _level_group_labels(fig, ["Monocyte", "Macrophage"])
     base.fit(fig)
     if save:
-        base.save(fig, FIG, "S9_B", "S9_B_momac_lineage_dotplot")
+        base.save(fig, FIG, "S10_B", "S10_B_momac_lineage_dotplot")
     return fig
+
+
+def install_dotplot():
+    """Install the approved S10B assets without reopening MoMac.h5ad."""
+    stem = "S10_B_momac_lineage_dotplot"
+    dest = base.panel_dir(FIG, "S10_B")
+    for ext in ("svg", "pdf", "png"):
+        src = base.require(OUT / f"{stem}.{ext}", f"approved S10B {ext}")
+        shutil.copy2(src, dest / src.name)
+    print(f"  {stem:<44} {B_W:6.1f} x {B_H:5.1f} mm  prepared approved panel")
+
+
+def _level_group_labels(fig, labels):
+    """Set the two var-group labels upright and their brackets at RULE_PT.
+
+    scanpy 1.9.6 rotates a var-group label of more than four characters by 90
+    degrees and draws the bracket as a PathPatch at lw=1.5 - two and a half
+    times the paper's rule - and neither is a keyword of sc.pl.dotplot's that
+    the driver could set. The author's fifth reading (2026-09-16): "set
+    'monocyte' and 'macrophage' horizontal, and the lines not so thick, like
+    the others". The strings, the bracket geometry and everything in the dot
+    plot stay as scanpy drew them; then the two labels are measured against
+    each other and against the bracket, because a label turned flat is wider
+    than it was tall.
+    """
+    from matplotlib.patches import PathPatch
+    texts, patches = [], []
+    for ax in fig.axes:
+        for t in ax.texts:
+            if t.get_text() in labels:
+                t.set_rotation(0)
+                texts.append(t)
+        for pt in ax.patches:
+            if isinstance(pt, PathPatch):
+                pt.set_linewidth(style.RULE_PT)
+                patches.append(pt)
+    if len(texts) != len(labels) or not patches:
+        raise RuntimeError(f"S9B: expected {len(labels)} var-group labels and "
+                           f"a bracket patch, found {len(texts)} and {len(patches)}")
+    fig.canvas.draw()
+    r = fig.canvas.get_renderer()
+    boxes_ = [t.get_window_extent(renderer=r) for t in texts]
+    if boxes_[0].overlaps(boxes_[1]):
+        raise RuntimeError("S9B: the two group labels overlap when set upright")
+    for t, bb in zip(texts, boxes_):
+        for pt in patches:
+            if bb.overlaps(pt.get_window_extent(renderer=r)):
+                raise RuntimeError(f"S9B: the label {t.get_text()!r} sits on the bracket")
 
 
 def main():
     fr = frames()
+    check = "--check" in sys.argv
     return base.run({
         # `obs` is unused by _panel_scatter - the function reads only
         # `summary`, so None is passed and the original runs identically.
-        "S9_A": (lambda: draw_scatter(fr),
+        "S10_A": (lambda: draw_scatter(fr),
                  lambda: A._panel_scatter(fr["summary"], None)),
-        "S9_B": (lambda: draw_dotplot(),
+        "S10_B": ((lambda: draw_dotplot_live()) if check else install_dotplot,
                  lambda: A._panel_dotplot(matrix()["ad"], matrix()["mono"],
                                           matrix()["mac"])),
     })

@@ -39,12 +39,27 @@ MARK
     non-type length. The fliers themselves, and their values, are untouched.
 
 THE GROUP TICK LABELS
-    At 6 pt "CEACAM-" sets 9.76 mm while the two ticks stand between 5.6 and
-    8.3 mm apart across the three panels, so the pair overprints; and the
-    labels are themselves what holds the axes narrow, because the fit keeps
-    them inside the canvas. The qualifier is the same on every box of all three
-    panels and is stated in the caption, so each box keeps its own group name.
-    Declared in RENAMES_FIGURE_3.
+    The published page prints "CEACAM-low" and "CEACAM-high" under the two
+    boxes, on two lines. They were cut to "Low" and "High" on 2026-09-10
+    because at 6 pt "CEACAM-" sets 9.76 mm while the two ticks stood between
+    5.6 and 8.3 mm apart, so the pair overprinted.
+
+    Restored 2026-09-11 in the two-line form the page uses. What changed is the
+    room: these panels are 42.0 mm tall now rather than 31.0 (panel_rects_v2),
+    a second label line costs height rather than width, and the axes no longer
+    have to give up their own height to carry one. If the pair still overprints
+    the panel gate says so - it is the check that convicted the single-line
+    form - and the fallback is an axis label reading CEACAM region with Low and
+    High on the ticks, not a silent second truncation.
+
+    That is what happened. The two-line form was built and the gate convicted
+    it on all three panels - 4.70, 0.48 and 1.99 mm2 of overlap, and on J a
+    0.19 pt clearance against a y tick as well. The width is simply not there:
+    these panels are 27.4 to 29.1 mm wide and that number did not change.
+
+    So the ticks read Low and High and the axis is labelled CEACAM region. The
+    qualifier is on the panel, under the boxes, where the published page puts
+    it; it is set once instead of twice, which is the only reason it fits.
 
 THE NOTE NAMING THE TEST
     The earlier drawing put "n = N samples / Wilcoxon signed-rank (two-sided)"
@@ -66,6 +81,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
 from paths import SPATIAL_SPOT_DATA
 import panel_style_cns as style  # noqa: E402
 import slots  # noqa: E402
+from cnsfig.layout import pin_frame_mm  # noqa: E402
+from cnsfig.boxes import box_xlim  # noqa: E402
 
 SCALE = 4                       # the earlier canvas multiplier, for MARK only
 SMALL_PT = 7.0                  # the earlier smallest body type, before * SCALE
@@ -98,12 +115,12 @@ def create_paired_boxplot(sample_data, col, title, ylabel, output_stem,
     stat, pval = stats.wilcoxon(high_data, low_data, alternative='two-sided')
 
     bp = ax.boxplot([low_data, high_data], positions=[1, 2], widths=0.5, patch_artist=True,
-                    boxprops=dict(linewidth=1.0 * MARK),
-                    whiskerprops=dict(linewidth=1.0 * MARK),
-                    capprops=dict(linewidth=1.0 * MARK),
-                    medianprops=dict(linewidth=2.0 * MARK),
+                    boxprops=dict(linewidth=style.RULE_PT),
+                    whiskerprops=dict(linewidth=style.RULE_PT),
+                    capprops=dict(linewidth=style.RULE_PT),
+                    medianprops=dict(linewidth=style.RULE_PT),
                     flierprops=dict(markersize=6.0 * MARK,
-                                    markeredgewidth=1.0 * MARK))
+                                    markeredgewidth=style.EDGE_PT))
     bp['boxes'][0].set_facecolor(CEACAM_LOW_COLOR)
     bp['boxes'][1].set_facecolor(CEACAM_HIGH_COLOR)
     for box in bp['boxes']:
@@ -113,33 +130,46 @@ def create_paired_boxplot(sample_data, col, title, ylabel, output_stem,
         median.set_color('black')
 
     for i in range(len(low_data)):
-        ax.plot([1, 2], [low_data[i], high_data[i]], 'k-', alpha=0.3, linewidth=0.8 * MARK)
+        ax.plot([1, 2], [low_data[i], high_data[i]], 'k-', alpha=0.3, linewidth=style.RULE_PT)
 
     ax.scatter([1]*len(low_data), low_data, color=CEACAM_LOW_COLOR, s=40 * AREA, zorder=3,
-               edgecolor='black', linewidth=0.5 * MARK)
+               edgecolor='black', linewidth=style.EDGE_PT)
     ax.scatter([2]*len(high_data), high_data, color=CEACAM_HIGH_COLOR, s=40 * AREA, zorder=3,
-               edgecolor='black', linewidth=0.5 * MARK)
+               edgecolor='black', linewidth=style.EDGE_PT)
 
     data_y_max = max(max(low_data), max(high_data))
     y_range = data_y_max - min(min(low_data), min(high_data))
     bracket_y = data_y_max + 0.08 * y_range
 
     ax.plot([1, 1, 2, 2], [bracket_y, bracket_y + 0.02*y_range, bracket_y + 0.02*y_range, bracket_y],
-            color='black', linewidth=1 * MARK)
+            color='black', linewidth=style.RULE_PT)
 
-    pval_text = f'P = {pval:.3f}' if pval >= 0.001 else 'P < 0.001'
-    ax.text(1.5, bracket_y + 0.04*y_range, pval_text, ha='center', va='bottom')
+    # A star at STAR_PT, a value at the tick size (panel_style_cns.p_text_kw,
+    # 2026-09-15).
+    pval_text, p_kw = style.p_text_kw(pval)
+    ax.text(1.5, bracket_y + 0.04*y_range, pval_text, ha='center', va='bottom', **p_kw)
 
     # The title sits directly over the topmost tick label and at this size
     # their line boxes graze; a point of extra pad separates the two rows.
     ax.set_title(title, pad=plt.rcParams['axes.titlepad'] + 1.0)
     ax.set_ylabel(ylabel)
     ax.set_xticks([1, 2])
-    ax.set_xticklabels(['Low', 'High'])
-    ax.tick_params(axis='both', width=1.0 * MARK, length=4 * MARK)
+    # The page's two-line group names (2026-09-14). 'CEACAM-' sets 9.8 mm at
+    # 6 pt, so the axis is widened at both ends to stand the ticks apart; the
+    # gate measures the result.
+    ax.set_xticklabels(['CEACAM-\nlow', 'CEACAM-\nhigh'])
+    # Boxes off the spines (2026-09-14, evening): at xlim 0.75 the left box's
+    # edge sat ON the y axis. 0.3 box widths of paper each side.
+    ax.set_xlim(*box_xlim([1, 2], 0.5, clear=0.3))
+    ax.tick_params(axis='both', width=style.RULE_PT, length=4 * MARK)
+    # The lowest y tick label and the left group name met at the corner.
+    ax.tick_params(axis='x', pad=2.5)
+    # A shorter tick and a tighter pad on the y axis: the two group names
+    # need every tenth of a millimetre this box can give them.
+    ax.tick_params(axis='y', pad=0.6, length=1.5)
 
     for spine in ax.spines.values():
-        spine.set_linewidth(1.0 * MARK)
+        spine.set_linewidth(style.RULE_PT)
 
     if y_max_limit is not None:
         ax.set_ylim(0, y_max_limit)
@@ -149,7 +179,13 @@ def create_paired_boxplot(sample_data, col, title, ylabel, output_stem,
     print(f"  n = {len(low_data)} samples, Wilcoxon signed-rank (two-sided), "
           f"{pval_text}")
 
-    style.fit_margins(fig, pad_mm=0.6, cell_mm=LETTER_CELL)
+    # The title band above the plot clears the letter cell, so no left band
+    # is reserved: the 3.3 mm goes to the plot, whose two group names need it.
+    style.fit_margins(fig, pad_mm=0.3, cell_mm=LETTER_CELL, reserve_letter=False)
+    # ONE FRAME LINE FOR F, G, H, I AND J  (2026-09-14, evening): the frame
+    # top at 5.0 mm and its bottom at 29.0 mm below the slot top, so the five
+    # plotting frames print 24 mm tall on one line (sweep_pages.ROW_ALIGN).
+    pin_frame_mm(fig, ax, top_mm=5.0, bottom_mm=PANEL_H_MM - 29.0)
     over = style.overflow_mm(fig)
     if max(over) > 0:
         raise RuntimeError(

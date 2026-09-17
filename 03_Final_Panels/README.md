@@ -1,27 +1,40 @@
-# Main figures 1–6 — this tree is ARCHIVE, not the build path
+# Main figures 1–6 — the panel sources, and how the shipped pages are built
 
-**Running anything under `0X_Figure_X/` does not change what ships.** It never has.
+Until 2026-09-09 this tree was archive and the figures in the paper were the submitted
+PDFs edited in place (`../patch_figure_annotations.py` → `_patched/`). That path is
+retired. Since 2026-09-11 (Figures 2–5) and 2026-09-15 (Figure 1) **every panel of
+Figures 1–5 is redrawn here at the size it prints at**, and the pages are assembled
+from the redrawn panels:
 
-The figures in the paper are produced by editing the submitted PDFs in place:
+    0X_Figure_X/<dir>/create_*.py            one script per panel, 1:1, on
+                                             00_Config/panel_style_cns (cnsplots),
+                                             numbers from data/*.csv (cnsfig.cache)
+      -> ../../12_Figure_Refactor/rebuild_panels.py N --only <dir>
+      -> ../assemble_slotted.py N            places each drawing into its slot from
+                                             ../panel_rects_v2.csv / slot_subrects_v2.csv
+                                             (written by 12_Figure_Refactor/build_grid_v2.py)
+      -> _slotted/Figure_N.{svg,pdf,png}
+      -> ../build_shipped_figures.py         collects the pages
+      -> _shipped/Figure_N.pdf               shipped by 06_Submission_Package
 
-    ../../00_GROUND_TRUTH/figures/Figure N.pdf
-      -> ../patch_figure_annotations.py
-      -> _patched/Figure_N.pdf                       shipped by 06_Submission_Package
+Every page is 171.10 × 229.31 mm. Figure 1 was submitted as a 254 mm landscape page and
+is re-paged onto the same width (`build_grid_v2.REPAGED`): A, the study-overview
+artwork from `_panel_1A/build_figure.py`, across the top; B (UMAP) and C (composition,
+upright bars, key below) on one row at one height, 62 mm, since 2026-09-16. Figure 6 is
+supplied as submitted (`_supplied/Figure_6.pdf`).
 
-`patch_figure_annotations.py` does three kinds of thing, and nothing else:
+**A redraw changes the drawing only.** Not one number, gene set, cell selection,
+statistic or string moves without a declaration in `00_Config/shared/labels.py`;
+`../../10_Reproduction/compare_panel_content.py` is the proof, run for every redrawn
+panel. The departures the author ruled on (one box style with no individual points,
+2026-09-16; abbreviated labels, 2026-09-10; and others) are recorded in
+`../PROVENANCE.csv` row by row and in `../../RULES.md`.
 
-- redacts an old annotation and redraws the exact two-sided *P* value at the same
-  anchor (Figures 3 and 5, live text; Figure 2, vector outlines with no text layer);
-- corrects two labels in Figure 4 (`CD16` → `FCGR3A`, `Mac` → `MoMac`);
-- splices a replacement panel into a measured slot — currently Figure 1A, Figure 2D
-  and Figure 5H, listed in `PANEL_SWAPS`.
-
-The panel directories below hold the sources the pre-submission assembler consumed.
-They are kept for provenance and for the code release. The assemblers
-(`assemble_figure_*.py`) are **not** a way to rebuild the paper: `assemble_figure_2.py`
-was re-lettered after submission and emits panels A–Q where the paper prints A–N, and
-the pre-submission assembler is not on disk. Re-assembling would silently renumber the
-figure and invalidate every panel reference in the text.
+`assemble_figure_*.py` beside the panel directories are the **pre-submission**
+assemblers. They are not on the build path and must not be used to rebuild the paper:
+`assemble_figure_2.py` emits panels A–Q where the paper prints A–N, and
+`assemble_figure_1.py` prints the submitted landscape page. They are kept as the record
+of how the submitted pages were made and travel with the code release for that reason.
 
 ## The directory letter is not the printed panel letter
 
@@ -45,7 +58,9 @@ from.
 
 ## Rebuilding a panel
 
-Only when a claim in the paper is wrong, never because a script disagrees with the
-figure. Write the new panel to its directory, add it to `PANEL_SWAPS` with a slot
-measured from the white gutters of the submitted PDF, re-run
-`patch_figure_annotations.py`, and update its row in `../PROVENANCE.csv`.
+Edit its `create_*.py`, run `rebuild_panels.py N --only <dir>` (it refuses a script that
+exits 0 without writing a drawing), `assemble_slotted.py N`, `build_shipped_figures.py`,
+then the gates in `../../RULES.md` "Before shipping" — `sweep_panels.py`,
+`sweep_pages.py`, `check_figure_annotations.py`, `verify_panel_provenance.py` — and the
+comparator against the previous drawing. Update the panel's row in `../PROVENANCE.csv`
+with a dated sentence saying what changed.

@@ -27,7 +27,7 @@ NF-kB sentence must rest on (07_Archive/2026-09-03_S9E_S10C_drawn_from_live_run)
 The two disagree in six quantities, listed at `ADOPTED_GSEA` in the analysis;
 against the live table B cells print #37/38 instead of last, and five cell types
 print rank 1 instead of three, which contradicts the printed Results sentence
-and the Fig. S9C columns of Table S10. So `g` comes from `A.load_adopted()` -
+and the Fig. S10C (S9C until 2026-09-16) columns of Table S10. So `g` comes from `A.load_adopted()` -
 the analysis module's own accessor for that file, which raises if it is missing.
 
 This is what a driver reading `outputs/*.csv` by reflex cannot see, and the
@@ -66,13 +66,18 @@ base.apply_style()
 
 A = base.analysis("07_R1.8_NFkB_Specificity/scripts/nfkb_specificity.py")
 OUT = base.outputs_of(A)
-FIG = "S9_MoMac_Identity_NFkB"
+FIG = "S10_MoMac_Identity_NFkB"
 
-# Printed boxes, millimetres. The two sit side by side on one row of the
-# 183 mm page. S9C is the wider of the two because each bar carries an FDR and
-# a Hallmark rank annotated to its right; S9D is four grouped bars.
-C_W, C_H = 92.0, 62.0
-D_W, D_H = 74.0, 46.0
+# Printed boxes, millimetres. Since 2026-09-16 (the author's fifth reading:
+# "E appears before B - fix the layout") C, D and E share the last row of the
+# page under A and B, so the page reads in letter order: 66 + 48 + 37 mm plus
+# two 5 mm gutters is the 171.10 mm page width. S9C is the widest because each
+# bar carries an FDR and a Hallmark rank to its right; S9D is five grouped
+# bar pairs with its key above the bars (it stood over the IL1B bar until then).
+C_W, C_H = 66.0, 62.0
+D_W, D_H = 48.0, 46.0
+# Line weights since 2026-09-16: bar outlines at EDGE_PT, the zero line at
+# RULE_PT - panel_style_cns names those two and nothing else.
 
 
 def frames():
@@ -103,8 +108,8 @@ def draw_C(fr, save=True):
     fig, ax = style.subplots_mm(C_W, C_H)
     y = np.arange(len(post))
     colors = [A.COLOR_NR if q < 0.25 else "#cccccc" for q in post["fdr_q"]]
-    ax.barh(y, post["nes"], color=colors, edgecolor="#444444", linewidth=0.4,
-            height=0.65)
+    ax.barh(y, post["nes"], color=colors, edgecolor="#444444",
+            linewidth=style.EDGE_PT, height=0.65)
     # Annotations always sit to the right of the bar's far end, so the ones on
     # negative bars do not run into the cell-type labels on the axis.
     for i, (_, r) in enumerate(post.iterrows()):
@@ -112,7 +117,7 @@ def draw_C(fr, save=True):
                 f"q={r['fdr_q']:.2f}  #{r['rank']}/{r['n_sets']}",
                 va="center", ha="left",
                 fontsize=style.tick_pt(), color="#333333")
-    ax.axvline(0, color="#666666", linewidth=0.5)
+    ax.axvline(0, color="#666666", linewidth=style.RULE_PT)
     ax.set_yticks(y)
     ax.set_yticklabels([A.LABELS[c] for c in post["cell_type"]])
     ax.set_xlabel("NES, TNF$\\alpha$ signalling via NF-$\\kappa$B\n"
@@ -123,14 +128,18 @@ def draw_C(fr, save=True):
     for sp in ("top", "right", "left"):
         ax.spines[sp].set_visible(False)
     handles = [plt.Rectangle((0, 0), 1, 1, facecolor=c, edgecolor="#444444",
-                             linewidth=0.4, label=l)
+                             linewidth=style.EDGE_PT, label=l)
                for c, l in ((A.COLOR_NR, "FDR q < 0.25"),
                             ("#cccccc", "FDR q >= 0.25"))]
-    ax.legend(handles=handles, loc="lower right", frameon=False,
+    # The key stands above the plotting box, right-aligned (2026-09-16): at
+    # 66 mm the lower-right corner is where the Pericyte and B-cell
+    # annotations end, and the key printed 0.29 pt from "#30/49".
+    ax.legend(handles=handles, loc="lower right", bbox_to_anchor=(1.0, 1.0),
+              borderaxespad=0.0, frameon=False,
               handlelength=1.0, handletextpad=0.4, labelspacing=0.25)
     base.fit(fig)
     if save:
-        base.save(fig, FIG, "S9_C", "S9_C_nfkb_per_celltype")
+        base.save(fig, FIG, "S10_C", "S10_C_nfkb_per_celltype")
     return fig
 
 
@@ -150,7 +159,7 @@ def draw_D(fr, save=True):
         sub = post[post["compartment"] == comp].set_index("gene")
         vals = [sub["mean_NR"].get(gene, np.nan) for gene in genes]
         ax.bar(x + (k - 0.5) * w, vals, width=w, color=color, alpha=0.85,
-               edgecolor="#333333", linewidth=0.4, label=comp)
+               edgecolor="#333333", linewidth=style.EDGE_PT, label=comp)
     ax.set_xticks(x)
     ax.set_xticklabels(genes, style="italic")
     ax.set_ylabel("Mean expression,\npost-treatment non-responders")
@@ -166,11 +175,15 @@ def draw_D(fr, save=True):
     ax.tick_params(axis="both", width=0.6, length=2)
     for s in ("top", "right"):
         ax.spines[s].set_visible(False)
-    ax.legend(frameon=False, loc="upper left",
+    # The key stands above the plotting box, not in it: anchored to the axes'
+    # top-left corner and growing upward, so it can meet no bar. fit_margins
+    # then makes the room above the axes it needs.
+    ax.legend(frameon=False, loc="lower left", bbox_to_anchor=(0.0, 1.0),
+              borderaxespad=0.0, ncol=1,
               handlelength=1.0, handletextpad=0.4, labelspacing=0.25)
     base.fit(fig)
     if save:
-        base.save(fig, FIG, "S9_D", "S9_D_epithelial_vs_myeloid_cytokines")
+        base.save(fig, FIG, "S10_D", "S10_D_epithelial_vs_myeloid_cytokines")
     return fig
 
 
@@ -182,7 +195,7 @@ def main():
         # load_adopted())`. Handing this side the live table instead is what
         # let the gate report CONTENT IDENTICAL on 2026-09-08 while the panel
         # printed the live run's numbers; both sides were then wrong together.
-        "S9_C": (lambda: draw_C(fr), lambda: A._panel_nfkb(fr["g"])),
+        "S10_C": (lambda: draw_C(fr), lambda: A._panel_nfkb(fr["g"])),
         # The symlog decades are printed written out rather than as powers of
         # ten so that no glyph on that axis falls below the type floor; the
         # change is declared in 00_Config/shared/labels.py and the gate names
@@ -192,7 +205,7 @@ def main():
         # dict is built - i.e. on the drawing path, in the capsule, where that
         # module is deliberately not shipped. run() calls it only under
         # --check.
-        "S9_D": (lambda: draw_D(fr), lambda: A._panel_cytokines(fr["cyto"]),
+        "S10_D": (lambda: draw_D(fr), lambda: A._panel_cytokines(fr["cyto"]),
                  base.aliases),
     })
 

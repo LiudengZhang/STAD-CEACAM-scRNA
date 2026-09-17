@@ -18,15 +18,17 @@ was too broad must appear on no figure, and the narrower claim approved in its
 place must appear on Figure 6 exactly once. Forbidding the old wording alone
 would pass an edit that dropped the approved label as well.
 
-One carried-over supplementary figure is checked the same way. Supplementary
-Figure S2 panel D printed the one-sided exact Mann-Whitney value (P = 0.03);
-patch_S2_two_sided.py replaces it with the two-sided value Table S6 reports
-(P = 0.057). The shipped S2 must print the latter and not the former. The
-supplementary figures sit beside the main ones in every layout this runs in -
-03_Supplementary_Figures/ next to the archive's 02_Figures/, or
-Supplementary_Fixes/_patched/ next to Main_Figures/_patched/ in the working
-tree - so their directory is found from --dir, or given with --supp-dir. A
-missing S2 is a failure, not a skip.
+One supplementary figure is checked the same way. Supplementary Figure S2
+panel D printed the one-sided exact Mann-Whitney value (P = 0.03); the
+two-sided value Table S6 reports (0.057) prints through panel_style_cns.p_label
+as "P = 0.06", and the shipped S3 (S2 as submitted; renumbered 2026-09-16) must print that once and the old value
+nowhere. Until the evening of 2026-09-15 the string was patched into the
+submitted page by patch_S2_two_sided.py (as "P = 0.057"); since the S1-S6
+redraw the panel script prints it. The supplementary figures sit beside the
+main ones in every layout this runs in - 03_Supplementary_Figures/ next to the
+archive's 02_Figures/, or Supplementary_New/_assembled/ next to
+Main_Figures/_shipped/ in the working tree - so their directory is found from
+--dir, or given with --supp-dir. A missing S3 is a failure, not a skip.
 
 Exit code 0 when every affected panel carries an exact P value, Figure 4
 carries the corrected labels, the framing wording is the approved one and S2
@@ -52,7 +54,15 @@ AFFECTED = {
     "Figure_5": ["D BACH1 regulon", "E NFKB1 regulon", "J PD-L1 four panels",
                  "L IL-6/JAK/STAT3"],
 }
-EXPECTED_P = {"Figure_2": 8, "Figure_3": 3, "Figure_5": 9}
+# Since 2026-09-14 (evening), the author's ruling: a P below 0.05 prints as a
+# star (panel_style_cns.p_label), and the scatter panels' P values (3 A/B/D/E,
+# 5 K/M) are in the legend, generated from the panels' own files. So Figure 3
+# prints two values (I, J; H is a star) and Figure 5 three (0.052, 0.08, 0.055
+# in J). Until 2026-09-16 Figure 5 printed five: D and E carried the
+# Kruskal-Wallis P among the other three groups in grey (0.92, 0.90); the
+# author's fifth reading ("no need for the actual P values, ns is enough, and
+# not in grey") made them a black "ns", as 2H/I print theirs.
+EXPECTED_P = {"Figure_2": 8, "Figure_3": 2, "Figure_5": 3}
 
 # Stars that are not defects. Neither of these came from a one-tailed test, and
 # neither is a two-group comparison where an exact value would fit: the first is
@@ -61,14 +71,29 @@ EXPECTED_P = {"Figure_2": 8, "Figure_3": 3, "Figure_5": 9}
 # star appearing anywhere else still fails the check.
 ALLOWED_STARS = {
     "Figure_2": (1, "panel D, Spearman rho between CEACAM5 and CEACAM6"),
-    "Figure_3": (5, "panel N, immune recruitment across nine cell types"),
-    "Figure_5": (0, ""),
+    "Figure_3": (6, "panel N, immune recruitment across nine cell types (5); "
+                    "panel H, P = 0.01 printed as a star since 2026-09-14"),
+    "Figure_5": (4, "P < 0.05 printed as a star since 2026-09-14: D, E, "
+                    "J (DC cells) and L"),
 }
 
 # Figure 4: (string that must be absent, string that must be present, how many).
 # "CD16" is deliberately not in the absent list - Mono_CD16 is a state name and
 # keeps it; only the italic gene label was wrong.
+# The count fell from 6 to 5 on 2026-09-11, and the reason is recorded here
+# rather than the number quietly edited: the sixth occurrence was a row label
+# of panel 4A's correlation heatmap, and all fifty-six of those labels were
+# dropped under the author's ruling of that date - 56 rows at the 6 pt floor
+# need 130 mm against a 94.3 mm panel. See 04_A/SUPERSEDED.md.
+#
+# What this check is actually guarding is unaffected and was re-measured
+# before the number moved: the shipped Figure 4 carries MoMac_IL1B five times
+# and the un-renamed `Mac_IL1B` ZERO times, against six occurrences of the old
+# name in the published figure. The rename is still complete; one of the
+# surfaces it had to reach no longer exists.
 LABEL_CHECKS = {
+    # 6 since 2026-09-14: the fifty-six row labels of panel A are back and one
+    # of them is MoMac_IL1B (A, D, E, G, H and the legend of D).
     "Figure_4": [("Mac_IL1B", "MoMac_IL1B", 6), (None, "FCGR3A", 1)],
 }
 
@@ -88,11 +113,13 @@ LABEL_CHECKS = {
 FRAMING_FORBIDDEN = ("pan-TME",)
 FRAMING_REQUIRED = {"Figure_6": [("Multi-Lineage", 1)]}
 
-# Supplementary figures carried over from the submission and patched in place,
-# same tuple form. Matched with a digit boundary on both sides, so that the
-# replacement "P = 0.057" can never be read as the old "P = 0.03" still present.
+# The supplementary panel whose printed P was one-sided, same tuple form.
+# Matched with a digit boundary on both sides, so that the two-sided "P = 0.06"
+# can never be read as the old "P = 0.03" still present (and "P = 0.06" is not
+# matched inside a longer number). The panel is S3 D since the renumbering of
+# 2026-09-16 (S2 D as submitted); the key is the assembled file's name.
 SUPP_LABEL_CHECKS = {
-    "S2_CEACAM_Metaprogram_Validation": [("P = 0.03", "P = 0.057", 1)],
+    "S3_CEACAM_Metaprogram_Validation": [("P = 0.03", "P = 0.06", 1)],
 }
 
 STAR = re.compile(r"(?<![A-Za-z0-9])\*+(?![A-Za-z0-9])")
@@ -300,7 +327,7 @@ def supplementary_dir(root, given):
     if given:
         return Path(given)
     for cand in (root.parent / "03_Supplementary_Figures",
-                 root.parent.parent / "Supplementary_Fixes" / "_patched"):
+                 root.parent.parent / "Supplementary_New" / "_assembled"):
         if cand.is_dir():
             return cand
     return None
@@ -342,7 +369,7 @@ def main():
     ap.add_argument("--supp-dir", default=None,
                     help="directory of the shipped supplementary figures; by "
                          "default found beside --dir (03_Supplementary_Figures/ "
-                         "or Supplementary_Fixes/_patched/)")
+                         "or Supplementary_New/_assembled/)")
     ap.add_argument("--submitted", default=None,
                     help="directory of the submitted figures, named "
                          "'Figure N.pdf'. Defaults to the working tree's "
@@ -409,18 +436,19 @@ def main():
         if name in AFFECTED:
             print(f"{name}: panels to check -> " + "; ".join(AFFECTED[name]))
     if bad:
-        print("\nRegenerate with: python patch_figure_annotations.py "
-              "(main figures) or Supplementary_Fixes/patch_S2_two_sided.py (S2)")
+        print("\nRegenerate with: 12_Figure_Refactor/rebuild_panels.py and "
+              "assemble_slotted.py (main figures) or the S3_D panel script and "
+              "Supplementary_New/assemble_new_supplementaries.py (S3)")
         return 1
     if content_check_ran:
         print("Every converted panel prints its exact two-sided P value, "
               "Figure 4 carries the corrected labels, the framing wording is the "
-              "approved one, S2D prints the two-sided value, and no substantive "
+              "approved one, S3D prints the two-sided value, and no substantive "
               "image was lost to a redaction.")
     else:
         print("Every converted panel prints its exact two-sided P value, "
               "Figure 4 carries the corrected labels, the framing wording is the "
-              "approved one and S2D prints the two-sided value. The "
+              "approved one and S3D prints the two-sided value. The "
               "content-loss check did not run; see the note above.")
     return 0
 

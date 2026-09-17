@@ -10,10 +10,10 @@ it never reaches the Hallmark read that only the withdrawn companion panel
 needed, nor the `if not f.exists(): continue` beside it that would skip a
 lineage in silence.
 
-This panel is not assembled into a figure of its own. It is drawn at the size
-it prints at and spliced below the submitted S3 page by
-Supplementary_Fixes/patch_S3_add_adaptive.py, so it is written into
-Supplementary_Fixes/S3_E/ rather than into a supplementary figure directory.
+Until 2026-09-15 (evening) this panel was spliced below the submitted S3
+page by Supplementary_Fixes/patch_S3_add_adaptive.py and so was written into
+Supplementary_Fixes/S3_E/. Since the S1-S6 redraw it is a panel of the
+assembled figure (S3 then, S4 since the renumbering of 2026-09-16) like the other four, written into S4_CD8_TCells/S4_E/.
 
     python draw_adaptive_immune_resource.py --check
     python draw_adaptive_immune_resource.py
@@ -84,15 +84,14 @@ def draw_E(fr, save=True):
     axes[0].set_ylabel("Fraction of lineage")
     base.fit(fig, wspace=0.34)
     if save:
-        base.save(fig, None, "S3_E", "S3_E_adaptive_composition",
-                  root=base.FIXES)
+        base.save(fig, "S4_CD8_TCells", "S4_E", "S4_E_adaptive_composition")
     return fig
 
 
 def main():
     fr = frames()
     return base.run({
-        "S3_E": (lambda: draw_E(fr),
+        "S4_E": (lambda: draw_E(fr),
                  lambda: A._panel_composition(fr["fractions"], fr["tests"])),
     })
 

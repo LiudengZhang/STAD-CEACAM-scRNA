@@ -1,18 +1,13 @@
 """
 Supplementary tables for the revision.
 
-  ST1  expanded with the per-patient timepoint, RECIST trajectory and regimen
+  ST1  expanded with the per-patient timepoint, adjudicated RECIST 1.1 response
        that Reviewer 1 asked for (R1.3a, R1.3b)
-  ST6  new: every directional comparison reported with both tails, an effect
+  ST6  new: every directional comparison reported two-sided, with an effect
        size, a bootstrap CI and the BH-adjusted P (R1.3c)
   ST7  new: CEACAM5-only / CEACAM6-only / double-positive fractions and the
        per-marker IHC values (R1.5)
-  ST8  new: every pre-treatment comparison repeated with the two specimens the
-       cohort audit flagged reclassified or excluded (R1.3b)
-  ST9  new: effect sizes, the combination of the two cohorts that share no
-       patients, leave-one-patient-out refits and transcript-protein
-       concordance (R1.3)
-  ST10 new: the sample-level (pseudobulk) sensitivity analysis of the NF-kB
+  ST8  new: the sample-level (pseudobulk) sensitivity analysis of the NF-kB
        enrichment beside the adopted per-cell values (R1.8). The per-cell
        analysis is primary; the pseudobulk one is a cited sensitivity check
 
@@ -20,6 +15,7 @@ ST2-ST5 are carried over unchanged from the submission.
 """
 
 from pathlib import Path
+import re
 import shutil
 import sys
 
@@ -54,9 +50,36 @@ SUBMITTED_PANEL = {
     "Fig 5 (regulon-BACH1)": "Fig 5D",
     "Fig 5 (regulon-NFKB1)": "Fig 5E",
     "Fig 5 (IL6-CD4)": "Fig 5L",
-    # Supplementary Figure S2 panel D, whose printed P was one-sided.
-    "Fig S2 (D)": "Fig S2D",
+    # Supplementary Figure S2 panel D as submitted, whose printed P was
+    # one-sided; S3 D since the renumbering of 2026-09-16 (see RENUMBERED_S).
+    "Fig S2 (D)": "Fig S3D",
 }
+
+# SUPPLEMENTARY FIGURES RENUMBERED ON 2026-09-16 (the author's fifth reading):
+# the submitted S1 was split into S1 (QC) and S2 (cell-type annotation), and
+# the former S2-S9 are S3-S10. The analysis outputs the tables are built from
+# name panels in their comparison labels ("... (Fig. S2D)") and are frozen
+# (freeze_baseline.py), so the translation is made here, in the one place
+# that writes the shipped tables, and nowhere else. renumber_supp() refuses a
+# label that names a supplementary panel this map does not know, so a new
+# analysis label cannot ship under a stale number.
+RENUMBERED_S = {"S2D": "S3D", "S3D": "S4D", "S7A": "S8A", "S7B": "S8B",
+                "S7C": "S8C", "S9C": "S10C"}
+_SUPP_PANEL = re.compile(r"(Fig\.? ?)S(\d+)([A-Z])\b")
+
+
+def renumber_supp(text):
+    """A comparison label with its supplementary panel under today's number."""
+    if not isinstance(text, str):
+        return text
+
+    def one(m):
+        key = f"S{m.group(2)}{m.group(3)}"
+        if key not in RENUMBERED_S:
+            raise KeyError(f"{key!r} in {text!r}: not in RENUMBERED_S - "
+                           "decide its post-2026-09-16 number before shipping")
+        return m.group(1) + RENUMBERED_S[key]
+    return _SUPP_PANEL.sub(one, text)
 
 # Two of the sweep's panel labels are worn by more than one row, and the rows
 # they cover do not all print in the same panel. Mapping on the panel label
@@ -67,7 +90,7 @@ SUBMITTED_PANEL = {
 #              Figure 2N is 02_M/create_ihc_combined_boxplot.py, the COMBINED
 #              CEACAM5+CEACAM6 boxplot, so it is right for the summed row only.
 #              The per-marker comparison prints in Supplementary Figure S7
-#              panel C - measured off the shipped S7 PDF, whose panel C is the
+#              panel C (S8 C since 2026-09-16) - measured off the shipped S7 PDF, whose panel C is the
 #              "DAB+ area (% of tissue)" row and prints P = 0.200 for CEACAM5
 #              and P = 0.200 for CEACAM6, the two-tailed values these rows
 #              carry; PROVENANCE.csv rows S7,B and S7,C put both under
@@ -87,8 +110,8 @@ SUBMITTED_PANEL = {
 # a shared label is left to resolve by itself again.
 PANEL_BY_ANALYSIS = {
     "IHC staining, CEACAM5 + CEACAM6 summed": "Fig 2N",
-    "IHC staining, CEACAM5 only": "Fig S7C (CEACAM5)",
-    "IHC staining, CEACAM6 only": "Fig S7C (CEACAM6)",
+    "IHC staining, CEACAM5 only": "Fig S8C (CEACAM5)",
+    "IHC staining, CEACAM6 only": "Fig S8C (CEACAM6)",
     "S-MP4 score, pre-treatment R vs all other groups": "Fig 2H",
     "S-MP5 score, pre-treatment R vs all other groups": "Fig 2I",
 }
@@ -127,7 +150,72 @@ def check_panel_labels(sweep):
                          f"not have: {orphan}")
 
 
+# --------------------------------------------- ST1's adjudicated response
+# Supplementary Table 1 reports the fixed RECIST 1.1 assessment in one column.
+# Calls are keyed by patient so every specimen from that patient receives the
+# same assessment. Patients without a definitive call remain blank.
+RECIST_RESPONSE = {
+    "P1": "SD", "P2": "PD", "P3": "PR", "P4": "PR", "P5": "PR",
+    "P6": "PD", "P7": "", "P10": "SD", "P11": "PR", "P12": "PR",
+    "P13": "PR", "P14": "PD", "P16": "PD", "P21": "PR", "P22": "PR",
+    "P23": "SD", "P24": "PD", "P25": "PD", "P26": "PD", "P33": "",
+    "P34": "PD",
+}
+
+
+def _check_recist_response(st1):
+    """Gate the adjudicated call against ST1's own R/NR Grouping.
+
+    RECIST 1.1 makes a responder CR or PR. Every response-labelled row must
+    therefore carry PR against R and PD against NR; SD is the one call the
+    grouping cannot be predicted from, because it was decided on the narrative
+    tendency, and blank rows have no call to check.
+
+    This is a gate rather than an audit because the two quantities live in
+    different columns of the same published table and are read side by side: if
+    they ever disagree again, the table must not be written. The mutation that
+    shows the gate can fail is in the module's __main__ block.
+    """
+    bad = [v for v in RECIST_RESPONSE.values() if v not in ("PR", "SD", "PD", "")]
+    if bad:
+        raise SystemExit(f"build_tables(): RECIST_RESPONSE holds calls that are "
+                         f"not a RECIST 1.1 response: {sorted(set(bad))}")
+
+    missing = sorted(set(st1.loc[st1["R/NR Grouping"].notna(), "Patient ID"])
+                     - set(RECIST_RESPONSE))
+    if missing:
+        raise SystemExit(f"build_tables(): response-labelled patients with no "
+                         f"adjudicated RECIST call: {missing}")
+
+    expected = {"PR": "R", "PD": "NR"}
+    labelled = st1[st1["R/NR Grouping"].notna()]
+    clash = [f"{r['Sample']}: RECIST {r['RECIST 1.1 response']!r} against "
+             f"R/NR Grouping {r['R/NR Grouping']!r}"
+             for _, r in labelled.iterrows()
+             if r["RECIST 1.1 response"] in expected
+             and expected[r["RECIST 1.1 response"]] != r["R/NR Grouping"]]
+    if clash:
+        raise SystemExit("\n".join(
+            ["build_tables(): the adjudicated RECIST response contradicts ST1's "
+             "own R/NR Grouping:", *[f"  - {c}" for c in clash]]))
+
+    # The composition the Methods and the response letter both quote. It is
+    # asserted here because this is the table those sentences cite.
+    split = (labelled[labelled["Anatomical site"] == "Stomach"]
+             .groupby(["Treatment phase", "R/NR Grouping"]).size().to_dict())
+    if split != {("Post", "NR"): 6, ("Post", "R"): 5,
+                 ("Pre", "NR"): 4, ("Pre", "R"): 4}:
+        raise SystemExit(f"build_tables(): the response-labelled gastric split is "
+                         f"no longer 4 R / 4 NR pre and 5 R / 6 NR post: {split}")
+
+
 def main():
+    for obsolete in (
+        "ST9_crosscohort_convergence.csv",
+        "ST10_nfkb_pseudobulk_sensitivity.csv",
+    ):
+        (OUT / obsolete).unlink(missing_ok=True)
+
     # ---------------------------------------------- carry over ST2-ST5 as-is
     for f in sorted(SRC.glob("ST*.csv")):
         if f.name.startswith("ST1_"):
@@ -168,8 +256,8 @@ def main():
     USAGE = {
         "PRJEB25780": (
             "BayesPrism deconvolution of epithelial expression; CEACAM5 and "
-            "CEACAM6 in responders versus non-responders and the cross-cohort "
-            "combination (Fig. 2L, Table S9); epithelial metaprogram scores by "
+            "CEACAM6 in responders versus non-responders (Fig. 2L); epithelial "
+            "metaprogram scores by "
             "response; purity-adjusted association of epithelial CEACAM5/6 "
             "with immune infiltration"),
         "GSE239676": (
@@ -262,10 +350,10 @@ def main():
                   "CD38; BATF; IRF4; PRDM1; TOX2; ITGAE; NR4A1; NR4A2; NR4A3"),
         "Reference": "Wherry & Kurachi, Nat Rev Immunol 2015; this study",
     }])
-    # The composite Tex score of Fig. S3D is a third list: the ten-gene
+    # The composite Tex score of Fig. S4D (S3D until 2026-09-16) is a third list: the ten-gene
     # TEX_GENES of create_S3_D_cd8_tex_score_umap.py (scanpy score_genes).
     tex10 = pd.DataFrame([{
-        "Signature": "T cell exhaustion (Tex), 10-gene composite score (Fig. S3D)",
+        "Signature": "T cell exhaustion (Tex), 10-gene composite score (Fig. S4D)",
         "N_genes": 10,
         "Genes": "PDCD1; HAVCR2; LAG3; TIGIT; CTLA4; TOX; ENTPD1; LAYN; CXCL13; BATF",
         "Reference": "Wherry & Kurachi, Nat Rev Immunol 2015; this study",
@@ -299,16 +387,11 @@ def main():
     pairing = pd.read_csv(NEW_ANALYSES / "01_R1.3_Cohort_Pairing" / "outputs"
                           / "pairing_summary.csv")
 
-    st1 = st1.merge(
-        audit[["Sample", "regimen", "recist_raw", "recist_best", "recist_change"]],
-        on="Sample", how="left")
+    st1 = st1.merge(audit[["Sample", "regimen"]], on="Sample", how="left")
     st1 = st1.merge(
         pairing[["Patient ID", "paired_any_site"]], on="Patient ID", how="left")
     st1 = st1.rename(columns={
         "regimen": "Treatment regimen and cycles",
-        "recist_raw": "RECIST 1.1 trajectory",
-        "recist_best": "Best response",
-        "recist_change": "Change after best response",
         # paired_any_site is one row PER PATIENT in pairing_summary.csv, and the
         # merge is on Patient ID, so the flag is broadcast onto every specimen
         # row of that patient. Under the old name a reader counted three "Yes"
@@ -319,6 +402,13 @@ def main():
     })
     col = "Patient sampled at both timepoints (any site)"
     st1[col] = st1[col].map({True: "Yes", False: "No"})
+    # Placed where the three columns it replaces used to sit - after the
+    # regimen and before the pairing flag - so a reader of the previous version
+    # finds the response in the same place.
+    st1.insert(st1.columns.get_loc(col),
+               "RECIST 1.1 response",
+               st1["Patient ID"].map(RECIST_RESPONSE).fillna(""))
+    _check_recist_response(st1)
     st1.to_csv(OUT / "ST1_patient_sample_characteristics.csv", index=False)
 
     # --------------------------------------------------------- ST6, new
@@ -326,7 +416,7 @@ def main():
                         / "twosided_sweep.csv")
     st6 = sweep[[
         "panel", "analysis", "family", "test", "group_hi", "n_hi", "group_lo",
-        "n_lo", "mean_hi", "mean_lo", "p_one_tailed", "p_two_tailed",
+        "n_lo", "mean_hi", "mean_lo", "p_two_tailed",
         "p_two_tailed_BH", "effect_size_name",
         "effect_size", "hedges_g", "g_ci95_lo", "g_ci95_hi", "diff_of_means",
         "ci95_lo", "ci95_hi", "verdict",
@@ -338,7 +428,6 @@ def main():
         "group_hi": "Group 1", "n_hi": "n (group 1)",
         "group_lo": "Group 2", "n_lo": "n (group 2)",
         "mean_hi": "Mean (group 1)", "mean_lo": "Mean (group 2)",
-        "p_one_tailed": "P, one-tailed (as submitted)",
         "p_two_tailed": "P, two-tailed (revised)",
         "p_two_tailed_BH": "P, two-tailed, BH within family",
         # 2026-09-11, author's ruling: the "Smallest two-tailed P attainable at
@@ -363,6 +452,7 @@ def main():
     st6["Figure panel"] = [
         PANEL_BY_ANALYSIS.get(a, SUBMITTED_PANEL[p])
         for p, a in zip(st6["Figure panel"], st6["Comparison"])]
+    st6["Comparison"] = st6["Comparison"].map(renumber_supp)
     st6.to_csv(OUT / "ST6_two_sided_sensitivity.csv", index=False)
 
     # --------------------------------------------------------- ST7, new
@@ -380,59 +470,13 @@ def main():
     st7.to_csv(OUT / "ST7_ceacam5_vs_ceacam6.csv", index=False)
 
     # --------------------------------------------------------- ST8, new
-    # How far the pre-treatment comparisons depend on the response label of the
-    # two specimens the cohort audit could not reconcile with the SD/PD rule.
-    st8 = pd.read_csv(NEW_ANALYSES / "01_R1.3_Cohort_Pairing" / "outputs"
-                      / "response_label_sensitivity.csv")
-    st8.to_csv(OUT / "ST8_response_label_sensitivity.csv", index=False)
-
-    # --------------------------------------------------------- ST9, new
-    # The four convergence analyses have different natural shapes, so they are
-    # stacked into one schema: what was analysed, on what, and the statistic.
-    conv = NEW_ANALYSES / "10_R1.3_CrossCohort_Convergence" / "outputs"
-    forest = pd.read_csv(conv / "forest_effect_sizes.csv")
-    comb = pd.read_csv(conv / "crosscohort_combination.csv")
-    loo = pd.read_csv(conv / "loo_stability.csv")
-    conc = pd.read_csv(conv / "rna_protein_concordance.csv")
-
-    def block(analysis, measurement, comparison, n_nr, n_r, stat, value,
-              lo, hi, p):
-        return pd.DataFrame({
-            "Analysis": analysis, "Measurement": measurement,
-            "Comparison": comparison, "n non-responders": n_nr,
-            "n responders": n_r, "Statistic": stat, "Value": value,
-            "95% CI low": lo, "95% CI high": hi, "P, two-sided": p})
-
-    st9 = pd.concat([
-        block("Effect size", forest["Measurement"],
-              forest["Independent of the scRNA cohort"].map(
-                  {"discovery cohort": "discovery cohort",
-                   "yes": "independent of the discovery cohort",
-                   "no - same patients": "same patients as the discovery cohort"}),
-              forest["n (NR)"], forest["n (R)"], "Hedges g",
-              forest["Hedges g"].round(3), forest["g 95% CI low"].round(3),
-              forest["g 95% CI high"].round(3), forest["P, two-sided"].round(4)),
-        block("Combined across cohorts sharing no patients", comb["Gene"],
-              comb["Cohorts"], None, None, comb["Method"], None, None, None,
-              comb["P, combined two-sided"]),
-        block("Leave-one-patient-out", loo["Gene"],
-              loo["Dropped"].replace({"none (as published)": "none (as published)"}),
-              loo["n (NR)"], loo["n (R)"], "Hedges g", loo["Hedges g"],
-              None, None, loo["P, two-sided"]),
-        block("Transcript fraction against protein staining", conc["Marker"],
-              "same eight patients, both modalities", None, None,
-              "Spearman rho", conc["Spearman rho"], conc["rho 95% CI low"],
-              conc["rho 95% CI high"], conc["P"]),
-    ], ignore_index=True)
-    st9.to_csv(OUT / "ST9_crosscohort_convergence.csv", index=False)
-
-    # --------------------------------------------------------- ST10, new
     # The per-cell Welch analysis of the NF-kB enrichment is primary; the
     # sample-level pseudobulk analysis (15_Pseudobulk_Sample_Level: summed UMIs
     # per sample, limma-voom and DESeq2, the same prerank GSEA) ships as a
     # table and is cited as a sensitivity check rather than replacing it. The
     # ttest_percell_* columns of the source are sound13, the adopted table, so
-    # the per-cell values printed here are those of Fig. S9C and the Results.
+    # the per-cell values printed here are those of Fig. S10C (S9C until
+    # 2026-09-16) and the Results.
     pb = pd.read_csv(NEW_ANALYSES / "15_Pseudobulk_Sample_Level" / "outputs"
                      / "nfkb_comparison.csv")
     if not bool(pb["testable"].all()) or len(pb) != 26:
@@ -462,15 +506,15 @@ def main():
         "DESeq2 FDR q": pb["deseq2_q"].round(4),
         "DESeq2 rank": pb["deseq2_rank"],
         "DESeq2 Hallmark sets tested": pb["deseq2_nsets"],
-        "Per-cell NES (primary analysis; Fig. S9C)": pb["ttest_percell_nes"].round(3),
+        "Per-cell NES (primary analysis; Fig. S10C)": pb["ttest_percell_nes"].round(3),
         "Per-cell nominal P": pb["ttest_percell_p"].round(4),
         "Per-cell FDR q": pb["ttest_percell_q"].round(4),
         "Per-cell rank": pb["ttest_percell_rank"],
         "Per-cell Hallmark sets tested": pb["ttest_percell_nsets"],
     })
     if st10["Cell type"].isna().any():
-        raise SystemExit("build_tables(): unlabelled cell type in ST10")
-    st10.to_csv(OUT / "ST10_nfkb_pseudobulk_sensitivity.csv", index=False)
+        raise SystemExit("build_tables(): unlabelled cell type in ST8")
+    st10.to_csv(OUT / "ST8_nfkb_pseudobulk_sensitivity.csv", index=False)
 
     print("Supplementary tables written to", OUT)
     for f in sorted(OUT.glob("ST*.csv")):
@@ -478,5 +522,45 @@ def main():
         print(f"   {f.name:<48} {d.shape[0]:>4} rows x {d.shape[1]:>2} cols")
 
 
+def _mutation_test():
+    """Show that _check_recist_response() can fail, in the run that uses it.
+
+    Three mutations, one per branch of the gate, each MUST raise: an impossible
+    call, a response-labelled patient with no adjudicated call, and a PR
+    standing against an NR grouping.
+    """
+    st1 = pd.read_csv(OUT / "ST1_patient_sample_characteristics.csv")
+    st1["RECIST 1.1 response"] = st1["Patient ID"].map(RECIST_RESPONSE).fillna("")
+    real = dict(RECIST_RESPONSE)
+    mutants = [
+        ("an impossible RECIST call", lambda d, f: d.__setitem__("P3", "CRPR")),
+        ("a labelled patient with no call", lambda d, f: d.pop("P6")),
+        ("a PR call against an NR grouping",
+         lambda d, f: (d.__setitem__("P6", "PR"),
+                       f.__setitem__("RECIST 1.1 response",
+                                     f["Patient ID"].map(d).fillna("")))),
+    ]
+    failed = []
+    for name, mutate in mutants:
+        RECIST_RESPONSE.clear()
+        RECIST_RESPONSE.update(real)
+        frame = st1.copy()
+        mutate(RECIST_RESPONSE, frame)
+        try:
+            _check_recist_response(frame)
+        except SystemExit:
+            print(f"   mutation raises, as it must: {name}")
+        else:
+            failed.append(name)
+    RECIST_RESPONSE.clear()
+    RECIST_RESPONSE.update(real)
+    if failed:
+        raise SystemExit("\n".join(
+            ["build_tables(): _check_recist_response() PASSED a mutant, so it is "
+             "not checking what it claims to check:",
+             *[f"  - {m}" for m in failed]]))
+
+
 if __name__ == "__main__":
     main()
+    _mutation_test()

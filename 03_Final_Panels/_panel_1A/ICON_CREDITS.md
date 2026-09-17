@@ -6,8 +6,7 @@ All pictograms are openly licensed vector icons, embedded as SVG `<symbol>`s
 | Element | Icon | Source | License |
 |---|---|---|---|
 | Conceptual Framework (header) | neurology / brain | Health Icons | MIT |
-| Study Design (header) | people | Health Icons | MIT |
-| Validation Cohorts (header) | clipboard-check | Font Awesome Free 6 | CC BY 4.0 |
+| Study Design, Validation Cohorts (headers) | people | Health Icons | MIT |
 | Sample Collection (header) | vial | Font Awesome Free 6 | CC BY 4.0 |
 | Intrinsic resistance | shield + lock | Font Awesome Free 6 | CC BY 4.0 |
 | Acquired resistance | arrows-rotate | Font Awesome Free 6 | CC BY 4.0 |

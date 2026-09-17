@@ -49,6 +49,19 @@ NOTE FOR THE GATE
     `gp.prerank` is given an `outdir`, so gseapy writes its own tables and
     report plots there. `compare_panel_content.py` blocks disk writes, so this
     panel must be gated with `--divert-writes`, which swallows and lists them.
+
+DRAWING READS TABLES, since 2026-09-15 (cnsfig.cache): data/es_curves.csv
+(cell_type, rank, RES) and data/gsea_stats.csv (cell_type, nes, pval, fdr,
+n_hits, peak_idx). The h5ads, the t-test and gseapy run only when a table is
+absent or --recompute is passed.
+
+THE STATS BLOCK STANDS BESIDE THE CURVE, since 2026-09-15: the framed box of
+the earlier drawing covered the tail of both curves (the author's third
+reading), and on a 9 mm axes a three-line block at 6 pt is two thirds of the
+height - it cannot stand inside the axes without flattening the curve to a
+third (measured: the y limit would have to reach 3.5 for a peak of 0.9). So
+the plotting box gives up STATS_W_MM at its right and the block stands there,
+unframed, top-aligned with the box. Same three strings.
 """
 import scanpy as sc
 import numpy as np
@@ -65,8 +78,14 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
 from paths import *
 import panel_style_cns as style
 import slots
+from cnsfig import cache
+import pandas as pd
 
 BASE_DIR = Path(__file__).parent
+#: The column at the right of each plotting box that holds the three-line
+#: stats block ("FDR < 0.001" at 6 pt is 10.6 mm), and the paper between.
+STATS_W_MM = 11.6
+STATS_GAP_MM = 1.0
 
 SCALE = 4                       # the earlier canvas multiplier, for MARK only
 SMALL_PT = 5.0                  # the earlier smallest body type, before * SCALE
@@ -130,26 +149,67 @@ def run_gsea(deg_df, cell_type):
         return None
 
 
-def draw_gsea_subplot(ax_top, pre_res, label):
-    """Draw GSEA enrichment on two axes (ES curve + gene hits)."""
-    term_data = pre_res.results[PATHWAY_NAME]
-    RES = term_data['RES']
-    hits = term_data['hits']
-    nes = term_data['nes']
-    pval = term_data['pval']
-    fdr = term_data['fdr']
+_STATE = {}
 
+
+def _run_all():
+    """The computing half: t-test DEGs and gseapy prerank per cell type."""
+    if _STATE:
+        return _STATE["results"]
+    gsea_results = {}
+    for cell_type, config in CELL_TYPE_CONFIG.items():
+        print(f"\n=== {cell_type} ===")
+        if not config["path"].exists():
+            raise SystemExit(f"  Not found: {config['path']}")
+        adata = sc.read_h5ad(config["path"])
+        adata.obs_names_make_unique()
+        print(f"  {adata.n_obs} cells")
+
+        deg_df = run_deg_ttest(adata, COMPARISON)
+        if deg_df is None:
+            raise SystemExit(f"{cell_type}: no DEGs")
+        pre_res = run_gsea(deg_df, cell_type)
+        if pre_res is None or PATHWAY_NAME not in pre_res.results:
+            raise SystemExit(f"{cell_type}: {PATHWAY_NAME!r} not in the GSEA results")
+        gsea_results[cell_type] = pre_res
+    _STATE["results"] = gsea_results
+    return gsea_results
+
+
+def compute_stats():
+    rows = []
+    for cell_type, pre_res in _run_all().items():
+        t = pre_res.results[PATHWAY_NAME]
+        RES = np.asarray(t['RES'], dtype=float)
+        rows.append({"cell_type": cell_type, "nes": float(t['nes']),
+                     "pval": float(t['pval']), "fdr": float(t['fdr']),
+                     "n_hits": len(t['hits']), "peak_idx": int(np.argmax(np.abs(RES)))})
+    return pd.DataFrame(rows)
+
+
+def compute_curves():
+    out = []
+    for cell_type, pre_res in _run_all().items():
+        RES = np.asarray(pre_res.results[PATHWAY_NAME]['RES'], dtype=float)
+        out.append(pd.DataFrame({"cell_type": cell_type,
+                                 "rank": np.arange(len(RES)), "RES": RES}))
+    return pd.concat(out, ignore_index=True)
+
+
+def draw_gsea_subplot(ax_top, RES, stats, label):
+    """Draw the running ES and its stats block on one axes."""
+    nes, pval, fdr = stats['nes'], stats['pval'], stats['fdr']
     x = np.arange(len(RES))
     color = '#C62828'
 
     # Top: running ES
-    ax_top.plot(x, RES, color=color, linewidth=1.5 * MARK)
-    ax_top.axhline(y=0, color='gray', linestyle='--', linewidth=0.5 * MARK)
+    ax_top.plot(x, RES, color=color, linewidth=style.RULE_PT)
+    ax_top.axhline(y=0, color='gray', linestyle='--', linewidth=style.RULE_PT)
     ax_top.fill_between(x, 0, RES, where=(np.array(RES) >= 0), color='#EF9A9A', alpha=0.3)
     ax_top.fill_between(x, 0, RES, where=(np.array(RES) < 0), color='#90CAF9', alpha=0.3)
 
-    peak_idx = np.argmax(np.abs(RES))
-    ax_top.axvline(x=peak_idx, color='red', linestyle=':', linewidth=0.8 * MARK, alpha=0.7)
+    peak_idx = int(stats['peak_idx'])
+    ax_top.axvline(x=peak_idx, color='red', linestyle=':', linewidth=style.RULE_PT, alpha=0.7)
 
     ax_top.set_xlim(0, len(RES))
     ax_top.set_title(label)
@@ -161,16 +221,33 @@ def draw_gsea_subplot(ax_top, pre_res, label):
         return f"{name} < 0.001" if v < 0.001 else f"{name} = {v:.3f}"
 
     stats_text = f"NES = {nes:.2f}\n{fmt('p', pval)}\n{fmt('FDR', fdr)}"
-    ax_top.text(0.98, 0.95, stats_text, transform=ax_top.transAxes,
-                fontsize=style.tick_pt(), va='top', ha='right',
-                bbox=dict(boxstyle='round', facecolor='white', alpha=0.8, edgecolor='gray',
-                          linewidth=0.5 * MARK))
+    # Beside the box, not over the curve: drawn by place_stats_block once
+    # fit_margins has set the box, so the margins are fitted to the curve's
+    # own furniture and the block takes a column of its own.
+    txt = stats_text
 
     ax_top.spines['top'].set_visible(False)
     ax_top.spines['right'].set_visible(False)
 
     print(f"    {label}: NES={nes:.2f}, p={pval:.3f}, FDR={fdr:.3f}, "
-          f"{len(hits)} leading-edge hits")
+          f"{int(stats['n_hits'])} leading-edge hits")
+    return txt
+
+
+def place_stats_block(fig, ax, stats_text):
+    """Narrow the plotting box by the stats column and stand the block in
+    it, STATS_GAP_MM right of the box's right spine, top-aligned."""
+    box = ax.get_position()
+    w_mm = fig.get_figwidth() * 25.4
+    new_w = box.width - (STATS_W_MM + STATS_GAP_MM) / w_mm
+    if new_w * w_mm < 20.0:
+        raise RuntimeError(f"the plotting box would be {new_w * w_mm:.1f} mm "
+                           f"wide beside the stats column")
+    ax.set_position([box.x0, box.y0, new_w, box.height])
+    ax_w_mm = new_w * w_mm
+    return ax.text(1.0 + STATS_GAP_MM / ax_w_mm, 1.0, stats_text,
+                   transform=ax.transAxes, fontsize=style.tick_pt(),
+                   va='top', ha='left', linespacing=1.2)
 
 
 def main():
@@ -184,24 +261,10 @@ def main():
     print("  (t-test DEGs, min_size=5)")
     print("=" * 60)
 
-    # Run GSEA for each cell type
-    gsea_results = {}
-    for cell_type, config in CELL_TYPE_CONFIG.items():
-        print(f"\n=== {cell_type} ===")
-        if not config["path"].exists():
-            print(f"  Not found: {config['path']}")
-            continue
-        adata = sc.read_h5ad(config["path"])
-        adata.obs_names_make_unique()
-        print(f"  {adata.n_obs} cells")
-
-        deg_df = run_deg_ttest(adata, COMPARISON)
-        if deg_df is None:
-            continue
-        pre_res = run_gsea(deg_df, cell_type)
-        if pre_res is not None and PATHWAY_NAME in pre_res.results:
-            gsea_results[cell_type] = pre_res
-
+    stats = cache.table(BASE_DIR, "gsea_stats", compute_stats).set_index("cell_type")
+    curves = cache.table(BASE_DIR, "es_curves", compute_curves)
+    gsea_results = {ct: curves.loc[curves["cell_type"] == ct, "RES"].to_numpy()
+                    for ct in CELL_TYPE_CONFIG if ct in set(curves["cell_type"])}
     if not gsea_results:
         print("No GSEA results! Exiting.")
         return
@@ -219,31 +282,20 @@ def main():
     # fit_margins moves the four outer edges and keeps this spacing.
     fig.subplots_adjust(hspace=0.85)
 
-    for idx, (cell_type, pre_res) in enumerate(gsea_results.items()):
+    blocks = []
+    for idx, (cell_type, RES) in enumerate(gsea_results.items()):
         label = CELL_TYPE_CONFIG[cell_type]["label"]
-        draw_gsea_subplot(axes[idx], pre_res, label)
+        blocks.append((axes[idx], draw_gsea_subplot(axes[idx], RES, stats.loc[cell_type], label), RES))
 
-    # One label for two axes. At 7 pt it stands 20.5 mm tall against an 11 mm
-    # axes, which is why the published panel clips it to "Enrichment Scor"; it
-    # is therefore anchored at the boundary between the two curves and left to
-    # span both. Its `y` is the position along the lower axes, so matplotlib
-    # still places it to the left of the tick labels itself and the fit still
-    # reserves the column it needs. `y` is walked down until the label clears
-    # the corner the panel letter is drawn into.
-    shared = axes[-1]
-    for step in range(10):
-        # `ha` is what centres a rotated label along the axis; `va`
-        # would move it sideways, over the tick labels the axis
-        # places it clear of.
-        shared.set_ylabel('Enrichment Score', y=1.0 - 0.05 * step)
-        try:
-            style.fit_margins(fig, pad_mm=0.6, cell_mm=LETTER_CELL)
-        except RuntimeError as exc:
-            if "letter" not in str(exc) or step == 9:
-                raise
-            continue
-        break
-
+    # Each curve names its own axis (2026-09-14, evening): a label shared
+    # across the two was clipped to "Enrichment Scor" on the page and hung
+    # in the gap here. 'ES' is the standard short form of the enrichment
+    # score, declared in labels.py; the legend spells it out.
+    for one in axes:
+        one.set_ylabel('ES')
+    style.fit_margins(fig, pad_mm=0.6, cell_mm=LETTER_CELL)
+    for ax, txt, RES in blocks:
+        place_stats_block(fig, ax, txt)
     over = style.overflow_mm(fig)
     if max(over) > 0:
         raise RuntimeError(

@@ -1,0 +1,2 @@
+table,file,md5,rows,columns,source_script
+checkpoint_stats,checkpoint_stats.csv,883c5b997f5538971e6e4066ab58cb32,29,4,create_checkpoint_dotplot_flipped.py

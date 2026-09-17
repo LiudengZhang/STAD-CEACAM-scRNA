@@ -49,6 +49,21 @@ THE COHORT LEAVES THE TITLE, AND THE AXIS LABELS ARE RE-WRAPPED
     The subscript of log2 is written out. Mathtext draws a subscript at 70% of
     its base size, so it would print at 4.9 pt on a 7 pt label, below the floor
     this figure set is set to.
+
+MARKER AND RULE WIDTHS ARE MEASURED OFF THE PUBLISHED PAGE  (2026-09-11)
+    Every one of these scatter panels carried a stray factor of SCALE on its
+    non-type sizes - `s=30*SCALE*AREA`, `linewidth=0.8*SCALE*MARK` - on top of
+    AREA and MARK, which already carry the 4x canvas across. The markers came
+    out about twice as wide as the page prints them and ran together.
+
+    Counted out of `00_GROUND_TRUTH/figures/Figure 3.pdf` geometry:
+
+        panel A   0.520 mm across, 67 marks      panel B   0.421 mm, 445
+        panel D   0.518 mm, 69                   panel E   0.424 mm, 773
+        the dashed regression rule               0.595 pt
+
+    The constants below are those numbers converted through this panel's own
+    MARK. Not one coordinate, colour or statistic moves.
 """
 
 import pandas as pd
@@ -68,6 +83,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
 from paths import TCGA_BAYESPRISM_EPI, TCGA_BULK_TUMOR_ONLY, TCGA_RAW_DIR, TCGA_CLINICAL
 import panel_style_cns as style  # noqa: E402
 import slots  # noqa: E402
+from cnsfig import layout as cnslayout, corr_stats, rich_xlabel, rich_ylabel  # noqa: E402
+from cnsfig import cache, group_key  # noqa: E402
 
 # ==============================================================================
 # Configuration
@@ -81,6 +98,8 @@ AREA = MARK ** 2                              # area multiplier
 PANEL_LETTER = "B"
 PANEL_W_MM, PANEL_H_MM = slots.size_mm(3, PANEL_LETTER)
 LETTER_CELL = slots.letter_cell_mm(3, PANEL_LETTER)
+#: The column's margin, shared with the panel above (see 03_A / 03_B).
+LEFT_MM = 12.3   # box at the same page x as the panel above (2026-09-15)
 OUTPUT_DIR = Path(__file__).parent
 
 # Data paths (from paths.py)
@@ -215,13 +234,14 @@ def load_data():
     df['vital_status'] = df['vital_status'].fillna('Missing')
     print(f"  Vital status counts: {df['vital_status'].value_counts().to_dict()}")
 
-    return df
+    return df[['CEACAM5', 'CEACAM6', 'CD274', 'tex_ssgsea',
+               'vital_status']].reset_index(drop=True)
 
 
 # ==============================================================================
 # Plotting
 # ==============================================================================
-def plot_scatter(ax, x, y, vital, title, xlabel, ylabel, fontscale):
+def plot_scatter(ax, x, y, vital, title, xlabel, ylabel, fontscale, left=True):
     r_val, p_val = stats.spearmanr(x, y)
 
     # Plot dots by vital_status: Dead filled red, Alive open gray, Missing open light gray
@@ -234,7 +254,7 @@ def plot_scatter(ax, x, y, vital, title, xlabel, ylabel, fontscale):
         if mask.sum() == 0:
             continue
         ax.scatter(x[mask], y[mask], facecolors=fc, edgecolors=ec,
-                   s=20*fontscale*AREA, alpha=0.85, linewidths=0.5*fontscale*MARK, zorder=3)
+                   s=12.8*AREA, alpha=0.85, linewidths=style.EDGE_PT, zorder=3)
 
     # Regression line (above dots)
     valid = np.isfinite(x) & np.isfinite(y)
@@ -242,29 +262,23 @@ def plot_scatter(ax, x, y, vital, title, xlabel, ylabel, fontscale):
     if len(xv) >= 3 and np.std(xv) > 0:
         slope, intercept = np.polyfit(xv, yv, 1)
         x_line = np.linspace(xv.min(), xv.max(), 100)
-        ax.plot(x_line, slope * x_line + intercept, 'k--', linewidth=0.8*fontscale*MARK, alpha=0.6, zorder=5)
+        ax.plot(x_line, slope * x_line + intercept, 'k--', linewidth=style.RULE_PT, alpha=0.6, zorder=5)
 
-    # Stats — 1 sig digit (floor), scientific for very small P
-    import math
-    _e = math.floor(math.log10(p_val)); _c = int(p_val / 10**_e)
-    if _e >= -3:
-        p_str = f'P = {_c * 10**_e:.{-_e}f}'
-    else:
-        p_str = f'P = {_c}e{_e}'
-
-    # The cohort and its sample count are named in the caption; see
-    # THE COHORT LEAVES THE TITLE.
+    p_str = corr_stats.p_string(p_val)
     print(f'    {title}: rho = {r_val:.2f}, {p_str}')
-    ax.set_title(f'ρ = {r_val:.2f}\n{p_str}', linespacing=1.4)
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel(ylabel)
+    ax.set_title(title, fontsize=style.tick_pt())
+    cnslayout.corr_annotate(ax, r_val)
 
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     for spine in ['bottom', 'left']:
-        ax.spines[spine].set_linewidth(0.5*fontscale*MARK)
-    ax.tick_params(axis='both', width=0.5*fontscale*MARK, length=3*fontscale*MARK)
-    ax.set_box_aspect(1)
+        ax.spines[spine].set_linewidth(style.RULE_PT)
+    ax.tick_params(axis='both', width=style.RULE_PT, length=3*fontscale*MARK)
+    # The rich labels last: they measure the tick labels' reach, which the
+    # tick length above changes.
+    rich_xlabel(ax, xlabel)
+    if left:
+        rich_ylabel(ax, ylabel)
 
     # Compact legend (Dead filled red, Alive open gray). `key` undoes cnsplots'
     # legend.markerscale so each key prints at MARK times the size it had.
@@ -276,11 +290,14 @@ def plot_scatter(ax, x, y, vital, title, xlabel, ylabel, fontscale):
     h_alive = mlines.Line2D([], [], marker='o', color='none', markerfacecolor='none',
                             markeredgecolor=COLOR_ALIVE,
                             markersize=4*fontscale/SCALE*MARK*key,
-                            markeredgewidth=0.5*MARK, label='Alive')
-    ax.legend(handles=[h_dead, h_alive], loc='upper left',
-              frameon=False, handletextpad=0.3, borderpad=0.2)
-
-    return r_val, p_val
+                            markeredgewidth=style.EDGE_PT, label='Alive')
+    # RETURNED, NOT DRAWN, SINCE 2026-09-11
+    #   These two keys were drawn inside each axes at loc='upper left', which
+    #   put the words 'Dead' and 'Alive' on top of the scatter in both axes and
+    #   twice over. The published page prints one key, outside the plotting
+    #   area, at the right of the panel - which is also where panel D of this
+    #   figure prints its five-group key. main() draws it once.
+    return r_val, p_val, [h_dead, h_alive]
 
 
 def main():
@@ -289,33 +306,52 @@ def main():
     print(f"  type set in {family}; body {style.body_pt():g} pt, "
           f"ticks/legend {style.tick_pt():g} pt; MARK {MARK:.3f}")
 
-    df = load_data()
+    # From data/tcga_samples.csv (cnsfig.cache, 2026-09-15): the expression,
+    # deconvolution and clinical tables are read only when it is absent.
+    df = cache.table(OUTPUT_DIR, 'tcga_samples', load_data)
     n = len(df)
 
     # CEACAM vs CD274 only (filter zero-expression samples per subplot)
     panel = {
         'name': 'tcga_ceacam_cd274',
         'combos': [
-            ('CEACAM5', 'CD274', 'Epi. CEACAM5', 'Epi. PD-L1\n(CD274)'),
-            ('CEACAM6', 'CD274', 'Epi. CEACAM6', 'Epi. PD-L1\n(CD274)'),
+            ('CEACAM5', 'CD274', '*CEACAM5*', 'Epi. PD-L1\n(*CD274*)'),
+            ('CEACAM6', 'CD274', '*CEACAM6*', 'Epi. PD-L1\n(*CD274*)'),
         ],
     }
 
+    # ONE GEOMETRY FOR THE FOUR SCATTER PAIRS  (2026-09-14, evening)
+    #   The author's ruling: A, B, D and E are the same size, square, the
+    #   dataset name alone in the title, rho inside the box, P in the legend
+    #   (cnsfig.corr_stats writes it; edits.py reads it), and the two rows
+    #   2 mm apart. cnsfig.layout.scatter_pair_mm places the boxes at
+    #   millimetres, so the four panels print one geometry by construction.
     results = []
-    fig, axes = style.subplots_mm(PANEL_W_MM, PANEL_H_MM, 1, 2)
+    fig = style.figure_mm(PANEL_W_MM, PANEL_H_MM)
+    axes = cnslayout.scatter_pair_mm(fig, left_mm=LEFT_MM)
     for col_idx, (xcol, ycol, xlabel, ylabel) in enumerate(panel['combos']):
         ax = axes[col_idx]
         # Remove samples with zero CEACAM or zero CD274 expression
         mask = (df[xcol] > 0) & (df[ycol] > 0)
         sub = df[mask]
         n_sub = len(sub)
-        cohort_title = f'TCGA-STAD (n = {n_sub})'
-        r_val, p_val = plot_scatter(ax, sub[xcol].values, sub[ycol].values,
-                                    sub['vital_status'].values,
-                                    cohort_title, xlabel, ylabel, SCALE)
+        cohort_title = 'TCGA-STAD'   # the page prints no n (2026-09-14)
+        r_val, p_val, keys = plot_scatter(ax, sub[xcol].values, sub[ycol].values,
+                                          sub['vital_status'].values,
+                                          cohort_title, xlabel, ylabel, SCALE,
+                                          left=(col_idx == 0))
         results.append({'x': xcol, 'y': ycol, 'r': r_val, 'p': p_val, 'n': n_sub})
+    corr_stats.write(OUTPUT_DIR, [(r['x'], r['r'], r['p'], r['n']) for r in results])
 
-    style.fit_margins(fig, pad_mm=0.6, cell_mm=LETTER_CELL)
+    # The key in the strip at the right edge, as printed panel D of this
+    # figure prints its five-group key.
+    # The key, right of the second box, at cnsfig.legend.group_key's fixed
+    # 1.3 mm circles (the handle-sized keys of 2026-09-15 were 0.42 mm).
+    group_key(fig, [(keys[0].get_label(), COLOR_DEAD),
+                    (keys[1].get_label(), None, COLOR_ALIVE)],
+              x_mm=LEFT_MM + 2 * cnslayout.SCATTER_BOX_MM + cnslayout.SCATTER_GAP_MM + 0.8,
+              y_mm=cnslayout.SCATTER_TOP_MM)
+
     over = style.overflow_mm(fig)
     if max(over) > 0:
         raise RuntimeError(

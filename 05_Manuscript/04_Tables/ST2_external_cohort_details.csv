@@ -1,5 +1,5 @@
 Dataset ID,Year,N patients,N samples,Data type,Platform,Usage in paper,Note
-PRJEB25780,2018,45,45,Bulk RNA-seq,Illumina HiSeq,"BayesPrism deconvolution of epithelial expression; CEACAM5 and CEACAM6 in responders versus non-responders and the cross-cohort combination (Fig. 2L, Table S9); epithelial metaprogram scores by response; purity-adjusted association of epithelial CEACAM5/6 with immune infiltration",Only tumor samples were used.
+PRJEB25780,2018,45,45,Bulk RNA-seq,Illumina HiSeq,BayesPrism deconvolution of epithelial expression; CEACAM5 and CEACAM6 in responders versus non-responders (Fig. 2L); epithelial metaprogram scores by response; purity-adjusted association of epithelial CEACAM5/6 with immune infiltration,Only tumor samples were used.
 TCGA-STAD,2014,407,407,Bulk RNA-seq (FPKM),Illumina HiSeq,BayesPrism deconvolution; NF-κB pathway validation; survival analysis,Only tumor samples were used.
 GSE183904,2022,31,56,scRNA-seq,10x Genomics Chromium 3',Independent validation of macrophage subtype proportions and CEACAM expression patterns,
 GSE239676,2024,30,48,scRNA-seq,10x Genomics Chromium 3',Independent validation of IL-1β+ MoMac (MoMac_IL1B) enrichment in primary tumor versus adjacent normal tissue (Fig. 4H),

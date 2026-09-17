@@ -44,7 +44,6 @@ import numpy as np
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-import seaborn as sns
 from pathlib import Path
 from scipy.stats import mannwhitneyu
 import sys
@@ -54,6 +53,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
 from paths import *                       # noqa: E402,F401,F403
 import panel_style_cns as style           # noqa: E402
 import slots                              # noqa: E402
+from cnsfig.boxes import draw_boxes, bracket, ylim_above, assert_no_points  # noqa: E402
 
 SCALE = 4                       # the earlier canvas multiplier, for MARK only
 SMALL_PT = 5.0                  # the earlier body type, before * SCALE
@@ -114,45 +114,24 @@ def main():
 
     fig, ax = style.subplots_mm(PANEL_W_MM, PANEL_H_MM)
 
-    # Create boxplot with R on left, NR on right
-    sns.boxplot(
-        data=filtered,
-        x='stomach_post_grouping',
-        y='Module_2',
-        order=['Responsed', 'No-response'],  # R first (left)
-        palette=PALETTE,
-        ax=ax,
-        boxprops=dict(edgecolor='black', linewidth=1.0 * SCALE * MARK),
-        medianprops=dict(color='black', linewidth=1.5 * SCALE * MARK),  # Will be overridden
-        whiskerprops=dict(linewidth=1.0 * SCALE * MARK),
-        capprops=dict(linewidth=1.0 * SCALE * MARK),
-        flierprops=dict(marker='o', markerfacecolor='white', markeredgecolor='black',
-                        markersize=4 * SCALE * MARK, markeredgewidth=1 * SCALE * MARK),
-        width=0.6
-    )
-
-    # Color median lines to match box colors (darker shades)
-    for i, artist in enumerate(ax.patches):
-        if i == 0:
-            ax.lines[4].set_color(MEDIAN_COLOR_R)  # First median
-        elif i == 1:
-            ax.lines[9].set_color(MEDIAN_COLOR_NR)  # Second median
-
-    # Update x-tick labels
+    # ONE BOX (2026-09-16, the author's fifth reading: "Figure 4's
+    # outliers are too large and the star sits too far above the line").
+    # cnsfig.boxes.draw_boxes replaces the seaborn box: the same 1.5 IQR
+    # statistics on the same two arrays (the comparator holds every whisker,
+    # box and median coordinate), the family's 0.79 mm open flier instead of
+    # the 2.5 mm one, a black median instead of the darker per-group shade.
+    # The bracket keeps its vertices (line at y_max + 0.10 range, arms 0.05
+    # of the range); the star's INK sits 0.4 mm above the line.
+    bp = draw_boxes(ax, [group_r, group_nr], [0, 1], PALETTE, width=0.6)
+    ax.set_xlim(-0.5, 1.5)               # seaborn's categorical limits
+    ax.set_xticks([0, 1])
     ax.set_xticklabels(['Post-R', 'Post-NR'])
 
-    # Add significance bracket
     y_max = filtered['Module_2'].max()
     y_range = filtered['Module_2'].max() - filtered['Module_2'].min()
-    bracket_height = y_max + y_range * 0.1
-    bracket_top = bracket_height + y_range * 0.05
-
-    ax.plot([0, 0, 1, 1], [bracket_height, bracket_top, bracket_top, bracket_height],
-            lw=0.8 * SCALE * MARK, c='black')
-    p_text = '***' if p_value < 0.001 else '**' if p_value < 0.01 else '*' if p_value < 0.05 else 'ns'
-    ax.text(0.5, bracket_top + y_range * 0.02, p_text,
-            ha='center', va='bottom',
-            fontsize=style.body_pt() if p_value < 0.05 else style.tick_pt())
+    bracket_top = y_max + y_range * 0.15
+    _, p_txt, _ = bracket(fig, ax, 0, 1, y_max, y_range, p_value, kind="pair",
+                          lift=0.10, arm=0.05)
 
     # Styling
     ax.set_title('IM-MoMac')
@@ -162,6 +141,8 @@ def main():
     ax.spines['right'].set_visible(False)
 
     ax.set_ylim(ax.get_ylim()[0], bracket_top + y_range * 0.15)
+    ylim_above(ax, p_txt)
+    assert_no_points(ax, bp)
 
     style.fit_margins(fig, pad_mm=0.6, cell_mm=LETTER_CELL)
     over = style.overflow_mm(fig)

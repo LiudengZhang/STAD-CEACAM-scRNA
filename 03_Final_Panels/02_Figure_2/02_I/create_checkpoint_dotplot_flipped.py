@@ -38,25 +38,20 @@ LEGEND KEYS
     `markerscale ** 2`, so that after the legend applies its factor the key
     prints at exactly the area of the dot it labels.
 
-THE GENE LABELS ARE SET UPRIGHT, NOT AT 45 DEGREES
-    Twenty-nine ticks across this plotting box stand 3.3 mm apart, and a label
-    set at an angle puts its own depth across its neighbour's: at 45 degrees
-    the twenty-eight adjacent pairs overlap by up to 4.6 mm2 and at 60 degrees
-    by up to 0.9 mm2, whatever their length, because the spacing is fixed by
-    the number of genes and the width of the slot. Upright they clear one
-    another entirely. Same genes, same order, same tick positions, same
-    strings; only the angle changes.
-
-    An upright label is deeper than a rotated one and the slot is fixed, so the
-    cost was measured on the rendered panel rather than assumed: the gene label
-    band is 9.30 mm deep at 45 degrees and 10.71 mm upright - 1.41 mm more -
-    with the deepest label, TNFRSF18, going from 9.29 to 10.70 mm. The band
-    still ends 0.23 mm inside the foot of the 54.4 mm slot, and the panel
-    leaves 2.37 mm unused at the top, so the extra depth is paid out of slack
-    the panel already had.
+THE GENE LABELS ARE SET AT 80 DEGREES  (2026-09-14)
+    The published page sets them at 45. Twenty-nine ticks across this plotting
+    box stand 3.3 mm apart; a 6 pt line box is 2.5 mm deep, and at 45 degrees
+    neighbours are 2.3 mm apart and overlap whatever their length. At 60
+    degrees they are 2.9 mm apart and still graze by 0.9 mm2, at 70 they
+    clear by 0.29 pt, at 75 by 0.49, and at 80 by the 0.5 pt the gate asks for. Upright (the 2026-09-11 form) was
+    further from the page than the angle the page's own geometry allows.
 
 Every gene, every filter, every fold change, every P value and every string is
 the earlier drawing's. The drawing code is the same code.
+
+DRAWING READS A TABLE, since 2026-09-15 (cnsfig.cache): the per-gene fold
+change and P value live in data/checkpoint_stats.csv; the h5ad is read only
+when the table is absent or --recompute is passed.
 """
 
 import scanpy as sc
@@ -75,6 +70,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
 from paths import *                                       # noqa: E402,F403
 import panel_style_cns as style                           # noqa: E402
 import slots                                             # noqa: E402
+from cnsfig import cache                                  # noqa: E402
 
 SCALE = 4                           # the earlier canvas multiplier
 SMALL_PT = 5.0                      # the earlier smallest body type
@@ -103,13 +99,31 @@ COSTIMULATORY_GENES = [
 ]
 
 
+#: THE THREE DOT SIZES  (2026-09-14, then 2026-09-15)
+#:   Counted off 'Figure 2.pdf' geometry: 42 circles at 1.40 mm (28 of
+#:   them), 1.81 mm (10) and 2.21 mm (2) across - the three significance
+#:   classes, at the earlier drawing's area ratio 150 : 100 : 60. On the
+#:   author's third reading (2026-09-15) the two significant classes did not
+#:   stand out enough from the third, so the areas are 1 : 0.55 : 0.30 - the
+#:   largest 2.5 mm across, then 1.85 and 1.37 mm. The class boundaries
+#:   (0.10, 0.15) and which gene falls in which class are unchanged; only
+#:   the three areas, which compare_panel_content.py reports as size_ratios.
+#:   On the fifth reading (2026-09-16: "the P > 0.15 dots could be smaller")
+#:   the third class halved again, 0.30 -> 0.15 of the largest area (0.97 mm
+#:   across); the other two and the class boundaries are unchanged.
+#:   scatter's s is the diameter squared in points.
+DOT_D_MAX_MM = 2.5
+DOT_S_MAX = (DOT_D_MAX_MM * style.PT_PER_MM) ** 2
+DOT_AREA_RATIO = {"<=0.10": 1.0, "<=0.15": 0.55, ">0.15": 0.15}
+
+
 def assign_dot_size(p_value):
     if p_value <= 0.10:
-        return 150 * SCALE
+        return DOT_S_MAX * DOT_AREA_RATIO["<=0.10"]
     elif p_value <= 0.15:
-        return 100 * SCALE
+        return DOT_S_MAX * DOT_AREA_RATIO["<=0.15"]
     else:
-        return 60 * SCALE
+        return DOT_S_MAX * DOT_AREA_RATIO[">0.15"]
 
 
 def compute_checkpoint_statistics(adata):
@@ -166,18 +180,20 @@ def main():
     print(f"  type set in {family}; body {style.body_pt():g} pt, "
           f"ticks/legend {style.tick_pt():g} pt; MARK {MARK:.5f}")
 
-    print("Loading epithelial data...")
-    adata = sc.read_h5ad(EPITHELIAL_H5AD)                 # noqa: F405
-    print(f"Loaded {adata.n_obs} cells")
+    def compute():
+        print("Loading epithelial data...")
+        adata = sc.read_h5ad(EPITHELIAL_H5AD)             # noqa: F405
+        print(f"Loaded {adata.n_obs} cells")
+        return compute_checkpoint_statistics(adata)
 
-    data = compute_checkpoint_statistics(adata)
+    data = cache.table(BASE_DIR, "checkpoint_stats", compute)
     # Sort by Log2FC for better visualization
     data = data.sort_values('Merged_Log2FC', ascending=False)
 
     genes = data['Gene'].values
     fold_changes = data['Merged_Log2FC'].values
     p_values = data['Merged_P_Value'].values
-    sizes = [assign_dot_size(p) * AREA for p in p_values]
+    sizes = [assign_dot_size(p) for p in p_values]
 
     # FLIPPED: genes on X-axis, Log2FC on Y-axis
     x_positions = np.arange(len(genes))
@@ -191,12 +207,18 @@ def main():
     # FLIPPED scatter: x=gene positions, y=fold_changes
     scatter = ax.scatter(
         x_positions, fold_changes, s=sizes, c=fold_changes, cmap=cmap, alpha=0.8,
-        edgecolors='black', linewidths=0.5 * MARK, vmin=-2, vmax=2
+        edgecolors='black', linewidths=style.EDGE_PT, vmin=-2, vmax=2
     )
 
     # X-axis: genes
     ax.set_xticks(x_positions)
-    ax.set_xticklabels(genes, rotation=90, ha='right', style='italic')
+    # Angled, as the published page sets them (2026-09-14). At 6 pt on this
+    # 3.3 mm pitch 45 degrees cannot clear - a 6 pt line box is 2.5 mm deep
+    # and 45 degrees leaves 2.3 mm between neighbours - so the angle is 60,
+    # 80, the nearest that clears by the 0.5 pt the gate asks for (75: 0.49).
+    # Same genes, same order, same strings.
+    ax.set_xticklabels(genes, rotation=80, ha='right', style='italic',
+                       rotation_mode='anchor')
     ax.set_xlim(-1, len(genes))
 
     # Y-axis: Log2FC
@@ -206,8 +228,8 @@ def main():
     ax.set_ylabel('Log2 FC (NR/R)')
 
     # Horizontal reference line at 0
-    ax.axhline(y=0, color='gray', linestyle='--', linewidth=0.5 * MARK, alpha=0.7)
-    ax.grid(True, axis='y', alpha=0.3, linestyle=':', linewidth=0.3 * MARK)
+    ax.axhline(y=0, color='gray', linestyle='--', linewidth=style.RULE_PT, alpha=0.7)
+    # No y grid: the published page draws the zero rule alone (2026-09-14).
 
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
@@ -216,15 +238,17 @@ def main():
     # markerscale correction.
     key = 1.0 / plt.rcParams["legend.markerscale"] ** 2
     legend_elements = [
-        plt.scatter([], [], s=150*SCALE*AREA*key, c='gray', alpha=0.6, edgecolors='black', linewidths=0.5 * MARK, label='p ≤ 0.10'),
-        plt.scatter([], [], s=100*SCALE*AREA*key, c='gray', alpha=0.6, edgecolors='black', linewidths=0.5 * MARK, label='p ≤ 0.15'),
-        plt.scatter([], [], s=60*SCALE*AREA*key, c='gray', alpha=0.6, edgecolors='black', linewidths=0.5 * MARK, label='p > 0.15')
+        plt.scatter([], [], s=assign_dot_size(0.10)*key, c='gray', alpha=0.6, edgecolors='black', linewidths=style.EDGE_PT, label='p ≤ 0.10'),
+        plt.scatter([], [], s=assign_dot_size(0.15)*key, c='gray', alpha=0.6, edgecolors='black', linewidths=style.EDGE_PT, label='p ≤ 0.15'),
+        plt.scatter([], [], s=assign_dot_size(0.50)*key, c='gray', alpha=0.6, edgecolors='black', linewidths=style.EDGE_PT, label='p > 0.15')
     ]
 
+    # handletextpad 0.2 -> 0.8 and labelspacing 0.6 (2026-09-15): the keys
+    # touched their labels.
     legend = ax.legend(handles=legend_elements, title='Significance', loc='upper right',
-                       frameon=True, handletextpad=0.2, borderpad=0.4,
-                       edgecolor='black', framealpha=0.9)
-    legend.get_frame().set_linewidth(0.5 * MARK)
+                       frameon=True, handletextpad=0.8, borderpad=0.5,
+                       labelspacing=0.6, edgecolor='black', framealpha=0.9)
+    legend.get_frame().set_linewidth(style.RULE_PT)
 
     # Colorbar
     cbar = plt.colorbar(scatter, ax=ax, shrink=0.6, pad=0.02)

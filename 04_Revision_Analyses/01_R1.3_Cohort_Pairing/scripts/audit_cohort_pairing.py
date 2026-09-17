@@ -41,8 +41,21 @@ H5AD_FOR_MAPPING = B_CELLS_H5AD
 # The RECIST trajectory lives in the hospital's own spreadsheet, which carries
 # patient identifiers and is therefore not deposited with the rest of the data.
 # It has no default location: point STAD_CLINICAL_XLSX at it to re-run this
-# audit. Everything downstream of it is summarised in ST1 and in the outputs
-# below, both of which are released.
+# audit. Everything downstream of it is summarised in the outputs below, which
+# are released.
+#
+# 2026-09-11: it is NOT summarised in Supplementary Table 1 any more, and this
+# comment said it was. ST1 used to carry three columns built from the audit's
+# recist_raw / recist_best / recist_change; on the author's ruling it now
+# reports the collaborators' DEFINITIVE adjudicated call in a single column,
+# "RECIST 1.1 response", and does not report the original assessment at all.
+# The two are not the same reading of the same patients - for the six
+# post-treatment non-responders the trajectory's best responses are SD in four
+# and PD in two, while the adjudicated calls are SD in two and PD in four - so
+# the outputs here and ST1 must not be quoted against each other. This script
+# is otherwise unaffected: it reads no RECIST column out of ST1, only Patient
+# ID, Sample, Age, Sex, cTNM stage, Differentiation, Stomach site, Anatomical
+# site, Biopsy method and R/NR Grouping.
 CLIN = Path(os.environ["STAD_CLINICAL_XLSX"]) if "STAD_CLINICAL_XLSX" in os.environ \
     else None
 
@@ -129,7 +142,8 @@ if CLIN is None or not CLIN.exists():
         "SKIPPED: the RECIST trajectory table is not available.\n"
         "It carries patient identifiers and is not part of the deposited data.\n"
         "Set STAD_CLINICAL_XLSX to a copy to re-run this audit; its results are\n"
-        "reported in Supplementary Table 1.",
+        "reported in this directory's outputs/. Supplementary Table 1 reports the\n"
+        "separately adjudicated definitive response, not this trajectory.",
         file=sys.stderr)
     sys.exit(0)
 clin = pd.read_excel(CLIN)

@@ -45,6 +45,7 @@ the same code.
 """
 
 import matplotlib.pyplot as plt
+import matplotlib.lines as mlines
 import numpy as np
 from PIL import Image
 from scipy import ndimage
@@ -136,6 +137,10 @@ def make_square_crop(img_array):
     return img_array[top:top + size, left:left + size]
 
 
+#: Millimetres between the foot of an image and its grouping rule.
+RULE_DROP_MM = 1.4
+
+
 def main():
     family = style.apply(title_fontsize=7, fontsize_legend=6,
                          legend_fontsize=6)
@@ -204,16 +209,40 @@ def main():
 
     # Column titles - marker names above each image
     marker_titles = ["H&E", "CEACAM5", "CEACAM6", "H&E", "CEACAM5", "CEACAM6"]
-    marker_styles = ["normal", "italic", "italic", "normal", "italic", "italic"]
+    # Upright, all six (2026-09-14, evening): these are immunohistochemical
+    # stains, so the names are the PROTEINS' - a gene symbol is italic, its
+    # protein is not, and the submitted page set them upright. The page
+    # gate holds this panel to the regular face (check_restyled_panel.py:
+    # UPRIGHT_PROTEIN).
+    marker_styles = ["normal", "normal", "normal", "normal", "normal", "normal"]
     for i, (title, style_) in enumerate(zip(marker_titles, marker_styles)):
         axes[i].set_title(title, fontstyle=style_, pad=8 * SCALE * MARK)
 
     # Group labels below each triplet, on the middle column of each, as the
-    # shipped page prints them.
+    # shipped page prints them. They hang under the grouping rules drawn after
+    # the margins are set; see THE TWO GROUPING RULES.
     axes[1].set_xlabel("Pre-NR", labelpad=8 * SCALE * MARK)
     axes[4].set_xlabel("Pre-R", labelpad=8 * SCALE * MARK)
 
     style.margins_mm(fig, **MARGIN)
+
+    # THE TWO GROUPING RULES, RESTORED  (2026-09-11)
+    #   The published page draws a rule under each triplet of images and hangs
+    #   the group name off it, which is what tells the reader that the first
+    #   three images are one patient group and the last three another. The
+    #   redraw kept the two names and dropped both rules, so six images sat in
+    #   a row with two words under them and nothing saying where one group
+    #   ended. Neither rule carries a value; each spans exactly the images it
+    #   groups, read from their own placed positions rather than typed.
+    for first, last in ((0, 2), (3, 5)):
+        a = axes[first].get_position()
+        b = axes[last].get_position()
+        y = a.y0 - RULE_DROP_MM / PANEL_H_MM
+        fig.add_artist(mlines.Line2D([a.x0, b.x1], [y, y],
+                                     transform=fig.transFigure,
+                                     color='black', linewidth=style.RULE_PT,
+                                     solid_capstyle='butt'))
+
     over = style.overflow_mm(fig)
     if max(over) > 0:
         raise RuntimeError(

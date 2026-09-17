@@ -7,24 +7,22 @@ from its own Jaccard similarity matrix.
                                    do NOT read the directory as the letter)
 
 The five matrices, the similarity threshold, the node selection, the circular
-layout, the cell-type colouring, the edge weights and the short node names are
-unchanged. Only the canvas and the type change: the panel is drawn at the
-millimetre rectangle it prints in and set in the figure's one type system.
+layout, the cell-type colouring and the edge weights are unchanged. The node
+names and the circle size changed on 2026-09-14 (below); otherwise only the
+canvas and the type change: the panel is drawn at the millimetre rectangle it
+prints in and set in the figure's one type system.
 
-THE NODE NAMES ARE AN EXEMPTION
-    Eight node names are set around a circle in a row 18.9 mm tall, five rows
-    in a column 21.8 mm wide. At the figure's 6 pt floor they collide: five
-    overlapping pairs, the worst 4.92 mm2, and five names with glyphs running
-    off the drawing. The footprint is the published one and cannot grow -
-    measured by redrawing at a range of canvas sizes, the collisions clear only
-    at 1.55x it, 33.8 x 146.2 mm - and no abbreviation helps, because dropping
-    the cluster prefix leaves four nodes of one module reading Mac and two
-    reading Mono. So the size is measured rather than chosen: the panel was
-    redrawn from 6.00 pt down in 0.25 pt steps and then refined in 0.05 pt
-    steps, and NODE_LABEL_PT is the largest size at which no two names overlap
-    and no glyph is clipped or painted over. It is 2.1x the size the published
-    page sets these names at. The five module titles are at the figure's own
-    body size and are not part of the exemption.
+THE NODE NAMES ARE ONE LETTER AND ONE DIGIT  (2026-09-14)
+    Until 2026-09-14 the eight names round each ring were the cluster codes
+    the page prints (C2_CD8, C9_CD4, ...), and at the figure's 6 pt floor they
+    collided; they were carried at 3.55 pt as a measured exemption. The
+    author's ruling of 2026-09-14 renames them: a lineage letter, owned by
+    00_Config/shared/labels.py NODE_LETTER and defined in the Figure 4 legend,
+    and the cluster digit the state name carries. 'H9', 'C2', 'O1', 'M3',
+    'P0'. All 38 names drawn are distinct (main() raises otherwise), they are
+    set at the figure's tick size, regular weight, inside circles NODE_D_MM
+    across, and the exemption is gone. SUPERSEDED.md beside this script
+    records the divergence from the printed panel.
 
 MARK
     The earlier drawing set no SCALE. It drew a 70 x 120 mm canvas of five
@@ -56,6 +54,7 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
 import panel_style_cns as style           # noqa: E402
 import slots                              # noqa: E402
+from shared.labels import NODE_LETTER     # noqa: E402
 
 PANEL_LETTER = "B"
 PANEL_W_MM, PANEL_H_MM = slots.size_mm(4, PANEL_LETTER)
@@ -63,14 +62,23 @@ LETTER_CELL = slots.letter_cell_mm(4, PANEL_LETTER)
 
 EARLIER_CANVAS_H_MM = 120.0     # the earlier canvas height, for MARK only
 
-#: The size the eight node names are set at. This is Figure 4's second author
-#: exemption and the number is a measurement, not a choice: see THE NODE NAMES
-#: ARE AN EXEMPTION in the module docstring.
-NODE_LABEL_PT = 3.55
+#: Node names are at the figure's tick size since 2026-09-14: one letter and
+#: one digit fit inside a NODE_D_MM circle. The 3.55 pt exemption is gone.
+#: Read at draw time, after style.apply(): read at import it was the
+#: un-applied default (7 pt) and the names printed larger than the figure's
+#: ticks (the author, 2026-09-14 evening).
+NODE_LABEL_PT = None
 
 # Parameters
 SIMILARITY_THRESHOLD = 0.01
-NODE_SIZE = 150  # Smaller nodes
+#: Node circle diameter. The published page draws the nodes 3.63 mm across
+#: (38 circles counted off 'Figure 4.pdf'); 4.0 mm holds a 6 pt two-character
+#: name with clear paper round it, and eight of them on the ring a 19.4 mm
+#: row allows (LIMIT below) stand 0.6 mm apart.
+NODE_D_MM = 4.0
+#: Axis limit either side of the unit ring; the ring's outer edge is
+#: (1 + NODE_D_MM / 2 / unit) and must stay inside it.
+LIMIT = 1.35
 EDGE_WIDTH_MULTIPLIER = 2
 EDGE_ALPHA = 0.7
 EDGE_LABEL_THRESHOLD = 1.1  # Effectively disables edge labels (max Jaccard is 1.0)
@@ -78,6 +86,7 @@ EDGE_LABEL_THRESHOLD = 1.1  # Effectively disables edge labels (max Jaccard is 1
 # Module display names
 MODULE_DISPLAY = {1: 'IM-T/NK/DC', 2: 'IM-MoMac', 3: 'IM-Mixed', 4: 'IM-Neutrophil', 5: 'IM-B/Plasma'}
 MAX_NODES = 8
+DRAWN_LABELS = []       # every node name drawn, for the uniqueness check
 INCLUDE_STATS = True
 LAYOUT_SCALE = 1.0
 
@@ -124,20 +133,22 @@ def get_cell_type_from_state(cell_state):
 
 
 def get_short_label(cell_state):
-    """Get shortened label for display."""
+    """One letter for the lineage and the cluster's own digit (2026-09-14).
+
+    The author's ruling: a node name is one letter and one digit, so it sits
+    inside its circle at the figure's 6 pt. The letters are owned by
+    00_Config/shared/labels.py NODE_LETTER, which the Figure 4 legend is
+    checked against; the digit is the cluster index the state name carries.
+    'C2_CD8_MAIT_KLRB1' -> 'C2'; 'C9_CD4_Th17_IL17A' -> 'H9'; 'C0_Plasma' ->
+    'P0'. Every one of the 38 names drawn is distinct (asserted in main()).
+    """
     parts = cell_state.split('_')
-    if len(parts) >= 3:
-        short = f"{parts[0]}_{parts[1]}"
-    else:
-        short = cell_state
-
-    # Custom label replacements
-    label_mappings = {
-        'C2_MoMac': 'C2_Mac',
-        'C0_Plasma': 'C0_PB'
-    }
-
-    return label_mappings.get(short, short)
+    digit = parts[0][1:]
+    lineage = parts[1]
+    if lineage not in NODE_LETTER:
+        raise KeyError(f"{cell_state}: no letter for lineage {lineage!r} in "
+                       f"labels.NODE_LETTER")
+    return f"{NODE_LETTER[lineage]}{digit}"
 
 
 def induced(G, nodes):
@@ -203,15 +214,16 @@ def plot_single_network(ax, G, module_id, mark, area):
                    for node in G.nodes()]
 
     # Draw nodes
-    nx.draw_networkx_nodes(
+    nodes = nx.draw_networkx_nodes(
         G, pos,
         node_color=node_colors,
-        node_size=NODE_SIZE * area,
+        node_size=(NODE_D_MM * style.PT_PER_MM) ** 2,   # s = diameter^2 pt
         alpha=0.9,
         edgecolors='black',
-        linewidths=0.5 * mark,  # Half width border
+        linewidths=style.EDGE_PT,
         ax=ax
     )
+    nodes.set_clip_on(False)
 
     # Draw edges
     edges = G.edges()
@@ -247,17 +259,17 @@ def plot_single_network(ax, G, module_id, mark, area):
     nx.draw_networkx_labels(
         G, pos,
         labels=labels,
-        font_size=NODE_LABEL_PT,
-        font_weight='bold',
+        font_size=style.tick_pt(),
         ax=ax
     )
+    DRAWN_LABELS.extend(labels.values())
 
     # Add module title
     ax.set_title(MODULE_DISPLAY[module_id], pad=3 * mark)
 
     # Set axis limits to prevent label clipping
-    ax.set_xlim(-1.4, 1.4)
-    ax.set_ylim(-1.4, 1.4)
+    ax.set_xlim(-LIMIT, LIMIT)
+    ax.set_ylim(-LIMIT, LIMIT)
     ax.set_aspect('equal', adjustable='box')
     ax.axis('off')
 
@@ -298,6 +310,11 @@ def main():
         # Plot on corresponding axis
         ax = axes[module_id - 1]
         plot_single_network(ax, G, module_id, MARK, AREA)
+
+    if len(set(DRAWN_LABELS)) != len(DRAWN_LABELS):
+        dup = sorted({n for n in DRAWN_LABELS if DRAWN_LABELS.count(n) > 1})
+        raise RuntimeError(f"node names are not unique: {dup}")
+    print(f"  {len(DRAWN_LABELS)} node names, all distinct")
 
     style.fit_margins(fig, pad_mm=0.6, cell_mm=LETTER_CELL)
     over = style.overflow_mm(fig)

@@ -39,6 +39,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
 from paths import *                                       # noqa: E402,F403
 import panel_style_cns as style                           # noqa: E402
 import slots                                              # noqa: E402
+from cnsfig.boxes import draw_boxes, bracket, ylim_above, assert_no_points  # noqa: E402
 
 # Paths
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -96,37 +97,29 @@ def main():
     fig, ax = style.subplots_mm(PANEL_W_MM, PANEL_H_MM)
 
     data = [responder_vals, non_responder_vals]
-    bp = ax.boxplot(data, positions=[1, 2], widths=0.6, patch_artist=True,
-                    boxprops=dict(linewidth=0.5 * MARK),
-                    whiskerprops=dict(color='black', linewidth=0.5 * MARK),
-                    capprops=dict(color='black', linewidth=0.5 * MARK),
-                    flierprops=dict(marker='o', markerfacecolor='white',
-                                    markersize=4 * MARK,
-                                    markeredgecolor='black',
-                                    markeredgewidth=0.5 * MARK))
-
-    bp['boxes'][0].set_facecolor(COLORS['Responsed'])
-    bp['boxes'][1].set_facecolor(COLORS['No-response'])
-    bp['medians'][0].set_color(MEDIAN_COLORS['Responsed'])
-    bp['medians'][0].set_linewidth(0.8 * MARK)
-    bp['medians'][1].set_color(MEDIAN_COLORS['No-response'])
-    bp['medians'][1].set_linewidth(0.8 * MARK)
+    # ONE BOX (2026-09-16, the author's fifth reading: "box plots should
+    # look alike throughout"): cnsfig.boxes.draw_boxes - the 2H/I box with
+    # 0.79 mm open fliers and a black median (the per-group median colours
+    # of the submitted panel are the one thing this gives up). The bracket
+    # keeps its vertices (line at 1.15 x y_max, arms 5% of that) and prints
+    # through p_text_kw, the paper's one P-label owner: 0.0571 is "P = 0.06"
+    # here as on S3 D, where it was "P = 0.057" from a local .3f (R1.3c asked
+    # for exact values; the author's ruling of 2026-09-14 is two decimals at
+    # or above 0.05). Its ink sits 0.4 mm above the line.
+    bp = draw_boxes(ax, data, [1, 2],
+                    [COLORS['Responsed'], COLORS['No-response']], width=0.6)
 
     y_max = max(np.max(responder_vals), np.max(non_responder_vals))
-    y_bracket = y_max * 1.15
-    ax.plot([1, 1, 2, 2], [y_bracket, y_bracket*1.05, y_bracket*1.05, y_bracket],
-            'k-', linewidth=0.5 * MARK)
-    # Exact P rather than a threshold label; the test above is already
-    # two-sided, so only the annotation had to change (R1.3c).
-    pval_text = f'P = {pval:.3f}' if pval >= 0.001 else 'P < 0.001'
-    ax.text(1.5, y_bracket*1.08, pval_text, ha='center', va='bottom',
-            fontsize=style.tick_pt())
+    _, p_text, _ = bracket(fig, ax, 1, 2, y_max, y_max, pval, kind="pair",
+                           lift=0.15, arm=0.05 * 1.15)
 
     ax.set_title('Epi_CEACAM5/6')
     ax.set_ylabel('Proportion (%)')
     ax.set_xticks([1, 2])
     ax.set_xticklabels(['Pre-R', 'Pre-NR'])
     ax.set_ylim(0, y_max * 1.40)
+    ylim_above(ax, p_text)
+    assert_no_points(ax, bp)
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
 

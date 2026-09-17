@@ -37,6 +37,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
 from paths import *
 import panel_style_cns as style
 import slots
+from cnsfig.layout import pin_frame_mm
 
 BASE_DIR = Path(__file__).parent
 
@@ -133,17 +134,30 @@ def main():
 
     sns.violinplot(data=plot_df, y='test_ligand', x='auroc', ax=ax,
                    palette=palette, orient='h', cut=0, inner='box',
-                   linewidth=1 * MARK)
+                   linewidth=style.EDGE_PT)
+    # seaborn draws the inner box at three times `linewidth`, which put a
+    # 0.75 pt line inside every violin. The body outline is an edge; the
+    # inner box and its whiskers are lines, and lines are one width.
+    for ln in ax.lines:
+        ln.set_linewidth(style.RULE_PT)
     sns.stripplot(data=plot_df, y='test_ligand', x='auroc', ax=ax,
                   color='black', alpha=0.4, size=4 * MARK, jitter=True)
 
     ax.set_xlabel('Ligand Activity\n(AUC)')
     ax.set_ylabel('')
+    # Ligand gene symbols italic, as the published page sets them (2026-09-14).
+    ax.set_yticklabels([t.get_text() for t in ax.get_yticklabels()],
+                       style='italic')
 
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
 
     style.fit_margins(fig, pad_mm=0.6, cell_mm=LETTER_CELL)
+    # The frame top on the row's line (2026-09-14, evening): 56.3 mm on the
+    # page, with D's frame and F's matrix; and the violins off the y axis.
+    pin_frame_mm(fig, ax, top_mm=4.3, bottom_mm=ax.get_position().y0 * PANEL_H_MM)
+    _lo, _hi = ax.get_xlim()
+    ax.set_xlim(_lo - 0.08 * (_hi - _lo), _hi)
     over = style.overflow_mm(fig)
     if max(over) > 0:
         raise RuntimeError(

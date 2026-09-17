@@ -26,14 +26,19 @@ MARK
     The one non-type size is scanpy's `size`, which is the matplotlib scatter
     area in points squared, so it is multiplied by AREA.
 
-THE TWO CYTOTOXIC STATES ARE NAMED BY THEIR MARKER
+THE STATES CARRY THE PUBLISHED TCD8_ PREFIX AGAIN
     The centroid labels are placed at each state's median embedding position,
     so two neighbouring states are labelled a few millimetres apart whatever
-    the panel is. At 6 pt "Cytotoxic_CCL" sets 14.5 mm and prints over the
-    label of the state beside it. The eight states are named by their marker
-    gene, which is how the printed panel names them, and the two other states
-    that share the cytotoxic qualifier are unaffected. Declared in
-    RENAMES_FIGURE_3.
+    the panel is. At 44.0 mm of panel height "Cytotoxic_CCL" set 14.5 mm and
+    printed over the label of the state beside it, and the labels were cut to
+    the marker gene alone - CCL, DUSP1, MAIT.
+
+    That was a loss the page did not have to take. The published panel prints
+    TCD8_MAIT, TCD8_DUSP1 and six more, and the prefix is what tells the reader
+    these are CD8 T-cell states at all. Since 2026-09-11 the panel is 54.0 mm
+    tall (panel_rects_v2.csv), the embedding is that much further apart, and
+    the widest of the eight - TCD8_DUSP1 at 13.7 mm - is narrower than the
+    "Cytotoxic_CCL" that would not fit.
 
 TYPE
     The centroid labels are set at the tick and legend size: they are the
@@ -44,6 +49,7 @@ TYPE
 
 import scanpy as sc
 import matplotlib.pyplot as plt
+import matplotlib.transforms as mtransforms
 import pandas as pd
 from pathlib import Path
 import sys
@@ -77,15 +83,34 @@ COLORS = {
     'C7_CD8_ISG_ISG15':       '#B3B3B3',
 }
 
+#: Millimetres to move a centroid label by, (dx, dy) with dy up the page.
+#
+#  Two of the eight states are small and wedged between larger ones, so their
+#  median embedding position lands within a label's width of a neighbour's:
+#  the panel gate convicted TCD8_CCL against TCD8_ISG at 2.26 mm2. The
+#  published page moves the same two labels clear of their centroids and leans
+#  them on their own cluster, which is what these offsets reproduce. The
+#  centroid itself is unchanged, and so is every cell that went into it.
+LABEL_NUDGE_MM = {
+    # At body size (2026-09-14) six labels are nudged off their medians so
+    # that no two touch; each stays on its own cluster.
+    'TCD8_ISG':   (7.5, -1.0),
+    'TCD8_Tex':   (4.5, -3.0),
+    'TCD8_MAIT':  (-2.5, 1.5),
+    'TCD8_DUSP1': (0.5,  1.5),
+    'TCD8_Tcm':   (-3.5, -1.5),
+    'TCD8_CCL':   (-1.0, -2.0),
+}
+
 SHORT_NAMES = {
-    'C0_CD8_Cytotoxic_CCL':   'CCL',
-    'C1_CD8_Cytotoxic_DUSP1': 'DUSP1',
-    'C2_CD8_MAIT_KLRB1':      'MAIT',
-    'C3_CD8_Tcm_CCR7':        'Tcm',
-    'C4_CD8_Temra_KLRG1':     'Temra',
-    'C5_CD8_Prolif_MKI67':    'Prolif',
-    'C6_CD8_Tex_PDCD1':       'Tex',
-    'C7_CD8_ISG_ISG15':       'ISG',
+    'C0_CD8_Cytotoxic_CCL':   'TCD8_CCL',
+    'C1_CD8_Cytotoxic_DUSP1': 'TCD8_DUSP1',
+    'C2_CD8_MAIT_KLRB1':      'TCD8_MAIT',
+    'C3_CD8_Tcm_CCR7':        'TCD8_Tcm',
+    'C4_CD8_Temra_KLRG1':     'TCD8_Temra',
+    'C5_CD8_Prolif_MKI67':    'TCD8_Prolif',
+    'C6_CD8_Tex_PDCD1':       'TCD8_Tex',
+    'C7_CD8_ISG_ISG15':       'TCD8_ISG',
 }
 
 
@@ -123,8 +148,14 @@ def main():
         legend_loc='none',
         title='',
         frameon=False,
-        size=8 * AREA,
-        alpha=0.6,
+        # AREA is the 4x-canvas area multiplier. 8 * AREA gives a 1.2 pt dot,
+        # which at this cell count overplots to a flat block of Set2 at full
+        # strength - the published panel is pastel because its dots are small
+        # enough to leave the paper showing between them. Measured against the
+        # published crop rather than chosen: a quarter of the area is half the
+        # diameter.
+        size=2 * AREA,
+        alpha=0.55,
     )
 
     # Remove legend if scanpy created one anyway
@@ -147,9 +178,17 @@ def main():
         mask = coords['cluster'] == cluster_name
         cx = coords.loc[mask, 'UMAP1'].median()
         cy = coords.loc[mask, 'UMAP2'].median()
-        ax.text(cx, cy, cluster_name, fontsize=style.tick_pt(),
-                ha='center', va='center',
-                bbox=dict(boxstyle='round,pad=0.15', facecolor='white', alpha=0.7, edgecolor='none'))
+        # Bold, black, and sitting straight on the embedding, which is how
+        # the published panel sets them. The rounded white plate that was here
+        # read as a row of buttons rather than as cluster labels, and it is not
+        # on the page.
+        dx, dy = LABEL_NUDGE_MM.get(cluster_name, (0.0, 0.0))
+        tr = mtransforms.offset_copy(ax.transData, fig=fig,
+                                     x=dx / 25.4, y=dy / 25.4, units='inches')
+        # Body size, as the page's cluster labels are set (2026-09-14).
+        ax.text(cx, cy, cluster_name, fontsize=style.body_pt(),
+                ha='center', va='center', fontweight='bold', color='black',
+                transform=tr)
 
     # Rasterize scatter dots (keeps axes/legend as vectors, dots as embedded raster)
     for coll in ax.collections:

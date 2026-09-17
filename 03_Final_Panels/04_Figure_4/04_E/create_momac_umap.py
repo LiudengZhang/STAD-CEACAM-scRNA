@@ -70,6 +70,17 @@ COLORS = {
     'C6_Mac_Metallothionein_MT1G': '#E5C494',
 }
 
+#: (dx, dy) in points from each cluster's median, for the on-plot names.
+LABEL_NUDGE_PT = {
+    'MoMac_IL1B': (-8, 6),
+    'Mac_TREM2': (10, 2),
+    'MoMac_Inter': (0, -1),
+    'Mono_CD14': (-6, -6),
+    'Mac_MT1G': (8, -2),
+    'Mac_Prolif': (14, -5),
+    'Mono_CD16': (-6, -6),
+}
+
 SHORT_NAMES = {
     'C0_Mac_Classic_TREM2':           'Mac_TREM2',
     'C1_Mono_Classic_CD14':           'Mono_CD14',
@@ -141,14 +152,24 @@ def main():
         mask = coords['cluster'] == cluster_name
         cx = coords.loc[mask, 'UMAP1'].median()
         cy = coords.loc[mask, 'UMAP2'].median()
-        ax.text(cx, cy, cluster_name, fontsize=style.tick_pt(), fontweight='bold',
-                ha='center', va='center',
-                bbox=dict(boxstyle='round,pad=0.15', facecolor='white', alpha=0.7, edgecolor='none'))
+        # Body size, bold, black, no plate: how the published page and the
+        # other UMAPs of this paper set their cluster labels (2026-09-14).
+        # Nudged off the medoid in points (2026-09-14, evening): at the
+        # map's true aspect two pairs of names overprinted. The anchor is the
+        # cluster's median; only the text moves.
+        dx, dy = LABEL_NUDGE_PT.get(cluster_name, (0, 0))
+        ax.annotate(cluster_name, (cx, cy), xytext=(dx, dy),
+                    textcoords='offset points', fontsize=style.body_pt(),
+                    fontweight='bold', ha='center', va='center', color='black')
 
     # Rasterize scatter dots (keeps axes/legend as vectors, dots as embedded raster)
     for coll in ax.collections:
         coll.set_rasterized(True)
 
+    # Equal aspect (2026-09-14, evening): in a 33.5 x 47 mm slot the map was
+    # stretched tall ("D is squashed" - the author). The row is re-split so D
+    # is 38.6 mm wide, and the map keeps its own proportions inside the box.
+    ax.set_aspect('equal', adjustable='datalim')
     style.fit_margins(fig, pad_mm=0.6, cell_mm=LETTER_CELL)
     over = style.overflow_mm(fig)
     if max(over) > 0:

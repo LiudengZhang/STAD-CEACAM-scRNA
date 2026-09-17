@@ -55,7 +55,6 @@ import numpy as np
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-import seaborn as sns
 from pathlib import Path
 from scipy.stats import mannwhitneyu
 import sys
@@ -65,6 +64,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "00_Config"))
 from paths import *                       # noqa: E402,F401,F403
 import panel_style_cns as style           # noqa: E402
 import slots                              # noqa: E402
+from cnsfig.boxes import draw_boxes, bracket, ylim_above, assert_no_points  # noqa: E402
+from cnsfig.layout import pin_frame_mm    # noqa: E402
 
 SCALE = 4                       # the earlier canvas multiplier, for MARK only
 SMALL_PT = 5.0                  # the earlier tick type, before * SCALE
@@ -102,51 +103,31 @@ def create_boxplot(data, title, stem, sub, reserve_letter,
 
     fig, ax = style.subplots_mm(w_mm, h_mm)
 
-    # Create boxplot - Tumor on left, Normal on right
-    sns.boxplot(
-        data=data,
-        x='Group',
-        y='Mac3_Proportion',
-        order=['T', 'N'],
-        palette=[COLOR_TUMOR, COLOR_NORMAL],
-        ax=ax,
-        boxprops=dict(edgecolor='black', linewidth=1.0 * SCALE * MARK),
-        medianprops=dict(color='black', linewidth=1.5 * SCALE * MARK),  # Will be overridden
-        whiskerprops=dict(linewidth=1.0 * SCALE * MARK),
-        capprops=dict(linewidth=1.0 * SCALE * MARK),
-        flierprops=dict(marker='o', markerfacecolor='white', markeredgecolor='black',
-                        markersize=4 * SCALE * MARK, markeredgewidth=1 * SCALE * MARK),
-        width=0.6
-    )
-
-    # Color median lines to match box colors (darker shades)
-    for i, artist in enumerate(ax.patches):
-        if i == 0:
-            ax.lines[4].set_color(MEDIAN_COLOR_TUMOR)  # First median
-        elif i == 1:
-            ax.lines[9].set_color(MEDIAN_COLOR_NORMAL)  # Second median
-
     # Statistical test
     tumor_vals = data[data['Group'] == 'T']['Mac3_Proportion'].values
     normal_vals = data[data['Group'] == 'N']['Mac3_Proportion'].values
-
     stat, p_value = mannwhitneyu(tumor_vals, normal_vals, alternative='two-sided')
 
-    # Add significance bracket
+    # ONE BOX (2026-09-16, the author's fifth reading: "Figure 4's
+    # outliers are too large and the star sits too far above the line").
+    # cnsfig.boxes.draw_boxes replaces the seaborn box: the same 1.5 IQR
+    # statistics on the same two arrays, the family's 0.79 mm open flier
+    # instead of the 2.5 mm one, a black median instead of the darker shade.
+    # The bracket keeps its vertices (line at y_max + 0.10 range, arms 0.08
+    # of the range); the star's INK sits 0.4 mm above the line.
+    bp = draw_boxes(ax, [tumor_vals, normal_vals], [0, 1],
+                    [COLOR_TUMOR, COLOR_NORMAL], width=0.6)
+    ax.set_xlim(-0.5, 1.5)               # seaborn's categorical limits
+    ax.set_xticks([0, 1])
+    ax.set_xticklabels(['T', 'N'])
+
     y_max = data['Mac3_Proportion'].max()
     y_range = data['Mac3_Proportion'].max() - data['Mac3_Proportion'].min()
     if y_range == 0:
         y_range = 0.1
-    bracket_height = y_max + y_range * 0.1
-    bracket_top = bracket_height + y_range * 0.08
-
-    ax.plot([0, 0, 1, 1], [bracket_height, bracket_top, bracket_top, bracket_height],
-            lw=0.8 * SCALE * MARK, c='black')
-
-    p_text = '***' if p_value < 0.001 else '**' if p_value < 0.01 else '*' if p_value < 0.05 else 'ns'
-    ax.text(0.5, bracket_top + y_range * 0.02, p_text,
-            ha='center', va='bottom',
-            fontsize=style.body_pt() if p_value < 0.05 else style.tick_pt())
+    bracket_top = y_max + y_range * 0.18
+    _, p_txt, _ = bracket(fig, ax, 0, 1, y_max, y_range, p_value, kind="pair",
+                          lift=0.10, arm=0.08)
 
     # Styling
     ax.set_title(title)
@@ -156,9 +137,22 @@ def create_boxplot(data, title, stem, sub, reserve_letter,
     ax.spines['right'].set_visible(False)
 
     ax.set_ylim(ax.get_ylim()[0], bracket_top + y_range * 0.25)
+    ylim_above(ax, p_txt)
+    assert_no_points(ax, bp)
 
     style.fit_margins(fig, pad_mm=0.6, cell_mm=cell,
                       reserve_letter=reserve_letter)
+    # The frames on the row's line (2026-09-14, evening): box 1's top at
+    # 159.0 mm on the page (G's frame top), box 2's bottom at 203.5 (G's
+    # frame bottom; 203.2 until 2026-09-15, when G's x label went to two
+    # lines).
+    _sy0, _sy1 = slots.rect_mm(4, PANEL_LETTER, sub=sub)[1::2]
+    if sub == 1:
+        pin_frame_mm(fig, ax, top_mm=159.0 - _sy0,
+                     bottom_mm=ax.get_position().y0 * h_mm)
+    else:
+        pin_frame_mm(fig, ax, top_mm=(1 - ax.get_position().y1) * h_mm,
+                     bottom_mm=_sy1 - 203.5)
     over = style.overflow_mm(fig)
     if max(over) > 0:
         raise RuntimeError(

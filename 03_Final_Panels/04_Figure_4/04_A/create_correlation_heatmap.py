@@ -72,7 +72,7 @@ COLORBAR_SHRINK = 0.6
 
 #: The size the fifty-six row labels print at on the published page. Held
 #: deliberately; see THE ROW LABELS ARE AN EXEMPTION above.
-ROW_LABEL_PT = 3.322
+ROW_LABEL_PT = 4.0                # the one exemption to the 6 pt floor (2026-09-14)
 
 # Short display names for y-axis labels
 SHORT_NAMES = {
@@ -152,6 +152,12 @@ def main():
     # Apply short display names and strip Cx_ prefix
     strip_cx = lambda s: re.sub(r'^C\d+_', '', s)
     short_index = [strip_cx(SHORT_NAMES.get(s, s)) for s in correlation_ordered.index]
+    # Five rows read 'Mast' once the cluster prefix is stripped; those keep
+    # it, so that the fifty-six names are fifty-six names (2026-09-14).
+    dup = {n for n in short_index if short_index.count(n) > 1}
+    short_index = [SHORT_NAMES.get(s, s) if strip_cx(SHORT_NAMES.get(s, s)) in dup
+                   else strip_cx(SHORT_NAMES.get(s, s))
+                   for s in correlation_ordered.index]
     correlation_ordered.index = short_index
     correlation_ordered.columns = short_index
 
@@ -179,21 +185,32 @@ def main():
         cbar_kws={'label': 'Spearman Correlation', 'shrink': COLORBAR_SHRINK},
         ax=ax,
         xticklabels=False,
-        yticklabels=correlation_ordered.index,
-        linewidths=0.5 * MARK,
+        yticklabels=True,
+        linewidths=style.EDGE_PT,
         linecolor='lightgray'
     )
     # De-rasterize heatmap (seaborn uses pcolormesh which defaults to rasterized in SVG)
     for coll in ax.collections:
         coll.set_rasterized(False)
 
-    # Adjust cell labels
-    ax.set_yticklabels(ax.get_yticklabels(), fontsize=ROW_LABEL_PT)
+    # THE FIFTY-SIX ROW LABELS ARE BACK, AT ROW_LABEL_PT. Author's ruling,
+    # 2026-09-14, reversing the ruling of 2026-09-11 that took them off.
+    #
+    # The arithmetic has not changed: the rows sit at a 4.68 pt pitch on a
+    # 92.4 mm axes, and fifty-six labels at the 6 pt floor would need 130 mm.
+    # What changed is the ruling - the author wants the names on the page and
+    # accepts a small size for them, as THE ONE exemption to the floor in the
+    # whole figure set. ROW_LABEL_PT is the largest size the pitch holds
+    # with clear paper between lines (4.68 pt pitch, 4.0 pt type). Declared
+    # in 12_Figure_Refactor/sweep_panels.py FLOOR_EXEMPTIONS with this
+    # reason; recorded in SUPERSEDED.md beside this script.
+    ax.set_yticklabels(short_index, fontsize=ROW_LABEL_PT, rotation=0)
+    ax.tick_params(axis='y', length=1.0, width=style.RULE_PT, pad=1.0)
 
     # Add module boundaries
     for boundary in module_boundaries:
-        ax.axhline(y=boundary, color=BOUNDARY_COLOR, linewidth=BOUNDARY_WIDTH * MARK)
-        ax.axvline(x=boundary, color=BOUNDARY_COLOR, linewidth=BOUNDARY_WIDTH * MARK)
+        ax.axhline(y=boundary, color=BOUNDARY_COLOR, linewidth=style.RULE_PT)
+        ax.axvline(x=boundary, color=BOUNDARY_COLOR, linewidth=style.RULE_PT)
 
     # Add module labels at bottom
     module_positions = []

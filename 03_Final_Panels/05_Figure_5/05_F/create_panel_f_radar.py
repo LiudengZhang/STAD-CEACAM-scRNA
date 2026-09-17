@@ -75,6 +75,19 @@ PANEL_LETTER = "H"
 PANEL_W_MM, PANEL_H_MM = slots.size_mm(5, PANEL_LETTER)
 LETTER_CELL = slots.letter_cell_mm(5, PANEL_LETTER)
 
+#: Paper left round the ring for the thirteen full spoke names (2026-09-14).
+RING_MARGIN_MM = 12.0           # unused since the evening of 2026-09-14
+#: The ring's radius and centre on the canvas, in mm. r_max (2.4 NES) is the
+#: ring's edge; the names sit SPOKE_PAD outside it.
+#: 2026-09-15 (the author's third reading): "NES" is the title, centred over
+#: the ring as the page prints it, so the ring moves down to leave it a line;
+#: the legend goes under the names at the bottom right instead of over
+#: "Plasma"; the radius gives up 1 mm for both.
+RING_R_MM = 9.8
+RING_CX_MM = 23.0
+RING_CY_MM = 17.3
+#: Radial distance, in NES units, from the outer ring to the start of a name.
+SPOKE_PAD = 0.4
 COLOR_PRE = '#2166AC'
 COLOR_POST = '#B2182B'
 
@@ -89,17 +102,33 @@ ORDER = ["B_cells", "DC_cells", "Endothelial_cells", "Epithelial", "Fibroblast",
          "Mast_cells", "MoMac", "Neutrophils", "NK_cells", "Pericyte",
          "Plasma_cells", "TCD4_cells", "TCD8_cells"]
 
-# Thirteen names set around a 33 mm circle collide at full length: the label
-# ring costs twice the longest name on top of the plotting circle. These are
-# the forms printed on the spokes. LABELS above is untouched, so the table this
-# script writes beside itself still carries the full names.
+# FIVE SPOKES KEEP A SHORT FORM, AND THIS IS WHERE THE ARITHMETIC STOPS
+#   The 2026-09-11 round put the published wording back across Figures 2, 3 and
+#   5 by giving the panels the blank bottom of the page. That works wherever
+#   the crowding is vertical. A radar's labels ring a circle, so its crowding
+#   is radial, and the extra height buys almost nothing: rebuilt with all
+#   thirteen names in full, the panel gate convicted three pairs - Epithelial
+#   against Fibroblast at 1.93 mm2 the worst - and clipped the C off CD4+ T.
+#
+#   The panel is 44.6 mm wide and that number did not change; widening it would
+#   move a column of the page. So these five keep the short form, and the five
+#   full names are carried in LABELS above and in the table this script writes
+#   beside itself. The series names in the legend are NOT abbreviated - see
+#   SERIES_LABEL - because that legend is a box, not a ring.
 SPOKE_LABEL = {"Endothelial": "Endo", "Epithelial": "Epi",
                "Fibroblast": "Fibro", "Neutrophils": "Neut",
                "Pericyte": "Peri"}
 
-# The two series, named as the group labels of panels D and E name them. At
-# full length the legend is more than half the width of this panel and prints
-# over the lower-right spoke names.
+# The two series keep a short form, for the same reason the five spokes above
+# do. Both placements were built and measured on 2026-09-11: at full length in
+# the published bottom-right corner the box reaches into the label ring and the
+# gate convicted it against the CD4+ T spoke, clipping two glyphs; laid across
+# the foot of the panel it touches the Plasma spoke at 0.00 pt. The radar fills
+# its 44.6 x 38.0 mm and there is no corner left for a 32 mm key.
+#
+# Pre and Post are not an invention here. Panels D and E of this same figure
+# print their four groups as Pre NR, Pre R, Post NR and Post R, so the reader
+# meets the short form twice before reaching this panel.
 SERIES_LABEL = {"Pre-treatment": "Pre", "Post-treatment": "Post"}
 
 
@@ -154,37 +183,70 @@ def main():
 
     ax.fill(angles_closed, pre_nes_closed, color=COLOR_PRE, alpha=0.10)
     ax.fill(angles_closed, post_nes_closed, color=COLOR_POST, alpha=0.10)
-    ax.plot(angles_closed, pre_nes_closed, 'o--', linewidth=2 * MARK,
-            color=COLOR_PRE, label=SERIES_LABEL['Pre-treatment'],
-            markersize=6 * MARK)
+    # Markers 0.41 mm across, counted off the published page (2026-09-14).
+    ax.plot(angles_closed, pre_nes_closed, 'o--', linewidth=style.RULE_PT,
+            color=COLOR_PRE, label='Pre-treatment',
+            markersize=0.41 * style.PT_PER_MM)
 
-    ax.plot(angles_closed, post_nes_closed, 'o-', linewidth=2 * MARK,
-            color=COLOR_POST, label=SERIES_LABEL['Post-treatment'],
-            markersize=6 * MARK)
+    ax.plot(angles_closed, post_nes_closed, 'o-', linewidth=style.RULE_PT,
+            color=COLOR_POST, label='Post-treatment',
+            markersize=0.41 * style.PT_PER_MM)
 
+    # THE THIRTEEN NAMES IN FULL, ROUND A SMALLER RING  (2026-09-14)
+    #   The five short spokes and the two-word series key were the arithmetic
+    #   of a ring that filled the canvas. The author asked for the page's
+    #   names; the ring is drawn inside RING_MARGIN_MM of paper on each side
+    #   and the names have the margin. Same thirteen spokes, same values.
     ax.set_xticks(angles)
-    ax.set_xticklabels([SPOKE_LABEL.get(t, t) for t in labels])
+    ax.set_xticklabels([])
+    # Each name reads along its own spoke, outward, so neighbours near the
+    # top and bottom of the ring - where horizontal names collided - are
+    # side by side instead of on top of each other. Drawn as text: a polar
+    # axis re-lays its tick labels at draw time and drops a rotation set on
+    # them.
+    # HORIZONTAL NAMES ROUND A 12 mm RING  (2026-09-14, evening)
+    #   The radial names of the morning were rejected; the names are set
+    #   horizontally, as the page sets them, each anchored on its spoke just
+    #   outside the ring and aligned away from the centre (ha by the cosine,
+    #   va by the sine). The ring is placed at millimetres (RING_R_MM,
+    #   RING_CX_MM, RING_CY_MM) so the widest names - Neutrophils to the left,
+    #   B cells to the right - end inside the canvas, and the legend sits
+    #   under the ring at the right.
+    r_label = 2.4 + SPOKE_PAD
+    for name, ang in zip(labels, angles):
+        c, s_ = np.cos(ang), np.sin(ang)
+        ha = 'center' if abs(c) < 0.2 else ('left' if c > 0 else 'right')
+        va = 'center' if abs(s_) < 0.2 else ('bottom' if s_ > 0 else 'top')
+        ax.text(ang, r_label, name, ha=ha, va=va, fontsize=style.tick_pt())
     ax.tick_params(axis='x', pad=2 * SCALE * MARK)
     ax.set_ylim(-2, 2.4)
-    ax.set_yticks([-2, -1, 0, 1, 2])
-    ax.set_yticklabels(['-2', '-1', '0', '1', '2'], color='gray')
-    ax.set_rlabel_position(90)
-    # Pinned to the bottom-right corner of the canvas, where the published
-    # panel prints it and where the label ring has nothing: anchored to the
-    # axes it lands on the lower-right spoke names, because at 1:1 the legend
-    # is a much larger fraction of the panel than it was at four times the size.
-    ax.legend(loc='lower right', bbox_to_anchor=(1.0, 0.0),
+    # Three ring numbers, not five: at this ring size five stand 1.5 mm
+    # apart and overprint.
+    ax.set_yticks([-2, 0, 2])
+    ax.set_yticklabels(['-2', '0', '2'], color='gray')
+    # Between the B cells and DC spokes at the right, where the published
+    # panel sets its ring numbers (2026-09-15; they had been at 180, along
+    # the left horizontal, which the author read as "a strange place").
+    ax.set_rlabel_position(10.0)   # 22.5 put "2" 0.17 pt from the DC name
+    # Under the ring's names at the bottom right, clear of "Plasma"
+    # (2026-09-15). See SERIES_LABEL for why the two names are the short ones.
+    ax.legend(loc='lower right', bbox_to_anchor=(1.0 - 0.4 / PANEL_W_MM, 0.4 / PANEL_H_MM),
               bbox_transform=fig.transFigure,
-              handlelength=1.6, borderpad=0.35, labelspacing=0.35,
+              handlelength=1.4, borderpad=0.2, labelspacing=0.3,
               edgecolor='0.6', framealpha=1.0, frameon=True)
     ax.grid(True, linestyle='-', alpha=0.3)
-    ax.set_title('NES', pad=15 * MARK)
+    # The title, centred over the ring as the page prints it (2026-09-15).
+    ax.set_title('')
+    fig.text(RING_CX_MM / PANEL_W_MM, 1.0 - 0.4 / PANEL_H_MM, 'NES',
+             ha='center', va='top', fontsize=style.body_pt())
 
     # Dashed zero circle
     theta_circle = np.linspace(0, 2 * np.pi, 100)
-    ax.plot(theta_circle, [0] * 100, 'k--', linewidth=1 * MARK, alpha=0.7)
+    ax.plot(theta_circle, [0] * 100, 'k--', linewidth=style.RULE_PT, alpha=0.7)
 
-    style.fit_margins(fig, pad_mm=0.6, cell_mm=LETTER_CELL)
+    ax.set_position([(RING_CX_MM - RING_R_MM) / PANEL_W_MM,
+                     1.0 - (RING_CY_MM + RING_R_MM) / PANEL_H_MM,
+                     2 * RING_R_MM / PANEL_W_MM, 2 * RING_R_MM / PANEL_H_MM])
     over = style.overflow_mm(fig)
     if max(over) > 0:
         raise RuntimeError(
