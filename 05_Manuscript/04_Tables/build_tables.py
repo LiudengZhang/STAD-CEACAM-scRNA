@@ -210,6 +210,8 @@ def _check_recist_response(st1):
 
 
 def main():
+    # Guard against retired tables surviving from an older build. Neither table
+    # belongs to the fixed-label ST1-ST8 layout.
     for obsolete in (
         "ST9_crosscohort_convergence.csv",
         "ST10_nfkb_pseudobulk_sensitivity.csv",

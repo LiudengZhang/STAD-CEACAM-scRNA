@@ -3,10 +3,11 @@
 # Run all panel-creation and assembly scripts for main figures & supplementaries
 # Runs sequentially to avoid memory issues from parallel h5ad loading
 #
-# Usage: bash _run_all_panels.sh [figure_number]
+# Usage: bash _run_all_panels.sh [figure_number|supp|revision]
 #   e.g. bash _run_all_panels.sh 4      # only Figure 4
 #        bash _run_all_panels.sh supp    # only supplementaries
-#        bash _run_all_panels.sh         # all figures
+#        bash _run_all_panels.sh revision # revision analyses and S1-S10
+#        bash _run_all_panels.sh         # main figures plus retained pre-submission S1-S6
 #
 # Conda env: stad_ceacam
 #

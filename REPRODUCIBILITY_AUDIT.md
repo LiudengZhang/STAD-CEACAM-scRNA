@@ -2,9 +2,9 @@
 
 Audit date: 2026-09-17
 
-This release was checked from a prospective clean checkout against the inputs
-described in the README and deposited at Zenodo (DOI
-`10.5281/zenodo.18737073`). The audit covered import and path resolution,
+This release was checked from a prospective clean checkout against the locally
+staged inputs prepared for the next version of Zenodo concept DOI
+`10.5281/zenodo.18737073`. The audit covered import and path resolution,
 manuscript-number verification, panel provenance, figure rendering, release
 synchronization, archive integrity, and publication-safety checks.
 
@@ -12,9 +12,9 @@ synchronization, archive integrity, and publication-safety checks.
 
 | Check | Result |
 |---|---:|
-| Release self-check | 302 Python files passed |
-| Clean-checkout dependency and path audit | 216 runnable Python files passed |
-| Default main workflow | 98 scripts passed; 0 failed |
+| Release self-check | 300 Python files passed |
+| Clean-checkout dependency and path audit | 214 runnable Python files passed |
+| Default main and retained pre-submission workflow | 98 scripts passed; 0 failed |
 | Manuscript numerical checks | 183 checks passed |
 | Manuscript/table text checks | 38 checks passed |
 | DOCX revision and embedded-figure integrity | Passed |
@@ -24,7 +24,7 @@ synchronization, archive integrity, and publication-safety checks.
 | Main and supplementary page sweep | 5 of 5 main and 10 of 10 supplementary pages passed |
 | Frozen source baseline | 882 analysis, 4 panel-written, 69 panel-data, and 348 drawing files matched |
 | Submission archive | All members matched their sources; reviewer commands passed |
-| Publication-safety scan | 2,696 text files scanned; no fatal findings |
+| Publication-safety scan | 2,694 text files scanned; no fatal findings |
 | Data-deposit accession scan | 1,383 files scanned; no pathology accessions found |
 
 The supplementary rebuild left cached data hashes unchanged. All ten rebuilt
@@ -33,11 +33,11 @@ bounding boxes. Figure S9 retained panels A–E; panels A and B contain no secti
 counts, panel C has clear annotation spacing, and panels D and E match their
 source analysis axes.
 
-Figure S10A uses the versioned lineage-score table. Figure S10B installs its
+Figure S10A uses the versioned lineage-score table. Figure S10B reinstalls its
 versioned prepared panel because its scaled expression values require the
-feature-selected source matrix used for the analysis; the public deposited
-MoMac object is feature-complete. The standard build therefore reproduces the
-approved S10 page exactly.
+feature-selected source matrix used for the analysis; the staged public MoMac
+object is feature-complete. The standard build then reproduces the approved S10
+page exactly.
 
 The fresh default workflow regenerated 63 individual main panels: 62 were
 pixel-identical, and Figure 4B differed only by one color-channel unit. Its 56
@@ -68,6 +68,6 @@ driver. CellTypist and CellPhoneDB supporting analyses remain available through
 `STAD_RUN_OPTIONAL=1`; their deposited results are not required to assemble
 S1–S10.
 
-Archived upstream pipelines document how deposited intermediates were produced.
-The default workflows consume the versioned deposited intermediates, as stated
-in the README.
+Archived upstream pipelines document how the staged intermediates were produced.
+The default workflows consume those versioned intermediates, as stated in the
+README.

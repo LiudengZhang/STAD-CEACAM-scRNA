@@ -683,25 +683,6 @@ for gene, expected in (("CEACAM6", 0.007), ("CEACAM5", 0.014)):
     check(f"{gene} combined value as stored", float(stated.iloc[0]), expected,
           tol=0.001)
 
-# Round 41 (2026-09-16): the Results cite "alternative combinations in Table S9"
-# instead of quoting the sqrt(n)-weighted and Fisher values, so the shipped
-# table is held to the analysis output here (the text gate no longer pins them).
-ST9 = Path(__file__).resolve().parent / "04_Tables" / "ST9_crosscohort_convergence.csv"
-if not ST9.exists():
-    skipped.append(f"the Table S9 alternative-combination checks: {ST9} is not part of this layout")
-else:
-    st9 = pd.read_csv(ST9)
-    for gene, method, expected in (("CEACAM6", "Stouffer, weighted by sqrt(n)", 0.012),
-                                   ("CEACAM6", "Fisher", 0.013),
-                                   ("CEACAM5", "Stouffer, weighted by sqrt(n)", 0.019),
-                                   ("CEACAM5", "Fisher", 0.025)):
-        row = st9[(st9["Measurement"] == gene) & (st9["Statistic"] == method)]
-        check(f"Table S9 {gene} {method}",
-              None if row.empty else row["P, two-sided"].iloc[0], expected, tol=0.001)
-        src = comb[(comb.Gene == gene) & (comb.Method == method)]["P, combined two-sided"]
-        check(f"{gene} {method} as stored in the analysis output",
-              None if src.empty else float(src.iloc[0]), expected, tol=0.001)
-
 loo = pd.read_csv(out("10_R1.3_CrossCohort_Convergence", "loo_stability.csv"))
 drops = loo[loo.Dropped != "none (as published)"]
 for gene in ("CEACAM6", "CEACAM5"):

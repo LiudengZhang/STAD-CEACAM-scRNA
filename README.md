@@ -118,7 +118,8 @@ conda run -n r_bayesprism R -e "install.packages('estimate', repos='http://r-for
 
 ## Usage
 
-Run all figure panels:
+Run the main-panel workflow plus the retained pre-submission supplementary
+scripts:
 
 ```bash
 bash 03_Final_Panels/_run_all_panels.sh
@@ -154,11 +155,11 @@ wget https://resources.aertslab.org/cistarget/motif2tf/motifs-v10nr_clust-nr.hgn
 
 ## Data Availability
 
-Processed single-cell objects and the H&E/IHC images are deposited at Zenodo,
-[DOI:10.5281/zenodo.18737073](https://doi.org/10.5281/zenodo.18737073), which
-always resolves to the current version of the record. The same record carries the
-prepared intermediates the panels read (`02_Preparation_for_Panels/`). Set
-`STAD_RAW_INPUTS` and `STAD_PREPARED_INPUTS` to point at your copy.
+The restricted Zenodo record already has an earlier data version. The current
+revision data and prepared intermediates are staged for its next version under
+[DOI:10.5281/zenodo.18737073](https://doi.org/10.5281/zenodo.18737073); the
+concept DOI will resolve to that version after it is published. Set
+`STAD_RAW_INPUTS` and `STAD_PREPARED_INPUTS` to point at a local copy.
 
 Public datasets are obtained from their own sources: GSE251950 (spatial),
 GSE183904 and GSE239676 (single-cell validation), PRJEB25780 (bulk, TIGER) and

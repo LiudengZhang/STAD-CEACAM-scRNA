@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 """
-Draw S9A and S9B - monocyte versus macrophage lineage (Reviewer 1, R1.7).
+Draw S10A and S10B - monocyte versus macrophage lineage (Reviewer 1, R1.7).
 
 Analysis: 04_Revision_Analyses/06_R1.7_MoMac_Lineage_Markers/scripts/momac_lineage.py
 
 NOTHING IS RECOMPUTED HERE.
 
-S9A reads `momac_lineage_scores.csv`, the per-state summary `main()` already
+S10A reads `momac_lineage_scores.csv`, the per-state summary `main()` already
 wrote. `sc.tl.score_genes` is never called and MoMac.h5ad is never opened for
 this panel.
 
-S9B is installed from the approved prepared panel deposited beside the lineage
+S10B is installed from the approved prepared panel deposited beside the lineage
 tables. The analysis used a feature-selected MoMac matrix, whereas the public
 Zenodo object retains the feature-complete matrix; asking scanpy to calculate
 the dotplot from those two representations gives different scaled means. The
@@ -18,7 +18,7 @@ live-matrix implementation remains below for the development-only `--check`
 gate, but the public reproduction path uses the prepared panel that appears in
 the paper.
 
-S9B DOES NOT PRINT "CONTENT IDENTICAL", AND THAT IS NOT A CONTENT DIFFERENCE.
+S10B DOES NOT PRINT "CONTENT IDENTICAL", AND THAT IS NOT A CONTENT DIFFERENCE.
 `--check S10_B` reports exactly one line:
 
     figures: length 3 vs 1
@@ -68,9 +68,9 @@ FIG = "S10_MoMac_Identity_NFkB"
 
 # Printed boxes, millimetres.
 #
-# S9B is 21 gene columns plus scanpy's 1.5 in (38 mm) legend column plus the
+# S10B is 21 gene columns plus scanpy's 1.5 in (38 mm) legend column plus the
 # seven cell-state names on the left, so it takes a full-width row of its own.
-# S9A is set at the width its own labels need (see `draw_scatter`) and sits on
+# S10A is set at the width its own labels need (see `draw_scatter`) and sits on
 # the row above it.
 # A_W 115 -> 100 on 2026-09-15 so that A shared its row with E; 100 -> 161 on
 # 2026-09-16 (the author's fifth reading: "E appears before B - fix the
@@ -80,7 +80,7 @@ FIG = "S10_MoMac_Identity_NFkB"
 A_W, A_H = 161.0, 60.0
 B_W, B_H = 171.0, 68.0        # B_H 74 -> 68 on the evening of 2026-09-15: the page under 229.31 mm
 
-# Mark sizes for S9A, rescaled so they keep their size relative to the type.
+# Mark sizes for S10A, rescaled so they keep their size relative to the type.
 # Previously drawn at four times print size and fitted at 0.3100; its smallest
 # type was the 4.5 pt state label, i.e. 5.58 pt on paper.
 A_FIT = 0.3100
@@ -92,7 +92,7 @@ A_AREA = A_MARK ** 2
 def frames():
     """The summary table the analysis already wrote. No computation."""
     summary = pd.read_csv(base.require(
-        OUT / "momac_lineage_scores.csv", "S9A lineage scores"), index_col=0)
+        OUT / "momac_lineage_scores.csv", "S10A lineage scores"), index_col=0)
     for col in ("monocyte_score", "macrophage_score"):
         if col not in summary.columns:
             raise RuntimeError(f"momac_lineage_scores.csv has no `{col}` "
@@ -105,9 +105,9 @@ _MATRIX = {}
 
 def matrix():
     """MoMac.h5ad and the two gene panels, exactly as momac_lineage.main() has
-    them. Loaded once, and only when S9B is actually drawn."""
+    them. Loaded once, and only when S10B is actually drawn."""
     if not _MATRIX:
-        ad = sc.read_h5ad(base.require(A.MOMAC_H5AD, "S9B MoMac matrix"))
+        ad = sc.read_h5ad(base.require(A.MOMAC_H5AD, "S10B MoMac matrix"))
         present = set(ad.var_names)
         _MATRIX["ad"] = ad
         _MATRIX["mono"] = [g for g in A.MONOCYTE if g in present]
@@ -116,7 +116,7 @@ def matrix():
 
 
 # --------------------------------------------------------------------------
-# S9A - state means on the monocyte/macrophage score plane.
+# S10A - state means on the monocyte/macrophage score plane.
 #
 # The label offsets are rescaled with the type like any other length in points.
 # compare_panel_content records an Annotation by the point it points AT, in data
@@ -215,14 +215,14 @@ def _place_labels(fig, ax, gap_mm=0.5):
                 placed.append((bb.x0, bb.y0, bb.x1, bb.y1))
                 break
         else:
-            raise RuntimeError(f"S9A: no clear slot for the label {t.get_text()!r}")
+            raise RuntimeError(f"S10A: no clear slot for the label {t.get_text()!r}")
     over = style.overflow_mm(fig)
     if max(over) > 0.0:
-        raise RuntimeError(f"S9A: a moved label left the canvas: {over}")
+        raise RuntimeError(f"S10A: a moved label left the canvas: {over}")
 
 
 # --------------------------------------------------------------------------
-# S9B - marker dotplot. scanpy builds this figure, not matplotlib: the box is
+# S10B - marker dotplot. scanpy builds this figure, not matplotlib: the box is
 # given to sc.pl.dotplot as inches, and the margins are set afterwards on the
 # figure scanpy made (its outer GridSpec carries no left/right of its own, so
 # subplots_adjust still reaches it).
@@ -312,17 +312,17 @@ def _level_group_labels(fig, labels):
                 pt.set_linewidth(style.RULE_PT)
                 patches.append(pt)
     if len(texts) != len(labels) or not patches:
-        raise RuntimeError(f"S9B: expected {len(labels)} var-group labels and "
+        raise RuntimeError(f"S10B: expected {len(labels)} var-group labels and "
                            f"a bracket patch, found {len(texts)} and {len(patches)}")
     fig.canvas.draw()
     r = fig.canvas.get_renderer()
     boxes_ = [t.get_window_extent(renderer=r) for t in texts]
     if boxes_[0].overlaps(boxes_[1]):
-        raise RuntimeError("S9B: the two group labels overlap when set upright")
+        raise RuntimeError("S10B: the two group labels overlap when set upright")
     for t, bb in zip(texts, boxes_):
         for pt in patches:
             if bb.overlaps(pt.get_window_extent(renderer=r)):
-                raise RuntimeError(f"S9B: the label {t.get_text()!r} sits on the bracket")
+                raise RuntimeError(f"S10B: the label {t.get_text()!r} sits on the bracket")
 
 
 def main():
