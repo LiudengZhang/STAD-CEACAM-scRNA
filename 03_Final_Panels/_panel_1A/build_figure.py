@@ -201,8 +201,8 @@ T(65, 105, "Pre-treatment non-response", 6.4, "bold", fill=SHIELD)
 T(65, 112.5, "Pre-NR vs Pre-R", 6.0)
 
 arrow(53, 129, 77, 129, CYCLE, 1.0, both=True, L=3.0, wd=2.2)
-T(65, 160, "Post-treatment non-response", 6.4, "bold", fill=CYCLE)
-T(65, 169, "Post-NR vs Post-R", 6.0)
+T(65, 153, "Post-treatment non-response", 6.4, "bold", fill=CYCLE)
+T(65, 162, "Post-NR vs Post-R", 6.0)
 g_close()
 
 # ---- Panel 2: Study Design ----
