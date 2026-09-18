@@ -47,7 +47,6 @@ MOVE_RANGE_TAGS = {Q(W, f"{kind}Range{edge}")
 COMMENT_TAGS = {Q(W, "commentRangeStart"), Q(W, "commentRangeEnd"),
                 Q(W, "commentReference")}
 EXPECTED_AUTHOR = "Liudeng Zhang"
-FINAL_SUPPLEMENT_EDITOR = "new editor 1"
 
 
 @dataclass(frozen=True)
@@ -293,10 +292,8 @@ def revision_noise(path: Path) -> list[str]:
 def author_integrity(path: Path) -> list[str]:
     """Require the declared authors in revisions and core metadata."""
     errors = []
-    is_manuscript = "Manuscript" in path.name
-    expected_authors = ({EXPECTED_AUTHOR, FINAL_SUPPLEMENT_EDITOR}
-                        if is_manuscript else {EXPECTED_AUTHOR})
-    expected_editor = FINAL_SUPPLEMENT_EDITOR if is_manuscript else EXPECTED_AUTHOR
+    expected_authors = {EXPECTED_AUTHOR}
+    expected_editor = EXPECTED_AUTHOR
     with ZipFile(path) as zf:
         for name in zf.namelist():
             if name.endswith(".xml") and b"Claude" in zf.read(name):

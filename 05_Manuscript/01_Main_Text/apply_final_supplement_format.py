@@ -22,7 +22,7 @@ HERE = Path(__file__).resolve().parent
 W = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
 CP = "http://schemas.openxmlformats.org/package/2006/metadata/core-properties"
 Q = lambda ns, name: f"{{{ns}}}{name}"
-AUTHOR = "new editor 1"
+AUTHOR = "Liudeng Zhang"
 
 
 def legends() -> dict[str, str]:
@@ -154,9 +154,19 @@ def rewrite_docx(path: Path, tracked: bool, wanted: dict[str, str]) -> int:
                 if info.filename == "word/document.xml":
                     root = etree.fromstring(data)
                     edited = truncate_tracked(root, wanted) if tracked else truncate_clean(root, wanted)
+                    # One author identity throughout the final review copy.
+                    for node in root.iter():
+                        if node.tag in {Q(W, "ins"), Q(W, "del"),
+                                       Q(W, "moveFrom"), Q(W, "moveTo")}:
+                            if node.get(Q(W, "author")) is not None:
+                                node.set(Q(W, "author"), AUTHOR)
                     data = etree.tostring(root, xml_declaration=True, encoding="UTF-8", standalone="yes")
                 elif info.filename == "docProps/core.xml":
                     root = etree.fromstring(data)
+                    creator = root.find("{http://purl.org/dc/elements/1.1/}creator")
+                    if creator is None:
+                        creator = etree.SubElement(root, "{http://purl.org/dc/elements/1.1/}creator")
+                    creator.text = AUTHOR
                     node = root.find(Q(CP, "lastModifiedBy"))
                     if node is None:
                         node = etree.SubElement(root, Q(CP, "lastModifiedBy"))
