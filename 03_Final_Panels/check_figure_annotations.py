@@ -92,9 +92,22 @@ ALLOWED_STARS = {
 # name in the published figure. The rename is still complete; one of the
 # surfaces it had to reach no longer exists.
 LABEL_CHECKS = {
+    "Figure_1": [
+        ("Intrinsic resistance", "Pre-treatment non-response", 1),
+        ("Acquired resistance", "Post-treatment non-response", 1),
+    ],
     # 6 since 2026-09-14: the fifty-six row labels of panel A are back and one
     # of them is MoMac_IL1B (A, D, E, G, H and the legend of D).
     "Figure_4": [("Mac_IL1B", "MoMac_IL1B", 6), (None, "FCGR3A", 1)],
+    "Figure_6": [
+        ("Anti-PD1", "Anti-PD-1", 1),
+        ("Intrinsic Resistance", "Pre-treatment non-response", 1),
+        ("Acquired Resistance", "Post-treatment non-response", 1),
+        ("Recruitment", "abundance", 1),
+        (None, "MoMac", 2),
+        ("Activation", "signature", 2),
+        ("Chronic", "Inflammatory", 1),
+    ],
 }
 
 # The framing wording, asserted across the whole shipped set rather than inside

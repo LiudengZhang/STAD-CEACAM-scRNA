@@ -1,24 +1,24 @@
 Patient ID,Sample,Age,Sex,cTNM stage,Differentiation,Stomach site,Anatomical site,Tumor type,Biopsy method,Treatment phase,R/NR Grouping,Other Notes,Treatment regimen and cycles,RECIST 1.1 response,Patient sampled at both timepoints (any site)
-P1,P01-M1,70,M,T4aN3M1,,,Liver,Metastatic,Ultrasound guided percutaneous liver biopsy,Pre,,,,SD,Yes
+P1,P01-M1,70,M,T4aN3M1,,,Liver,Metastatic,Ultrasound guided percutaneous liver biopsy,Pre,NR,,Neoadjuvant (mFOLFOX6+ICIs),SD,Yes
 P1,P01-P1,70,M,T4aN3M1,Poor,Antrum,Stomach,Primary,Gastroscopic biopsy,Pre,NR,,Neoadjuvant (mFOLFOX6+ICIs),SD,Yes
 P1,P01-P2,70,M,T4aN3M1,Poor,Antrum,Stomach,Primary,Gastroscopic biopsy,Post,NR,,Neoadjuvant (mFOLFOX6+ICIs)*4,SD,Yes
-P2,P02-M1,55,M,T4aN3M1,,,Liver,Metastatic,Ultrasound guided percutaneous liver biopsy,Pre,,,,PD,No
+P2,P02-M1,55,M,T4aN3M1,,,Liver,Metastatic,Ultrasound guided percutaneous liver biopsy,Pre,NR,,Neoadjuvant (SOX+ICIs)*1,PD,No
 P2,P02-P1,55,M,T4aN3M1,Moderate to poor,Antrum,Stomach,Primary,Gastroscopic biopsy,Pre,NR,,Neoadjuvant (SOX+ICIs)*1,PD,No
-P3,P03-M1,46,F,T4bN2M1,,,Liver,Metastatic,Ultrasound guided percutaneous liver biopsy,Pre,,,,PR,No
+P3,P03-M1,46,F,T4bN2M1,,,Liver,Metastatic,Ultrasound guided percutaneous liver biopsy,Pre,R,,Neoadjuvant (SOX+ICIs)*3,PR,No
 P3,P03-P1,46,F,T4bN2M1,Moderate to high,Body,Stomach,Primary,Gastroscopic biopsy,Pre,R,,Neoadjuvant (SOX+ICIs)*3,PR,No
-P4,P04-M1,69,M,T4aN2M1,,,Liver,Metastatic,Ultrasound guided percutaneous liver biopsy,Pre,,,,PR,No
+P4,P04-M1,69,M,T4aN2M1,,,Liver,Metastatic,Ultrasound guided percutaneous liver biopsy,Pre,R,,Neoadjuvant (mFOLFOX6+ICIs)*3,PR,No
 P4,P04-P1,69,M,T4aN2M1,Moderate to high,Antrum,Stomach,Primary,Gastroscopic biopsy,Pre,R,,Neoadjuvant (mFOLFOX6+ICIs)*3,PR,No
 P5,P05-P2,68,M,T4aN3M1,Moderate to poor,Body,Stomach,Primary,Surgery specimen,Post,R,,"Neoadjuvant SOX*5, (NIPS+ICIs)*3",PR,No
 P6,P06-P2,57,M,T4aN2M1,Poor,Antrum,Stomach,Primary,Gastroscopic biopsy,Post,NR,,Neoadjuvant (mFOLFOX6+ICIs)*3,PD,No
 P7,P07-P2,69,M,T4aN2M1,Poor,Cardia,Stomach,Primary,Surgery specimen,Post,,,,,No
 P8,P08-M1,43,F,T0N0M1,,,Ovary,Metastatic,Surgery specimen,Pre,,,,,No
 P9,P09-M1,50,F,T0N0M1,,,Ovary,Metastatic,Surgery specimen,Pre,,,,,No
-P10,P10-M2,52,F,T4aN2M1,,,Liver,Metastatic,Ultrasound guided percutaneous liver biopsy,Post,,,,SD,No
+P10,P10-M2,52,F,T4aN2M1,,,Liver,Metastatic,Ultrasound guided percutaneous liver biopsy,Post,R,,Neoadjuvant (mFOLFOX6+ICIs)*3,SD,No
 P10,P10-P2,52,F,T4aN2M1,Moderate to poor,Antrum,Stomach,Primary,Gastroscopic biopsy,Post,R,,Neoadjuvant (mFOLFOX6+ICIs)*3,SD,No
 P11,P11-P2,70,M,T4aN2M1,Poor,Antrum,Stomach,Primary,Gastroscopic biopsy,Post,R,,Neoadjuvant (SOX+ICIs)*6,PR,No
 P12,P12-P2,74,M,T4bN3aMx,Moderate to poor,Antrum,Stomach,Primary,Surgery specimen,Post,R,,Neoadjuvant (mFOLFOX6+ICIs)*3,PR,No
 P13,P13-P2,64,M,T4aN3M1,Moderate to poor,Antrum,Stomach,Primary,Surgery specimen,Post,R,,Neoadjuvant (SOX+ICIs)*3,PR,No
-P14,P14-M2,57,M,T4aN2M1,,,Liver,Metastatic,Ultrasound guided percutaneous liver biopsy,Post,,,,PD,No
+P14,P14-M2,57,M,T4aN2M1,,,Liver,Metastatic,Ultrasound guided percutaneous liver biopsy,Post,NR,,Neoadjuvant (mFOLFOX6+ICIs)*2,PD,No
 P14,P14-P2,57,M,T4aN2M1,Poor,Antrum,Stomach,Primary,Gastroscopic biopsy,Post,NR,,Neoadjuvant (mFOLFOX6+ICIs)*2,PD,No
 P15,P15-P1,71,M,T4aN1M0,Moderate to poor,Antrum,Stomach,Primary,Surgery specimen,Pre,,,,,No
 P16,P16-M1,57,M,T0N0M1,,,Liver,Metastatic,Ultrasound guided percutaneous liver biopsy,Pre,,,,PD,No
@@ -26,17 +26,17 @@ P17,P17-P1,75,M,T4aN1M0,Moderate,Cardia,Stomach,Primary,Surgery specimen,Pre,,,,
 P18,P18-P1,57,M,T3N0M0,Moderate to poor,Antrum,Stomach,Primary,Surgery specimen,Pre,,,,,No
 P19,P19-P1,74,M,T4aN0M0,Moderate to poor,Antrum,Stomach,Primary,Surgery specimen,Pre,,,,,No
 P20,P20-P1,69,M,T3N0M0,Moderate,Cardia,Stomach,Primary,Surgery specimen,Pre,,,,,No
-P21,P21-M1,71,F,T4aN2M1,,,Liver,Metastatic,Ultrasound guided percutaneous liver biopsy,Pre,,,,PR,No
+P21,P21-M1,71,F,T4aN2M1,,,Liver,Metastatic,Ultrasound guided percutaneous liver biopsy,Pre,R,,Neoadjuvant (SOX+ICIs)*3,PR,No
 P21,P21-P1,71,F,T4aN2M1,Poor,Antrum,Stomach,Primary,Gastroscopic biopsy,Pre,R,,Neoadjuvant (SOX+ICIs)*3,PR,No
-P22,P22-M1,64,M,T4aN2M1,,,Liver,Metastatic,Ultrasound guided percutaneous liver biopsy,Pre,,,,PR,No
+P22,P22-M1,64,M,T4aN2M1,,,Liver,Metastatic,Ultrasound guided percutaneous liver biopsy,Pre,R,,Neoadjuvant (SOX+ICIs)*3,PR,No
 P22,P22-P1,64,M,T4aN2M1,Poor,Antrum,Stomach,Primary,Gastroscopic biopsy,Pre,R,,Neoadjuvant (SOX+ICIs)*3,PR,No
 P23,P23-P2,65,M,T4bN2M1,,,Stomach,,Gastroscopic biopsy,Post,NR,,Neoadjuvant (mFOLFOX6+ICIs)*3,SD,No
 P24,P24-P2,67,M,T4aN3Mx,Poor,Antrum,Stomach,Primary,Gastroscopic biopsy,Post,NR,,Neoadjuvant (SOX+ICIs)*3,PD,No
-P25,P25-M1,61,M,T4aN3aM1,,,Liver,Metastatic,Ultrasound guided percutaneous liver biopsy,Pre,,,,PD,No
-P25,P25-B1,61,M,T4aN3aM1,,,Peripheral blood,,Hemospasia from vein,Pre,,,,PD,No
+P25,P25-M1,61,M,T4aN3aM1,,,Liver,Metastatic,Ultrasound guided percutaneous liver biopsy,Pre,NR,,Neoadjuvant (SOX+ICIs)*3,PD,No
+P25,P25-B1,61,M,T4aN3aM1,,,Peripheral blood,,Hemospasia from vein,Pre,NR,,Neoadjuvant (SOX+ICIs)*3,PD,No
 P25,P25-P1,61,M,T4aN3aM1,Poor,Antrum,Stomach,Primary,Gastroscopic biopsy,Pre,NR,,Neoadjuvant (SOX+ICIs)*3,PD,No
-P26,P26-M1,70,M,T4bN2M1,,,Liver,Metastatic,Ultrasound guided percutaneous liver biopsy,Pre,,,,PD,No
-P26,P26-B1,70,M,T4bN2M1,,,Peripheral blood,,Hemospasia from vein,Pre,,,,PD,No
+P26,P26-M1,70,M,T4bN2M1,,,Liver,Metastatic,Ultrasound guided percutaneous liver biopsy,Pre,NR,,Neoadjuvant (SOX+ICIs)*3,PD,No
+P26,P26-B1,70,M,T4bN2M1,,,Peripheral blood,,Hemospasia from vein,Pre,NR,,Neoadjuvant (SOX+ICIs)*3,PD,No
 P26,P26-P1,70,M,T4bN2M1,Moderate,Antrum,Stomach,Primary,Gastroscopic biopsy,Pre,NR,,Neoadjuvant (SOX+ICIs)*3,PD,No
 P27,P27-M1,36,F,T0N0M1,Poor,,Ovary,Metastatic,Surgery specimen,Pre,,,,,No
 P27,P27-B1,36,F,T0N0M1,,,Peripheral blood,,Hemospasia from vein,Pre,,,,,No
@@ -63,7 +63,7 @@ P32,P32-P1,78,M,T4aN2Mx,Moderate to poor,Cardia,Stomach,Primary,Surgery specimen
 P33,P33-M1,76,M,T4aN2M1,,,Liver,Metastatic,Ultrasound guided percutaneous liver biopsy,Pre,,,,,No
 P33,P33-B1,76,M,T4aN2M1,,,Peripheral blood,,Hemospasia from vein,Pre,,,,,No
 P33,P33-P1,76,M,T4aN2M1,Moderate to poor,Antrum,Stomach,Primary,Gastroscopic biopsy,Pre,,,,,No
-P34,P34-B2,55,F,T4aN3M1,,,Peripheral blood,,Hemospasia from vein,Post,,,,PD,No
+P34,P34-B2,55,F,T4aN3M1,,,Peripheral blood,,Hemospasia from vein,Post,NR,,Neoadjuvant (SOX+ICIs)*3,PD,No
 P34,P34-P2,55,F,T4aN3M1,Poor,Antrum,Stomach,Primary,Surgery specimen,Post,NR,,Neoadjuvant (SOX+ICIs)*3,PD,No
 P35,P35-LN1_2,64,F,T3N1M0,,,Lymph node,,Surgery specimen,Pre,,,,,No
 P35,P35-LN1_1,64,F,T3N1M0,,,Lymph node,,Surgery specimen,Pre,,,,,No

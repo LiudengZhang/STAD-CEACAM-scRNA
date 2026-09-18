@@ -25,15 +25,9 @@ figure actually contains:
                     than what they replace, so each is redrawn on the anchor its
                     neighbours share - right edge for tick labels, midpoint for
                     the UMAP annotation and the rotated axis titles.
-  Figure 6          RETIRED. The schematic once printed "Pan-TME NF-kB
-                    Activation" after the main text had dropped the pan-TME
-                    framing, and the qualifier was redacted here. The figure now
-                    ships as a page supplied whole by the author, in which that
-                    qualifier is absent at source: the label reads
-                    "Multi-Lineage" over "NF-kB Activation". There is nothing
-                    left for the redaction to find, so this figure is no longer
-                    patched and is collected by build_shipped_figures.py from
-                    Main_Figures/_supplied/ instead.
+  Figure 6          the author-supplied page is retained, with only the two
+                    temporal headings relabeled to match the cross-sectional
+                    design described in the revised manuscript.
 
 Figure 1 is different in kind: panel A is a schematic, not a measurement, and
 the author replaced it with a redrawn vector version (_panel_1A/). That panel
@@ -161,20 +155,6 @@ TEXT_PATCHES = {
         ("*", (220.1, 338.2, 225.5, 347.6), "P = 0.032", "J, dendritic cells"),
         ("*", (357.3, 338.2, 362.8, 347.6), "P = 0.030", "L, IL-6/JAK/STAT3 in CD4+ T"),
     ],
-    # RETIRED, and kept rather than deleted: the qualifier this deletion
-    # removed is now absent at source, because Figure 6 ships as a page the
-    # author supplies whole. The entry records what was once done to the
-    # submitted schematic, and PATCHED_FIGURES no longer reaches it - run
-    # against the supplied page it would search for a string that is not there.
-    # "Acquired Resistance" was left alone, and so were the six "NF-kB" spans:
-    # Figures 1A and 6 are the two the author sets by hand, and nothing in this
-    # file may write into either figure's wording. The measurements behind that
-    # boundary are recorded against F28 in
-    # 00_Inbox/audit_handoff_20260904/AUDIT_RESPONSE.csv.
-    "Figure 6": [
-        ("Pan-TME ", (376.2, 258.8, 424.8, 273.1), "",
-         "schematic, pan-TME qualifier removed"),
-    ],
 }
 
 # --------------------------------------------------------------------- Figure 2
@@ -215,6 +195,35 @@ LABEL_PATCHES = {
          "MoMac_IL1B Proportion", 4.5, "helv", "rot-centre", "H, axis title"),
         ("Mac_IL1B Proportion", (393.2, 501.5, 399.7, 545.8),
          "MoMac_IL1B Proportion", 4.5, "helv", "rot-centre", "H, axis title"),
+    ],
+    "Figure 6": [
+        ("Anti-PD1 +", (300.0, 42.0, 362.0, 60.0),
+         "Anti-PD-1 +", 11.0, "hebo", "centre",
+         "treatment label, PD-1 typography"),
+        ("Intrinsic Resistance", (122.0, 41.5, 236.0, 59.0),
+         "Pre-treatment non-response", 11.0, "hebo", "centre",
+         "left heading, cross-sectional pre-treatment contrast"),
+        ("Acquired Resistance", (424.0, 41.5, 543.0, 59.0),
+         "Post-treatment non-response", 11.0, "hebo", "centre",
+         "right heading, cross-sectional post-treatment contrast"),
+        ("Recruitment", (60.5, 362.0, 121.0, 377.0),
+         "abundance", 10.0, "hebo", "centre",
+         "left annotation, association rather than recruitment mechanism"),
+        ("Macrophage", (489.0, 139.5, 552.0, 155.0),
+         "MoMac", 10.5, "hebo", "centre",
+         "right state label, monocyte/macrophage identity"),
+        ("Differentiation", (444.0, 100.5, 514.0, 116.0),
+         "MoMac state", 10.0, "heit", "centre",
+         "right annotation, observed state rather than inferred differentiation"),
+        ("Activation", (391.5, 270.0, 443.0, 286.0),
+         "signature", 10.0, "hebo", "centre",
+         "centre annotation, transcriptional evidence"),
+        ("Chronic ", (603.0, 411.5, 653.0, 430.0),
+         "Inflammatory", 11.0, "hebo", "centre",
+         "lower-right annotation, cross-sectional inflammatory signal"),
+        ("Inflammation", (587.0, 426.0, 666.0, 444.0),
+         "signature", 11.0, "hebo", "centre",
+         "lower-right annotation, cross-sectional inflammatory signal"),
     ],
 }
 
@@ -430,9 +439,10 @@ def replace_figure_1a(doc):
 #: a slot and its B and C redrawn at 1:1. Patching Figure 1 here would write
 #: the submitted layout into _patched/ beside the slotted page; the code is
 #: kept, runnable with --figure 1, as the record of how the 2026-09-10 to
-#: 2026-09-14 pages were made. Figure 6 is supplied whole by the author. All
+#: 2026-09-14 pages were made. Figure 6 starts from the author-supplied page
+#: and receives the two heading corrections above. All
 #: are collected by build_shipped_figures.py, which records the mechanism.
-PATCHED_FIGURES = ()
+PATCHED_FIGURES = (6,)
 
 
 def main():
@@ -450,7 +460,8 @@ def main():
               "2026-09-15) or supplied; see PATCHED_FIGURES")
     for i in figures:
         name = f"Figure {i}"
-        src = SRC / f"{name}.pdf"
+        src = (MAIN_FIGURES / "_supplied" / "Figure_6.pdf") if i == 6 \
+            else SRC / f"{name}.pdf"
         doc = fitz.open(src)
         page = doc[0]
         changed = []
@@ -477,8 +488,9 @@ def main():
             print(f"    {w}")
     print(f"\n{total} annotations replaced; written to {OUT}")
     print("Figures 2, 3, 4 and 5 are not patched: they are redrawn into their "
-          "printed slots. Figure 6 is not patched either: it is supplied whole "
-          "by the author. All are collected by build_shipped_figures.py")
+          "printed slots. Figure 6 starts from the author-supplied page and "
+          "has only its two temporal headings corrected. All are collected "
+          "by build_shipped_figures.py")
 
 
 if __name__ == "__main__":

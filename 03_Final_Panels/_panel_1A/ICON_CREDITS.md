@@ -8,8 +8,7 @@ All pictograms are openly licensed vector icons, embedded as SVG `<symbol>`s
 | Conceptual Framework (header) | neurology / brain | Health Icons | MIT |
 | Study Design, Validation Cohorts (headers) | people | Health Icons | MIT |
 | Sample Collection (header) | vial | Font Awesome Free 6 | CC BY 4.0 |
-| Intrinsic resistance | shield + lock | Font Awesome Free 6 | CC BY 4.0 |
-| Acquired resistance | arrows-rotate | Font Awesome Free 6 | CC BY 4.0 |
+| Pre-treatment non-response | shield + lock | Font Awesome Free 6 | CC BY 4.0 |
 | Patients (pre/post) | person, person-dress | Font Awesome Free 6 | CC BY 4.0 |
 | Primary tumour | stomach | Health Icons | MIT |
 | Liver metastasis | liver | Health Icons | MIT |

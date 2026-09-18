@@ -5,13 +5,9 @@ Supplementary tables for the revision.
        that Reviewer 1 asked for (R1.3a, R1.3b)
   ST6  new: every directional comparison reported two-sided, with an effect
        size, a bootstrap CI and the BH-adjusted P (R1.3c)
-  ST7  new: CEACAM5-only / CEACAM6-only / double-positive fractions and the
-       per-marker IHC values (R1.5)
-  ST8  new: the sample-level (pseudobulk) sensitivity analysis of the NF-kB
-       enrichment beside the adopted per-cell values (R1.8). The per-cell
-       analysis is primary; the pseudobulk one is a cited sensitivity check
-
-ST2-ST5 are carried over unchanged from the submission.
+ST2-ST5 are carried over unchanged from the submission. The former ST7 and
+ST8 audit outputs remain reproducible from 04_Revision_Analyses but are not shipped
+as supplementary tables.
 """
 
 from pathlib import Path
@@ -213,6 +209,8 @@ def main():
     # Guard against retired tables surviving from an older build. Neither table
     # belongs to the fixed-label ST1-ST8 layout.
     for obsolete in (
+        "ST7_ceacam5_vs_ceacam6.csv",
+        "ST8_nfkb_pseudobulk_sensitivity.csv",
         "ST9_crosscohort_convergence.csv",
         "ST10_nfkb_pseudobulk_sensitivity.csv",
     ):
@@ -220,7 +218,8 @@ def main():
 
     # ---------------------------------------------- carry over ST2-ST5 as-is
     for f in sorted(SRC.glob("ST*.csv")):
-        if f.name.startswith("ST1_"):
+        table_number = int(re.match(r"ST(\d+)_", f.name).group(1))
+        if table_number > 6 or f.name.startswith("ST1_"):
             continue
         # The frozen source is read-only and copy2 preserves the mode, so a
         # second run would fail trying to overwrite its own output.
@@ -410,6 +409,25 @@ def main():
     st1.insert(st1.columns.get_loc(col),
                "RECIST 1.1 response",
                st1["Patient ID"].map(RECIST_RESPONSE).fillna(""))
+    # Patient-level response grouping and treatment apply to every specimen.
+    # These 13 rows were blank in the clinician-supplied sheet even though a
+    # matched specimen from the same patient carried the value. Use explicit
+    # source specimens so P01's pre-treatment regimen is not confused with its
+    # later four-cycle post-treatment record.
+    fill_from = {
+        "P01-M1": "P01-P1", "P02-M1": "P02-P1", "P03-M1": "P03-P1",
+        "P04-M1": "P04-P1", "P10-M2": "P10-P2", "P14-M2": "P14-P2",
+        "P21-M1": "P21-P1", "P22-M1": "P22-P1", "P25-M1": "P25-P1",
+        "P25-B1": "P25-P1", "P26-M1": "P26-P1", "P26-B1": "P26-P1",
+        "P34-B2": "P34-P2",
+    }
+    original_columns = st1.columns.tolist()
+    indexed = st1.set_index("Sample")
+    for target, source in fill_from.items():
+        for field in ("R/NR Grouping", "Treatment regimen and cycles"):
+            if pd.isna(indexed.at[target, field]) or indexed.at[target, field] == "":
+                indexed.at[target, field] = indexed.at[source, field]
+    st1 = indexed.reset_index()[original_columns]
     _check_recist_response(st1)
     st1.to_csv(OUT / "ST1_patient_sample_characteristics.csv", index=False)
 
@@ -456,67 +474,6 @@ def main():
         for p, a in zip(st6["Figure panel"], st6["Comparison"])]
     st6["Comparison"] = st6["Comparison"].map(renumber_supp)
     st6.to_csv(OUT / "ST6_two_sided_sensitivity.csv", index=False)
-
-    # --------------------------------------------------------- ST7, new
-    states = pd.read_csv(NEW_ANALYSES / "04_R1.5_CEACAM5_vs_CEACAM6" / "outputs"
-                         / "ceacam_state_tests.csv")
-    ihc = pd.read_csv(NEW_ANALYSES / "04_R1.5_CEACAM5_vs_CEACAM6" / "outputs"
-                      / "ihc_per_marker_tests.csv")
-    st7 = pd.concat([states, ihc], ignore_index=True).rename(columns={
-        "measure": "Measure", "level": "Data level",
-        "n_NR": "n non-responders", "n_R": "n responders",
-        "mean_NR": "Mean, non-responders", "mean_R": "Mean, responders",
-        "p_two_tailed": "P, two-tailed",
-        "rank_biserial_r": "Rank-biserial correlation",
-    })
-    st7.to_csv(OUT / "ST7_ceacam5_vs_ceacam6.csv", index=False)
-
-    # --------------------------------------------------------- ST8, new
-    # The per-cell Welch analysis of the NF-kB enrichment is primary; the
-    # sample-level pseudobulk analysis (15_Pseudobulk_Sample_Level: summed UMIs
-    # per sample, limma-voom and DESeq2, the same prerank GSEA) ships as a
-    # table and is cited as a sensitivity check rather than replacing it. The
-    # ttest_percell_* columns of the source are sound13, the adopted table, so
-    # the per-cell values printed here are those of Fig. S10C (S9C until
-    # 2026-09-16) and the Results.
-    pb = pd.read_csv(NEW_ANALYSES / "15_Pseudobulk_Sample_Level" / "outputs"
-                     / "nfkb_comparison.csv")
-    if not bool(pb["testable"].all()) or len(pb) != 26:
-        raise SystemExit("build_tables(): expected 26 testable contrasts in "
-                         "nfkb_comparison.csv")
-    labels = {"B_cells": "B cells", "DC_cells": "DC",
-              "Endothelial_cells": "Endothelial", "Epithelial": "Epithelial",
-              "Fibroblast": "Fibroblast", "Mast_cells": "Mast", "MoMac": "MoMac",
-              "Neutrophils": "Neutrophils", "NK_cells": "NK",
-              "Pericyte": "Pericyte", "Plasma_cells": "Plasma",
-              "TCD4_cells": "CD4+ T", "TCD8_cells": "CD8+ T"}
-    st10 = pd.DataFrame({
-        "Cell type": pb["cell_type"].map(labels),
-        "Timepoint": pb["phase"].map({"pre": "Pre-treatment",
-                                      "post": "Post-treatment"}),
-        "n samples": pb["n_samples"], "n responders": pb["n_R"],
-        "n non-responders": pb["n_NR"], "n cells": pb["n_cells"],
-        "Median cells per sample": pb["median_cells_per_sample"],
-        "Samples dropped (fewer than 10 cells)": pb["samples_dropped"],
-        "limma-voom NES": pb["limma_nes"].round(3),
-        "limma-voom nominal P": pb["limma_p"].round(4),
-        "limma-voom FDR q": pb["limma_q"].round(4),
-        "limma-voom rank": pb["limma_rank"],
-        "limma-voom Hallmark sets tested": pb["limma_nsets"],
-        "DESeq2 NES": pb["deseq2_nes"].round(3),
-        "DESeq2 nominal P": pb["deseq2_p"].round(4),
-        "DESeq2 FDR q": pb["deseq2_q"].round(4),
-        "DESeq2 rank": pb["deseq2_rank"],
-        "DESeq2 Hallmark sets tested": pb["deseq2_nsets"],
-        "Per-cell NES (primary analysis; Fig. S10C)": pb["ttest_percell_nes"].round(3),
-        "Per-cell nominal P": pb["ttest_percell_p"].round(4),
-        "Per-cell FDR q": pb["ttest_percell_q"].round(4),
-        "Per-cell rank": pb["ttest_percell_rank"],
-        "Per-cell Hallmark sets tested": pb["ttest_percell_nsets"],
-    })
-    if st10["Cell type"].isna().any():
-        raise SystemExit("build_tables(): unlabelled cell type in ST8")
-    st10.to_csv(OUT / "ST8_nfkb_pseudobulk_sensitivity.csv", index=False)
 
     print("Supplementary tables written to", OUT)
     for f in sorted(OUT.glob("ST*.csv")):

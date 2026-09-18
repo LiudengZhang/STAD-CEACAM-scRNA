@@ -24,8 +24,9 @@ from pathlib import Path
 import argparse
 import re
 import sys
+from zipfile import ZipFile
 
-import docx
+from lxml import etree
 import pandas as pd
 
 HERE = Path(__file__).resolve().parent
@@ -40,21 +41,28 @@ ap.add_argument("--docx", type=Path,
                 default=HERE / "01_Main_Text" / "Manuscript_R1_clean.docx",
                 help="the clean revised manuscript")
 ap.add_argument("--tables", type=Path, default=HERE / "04_Tables",
-                help="directory holding ST6 and ST8")
+                help="directory holding ST6")
 args = ap.parse_args()
 
 CLEAN = args.docx
 ST6 = args.tables / "ST6_two_sided_sensitivity.csv"
-ST8 = args.tables / "ST8_nfkb_pseudobulk_sensitivity.csv"
-for f in (CLEAN, ST6, ST8):
+for f in (CLEAN, ST6):
     if not f.exists():
         sys.exit(f"not found: {f}\nPass --docx and --tables for this layout.")
 
 failures, checks = [], 0
-TEXT = "\n".join(p.text for p in docx.Document(CLEAN).paragraphs)
+W = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
+with ZipFile(CLEAN) as archive:
+    root = etree.fromstring(archive.read("word/document.xml"))
+PARAGRAPHS = []
+for paragraph in root.findall(".//" + W + "p"):
+    value = "".join(
+        node.text or "" for node in paragraph.iter(W + "t")
+        if not any(parent.tag == W + "del" for parent in node.iterancestors()))
+    PARAGRAPHS.append(value)
+TEXT = "\n".join(PARAGRAPHS)
 
 sweep = pd.read_csv(ST6)
-pseudobulk = pd.read_csv(ST8)
 
 
 def two_tailed(fragment):
@@ -94,7 +102,7 @@ claim("IHC summed score",
       "two-sided P = {:.3f}, r = 0.88, Mann–Whitney U test, n = 4 per group",
       two_tailed("CEACAM5 + CEACAM6 summed"))
 claim("IHC markers separately",
-      "(CEACAM5, P = {:.2f}; CEACAM6, P = {:.2f}; Table S7)",
+      "(CEACAM5, P = {:.2f}; CEACAM6, P = {:.2f})",
       two_tailed("IHC staining, CEACAM5 only"),
       two_tailed("IHC staining, CEACAM6 only"))
 claim("S-MP4 metaprogram",
@@ -131,15 +139,6 @@ claim("PD-L1 in the four cell types",
       two_tailed("post-treatment fibroblasts"),
       two_tailed("post-treatment dendritic cells"))
 
-# ------------------------------------------ Table S8 remains the NF-κB check
-checks += 1
-required_pb = {"Cell type", "Timepoint", "limma-voom NES", "DESeq2 NES",
-               "Per-cell NES (primary analysis; Fig. S10C)"}
-missing_pb = required_pb.difference(pseudobulk.columns)
-if missing_pb or len(pseudobulk) != 26:
-    failures.append("Table S8 pseudobulk sensitivity is incomplete: "
-                    f"missing={sorted(missing_pb)}, rows={len(pseudobulk)}")
-
 # The immunohistochemistry is not an independent cohort, and the Results must
 # not say it is; ST1 and ST5 list the same eight patients.
 checks += 1
@@ -154,30 +153,35 @@ ALLOWED_ONE_TAILED = (
     "Statistical analyses were performed using Python",
 )
 checks += 1
-for par in docx.Document(CLEAN).paragraphs:
-    if not re.search(r"[Oo]ne-tail|[Oo]ne-sided", par.text):
+for par in PARAGRAPHS:
+    if not re.search(r"[Oo]ne-tail|[Oo]ne-sided", par):
         continue
-    if not any(par.text.startswith(a) for a in ALLOWED_ONE_TAILED):
+    if not any(par.startswith(a) for a in ALLOWED_ONE_TAILED):
         failures.append("a one-tailed test is still declared outside Methods: "
-                        f"“{par.text[:90]}…”")
+                        f"“{par[:90]}…”")
 
 # -------------------------------- every supplementary item cited and legended
 legends = {int(m.group(1)) for m in
-           (re.match(r"Figure S(\d+)\.", p.text) for p in
-            docx.Document(CLEAN).paragraphs) if m}
+           (re.match(r"Figure S(\d+)\.", p) for p in PARAGRAPHS) if m}
 tab_legends = {int(m.group(1)) for m in
-               (re.match(r"Supplementary Table (\d+)\.", p.text) for p in
-                docx.Document(CLEAN).paragraphs) if m}
+               (re.match(r"Supplementary Table (\d+)\.", p) for p in PARAGRAPHS) if m}
 cited_figs = {int(m) for m in re.findall(r"Fig(?:s?\.|ure)? ?S(\d+)", TEXT)}
 cited_tabs = {int(m) for m in re.findall(r"Table S(\d+)", TEXT)}
+
+# Also catch compressed plural citations such as "Tables S6 and S9".  The
+# original expression sees S6 but misses the second number because it is not
+# repeated after the word "Table".
+for match in re.finditer(
+        r"\bTables\s+(S\d+(?:\s*(?:,|and|–|-)\s*S\d+)+)", TEXT):
+    cited_tabs.update(int(n) for n in re.findall(r"S(\d+)", match.group(1)))
 
 for label, have, want in (
         # Ten supplementary figures since 2026-09-16 (S1 split into S1 and
         # S2; the former S2-S9 are S3-S10).
         ("supplementary figure legends", legends, set(range(1, 11))),
-        ("supplementary table legends", tab_legends, set(range(1, 9))),
+        ("supplementary table legends", tab_legends, set(range(1, 7))),
         ("supplementary figures cited", cited_figs, set(range(1, 11))),
-        ("supplementary tables cited", cited_tabs, set(range(1, 9)))):
+        ("supplementary tables cited", cited_tabs, set(range(1, 7)))):
     checks += 1
     missing = sorted(want - have)
     if missing:
@@ -194,10 +198,9 @@ for label, have, want in (
 # half of the old S8B now S9C, and S9A-E are S10A-E.
 PANELS = ("S3D S3E S3H S4E S8A S8B S8C S9A S9B S9C "
           "S10A S10B S10C S10D S10E").split()
-first_legend = next(i for i, par in enumerate(docx.Document(CLEAN).paragraphs)
-                    if re.match(r"Figure S1\.", par.text))
-BODY = "\n".join(par.text for par in
-                 docx.Document(CLEAN).paragraphs[:first_legend])
+first_legend = next(i for i, par in enumerate(PARAGRAPHS)
+                    if re.match(r"Figure S1\.", par))
+BODY = "\n".join(PARAGRAPHS[:first_legend])
 checks += 1
 uncited = [pn for pn in PANELS if not re.search(rf"\b{pn}\b", BODY)]
 if uncited:

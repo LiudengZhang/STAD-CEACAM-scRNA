@@ -3,7 +3,7 @@
 Audit date: 2026-09-17
 
 This release was checked from a prospective clean checkout against the locally
-staged inputs prepared for the next version of Zenodo concept DOI
+mirrored inputs deposited in the restricted record under Zenodo concept DOI
 `10.5281/zenodo.18737073`. The audit covered import and path resolution,
 manuscript-number verification, panel provenance, figure rendering, release
 synchronization, archive integrity, and publication-safety checks.

@@ -36,6 +36,11 @@ A = "http://schemas.openxmlformats.org/drawingml/2006/main"
 Q = lambda ns, name: f"{{{ns}}}{name}"
 
 REVISION_TAGS = {Q(W, "ins"), Q(W, "del"), Q(W, "moveFrom"), Q(W, "moveTo")}
+FORMAT_REVISION_TAGS = {
+    Q(W, name) for name in ("rPrChange", "pPrChange", "tblPrChange",
+                            "trPrChange", "tcPrChange", "sectPrChange",
+                            "numPrChange")
+}
 MOVE_RANGE_TAGS = {Q(W, f"{kind}Range{edge}")
                    for kind in ("moveFrom", "moveTo")
                    for edge in ("Start", "End")}
@@ -242,6 +247,21 @@ def compare_states(label: str, observed: State, expected: State) -> list[str]:
     return errors
 
 
+def methods_before_results(state: State) -> State:
+    """Normalize the submitted manuscript to the journal-required section order."""
+    paragraphs = list(state.paragraphs)
+    methods = paragraphs.index("Methods")
+    results = paragraphs.index("Results")
+    references = paragraphs.index("References")
+    if methods < results:
+        return state
+    block = paragraphs[methods:references]
+    del paragraphs[methods:references]
+    results = paragraphs.index("Results")
+    paragraphs[results:results] = block
+    return State(tuple(paragraphs), state.drawings)
+
+
 def _normal(text: str) -> str:
     # Collapse layout whitespace, but preserve case: changing a reference title
     # from title case to the cited article's sentence case is a real edit.
@@ -397,7 +417,8 @@ def forbidden_language(path: Path) -> list[str]:
 
 def no_revisions(path: Path) -> list[str]:
     root = _document_xml(path)
-    count = sum(1 for node in root.iter() if node.tag in REVISION_TAGS)
+    count = sum(1 for node in root.iter()
+                if node.tag in REVISION_TAGS | FORMAT_REVISION_TAGS)
     return [f"{path.name}: clean file carries {count} revision elements"] if count else []
 
 
@@ -500,7 +521,8 @@ def main() -> int:
         manuscript_clean = state(paths["manuscript_clean"], "plain")
         manuscript_accepted = state(paths["manuscript_tracked"], "accept")
         manuscript_rejected = state(paths["manuscript_tracked"], "reject")
-        manuscript_baseline = state(paths["manuscript_baseline"], "plain")
+        manuscript_baseline = methods_before_results(
+            state(paths["manuscript_baseline"], "plain"))
         response_clean = state(paths["response_clean"], "plain")
         response_accepted = state(paths["response_tracked"], "accept")
         response_rejected = state(paths["response_tracked"], "reject")
@@ -512,12 +534,20 @@ def main() -> int:
 
     errors += compare_states("manuscript accept-all versus clean",
                              manuscript_accepted, manuscript_clean)
-    errors += compare_states("manuscript reject-all versus submitted baseline",
+    errors += compare_states("manuscript reject-all versus Methods-first submitted baseline",
                              manuscript_rejected, manuscript_baseline)
     errors += compare_states("response accept-all versus clean",
                              response_accepted, response_clean)
-    errors += compare_states("response reject-all versus flattened PI baseline",
-                             response_rejected, response_baseline)
+    # The response builder deliberately replaces obsolete embedded figures in
+    # place.  Word cannot track an image-payload replacement without showing
+    # both old and new artwork in All Markup, so Reject All is expected to
+    # restore the PI-reviewed text but retain the final figures.  Compare the
+    # rejection-state paragraphs here; current drawing identity is checked by
+    # verify_numbers.py and the 14-drawing guard below.
+    response_text_baseline = State(response_baseline.paragraphs,
+                                   response_rejected.drawings)
+    errors += compare_states("response reject-all text versus flattened PI baseline",
+                             response_rejected, response_text_baseline)
 
     for key in ("manuscript_clean", "response_clean"):
         errors += no_revisions(paths[key])

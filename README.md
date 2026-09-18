@@ -12,9 +12,9 @@ The final release checks and their scope are recorded in
 
 - **542,121 cells** from **35 patients** with advanced gastric cancer treated with anti–PD-1 + chemotherapy
 - **Multi-modal**: single-cell RNA-seq + spatial transcriptomics + immunohistochemistry + bulk RNA-seq
-- **Two resistance programs identified**:
-  - *Intrinsic* — CEACAM5/6⁺ tumor cells form immune-excluded niches with macrophage recruitment & CD8⁺ T-cell exhaustion
-  - *Acquired* — IL-1β⁺ macrophages drive NF-κB activation, PD-L1 upregulation, and EMT
+- **Two response-associated states characterized**:
+  - *Pre-treatment non-response* — CEACAM5/6⁺ tumor cells are enriched and co-occur with an immune-poor spatial context and CD8⁺ T-cell exhaustion
+  - *Post-treatment non-response* — IL-1β⁺ monocyte-derived macrophages are enriched and accompany an NF-κB transcriptional signature, PD-L1 upregulation, and EMT
 
 ## Methods used
 
@@ -155,11 +155,11 @@ wget https://resources.aertslab.org/cistarget/motif2tf/motifs-v10nr_clust-nr.hgn
 
 ## Data Availability
 
-The restricted Zenodo record already has an earlier data version. The current
-revision data and prepared intermediates are staged for its next version under
-[DOI:10.5281/zenodo.18737073](https://doi.org/10.5281/zenodo.18737073); the
-concept DOI will resolve to that version after it is published. Set
-`STAD_RAW_INPUTS` and `STAD_PREPARED_INPUTS` to point at a local copy.
+The current revision data and prepared intermediates are deposited in a
+restricted Zenodo record under
+[DOI:10.5281/zenodo.18737073](https://doi.org/10.5281/zenodo.18737073). Access
+is available upon reasonable request. Set `STAD_RAW_INPUTS` and
+`STAD_PREPARED_INPUTS` to point at a local copy.
 
 Public datasets are obtained from their own sources: GSE251950 (spatial),
 GSE183904 and GSE239676 (single-cell validation), PRJEB25780 (bulk, TIGER) and

@@ -180,11 +180,9 @@ def shell(i, bd, hd, ic, title, glyph):
     T(x+24, 39, title, 8, "bold", "start")
 
 # ---- Panel 1: Conceptual Framework ----
-# Intrinsic resistance = baseline (pre-treatment) contrast only: Pre-NR vs Pre-R
-#   -> blue double arrow + shield.
-# Acquired resistance = 2x2 interaction: on-treatment change in non-responders
-#   referenced to the change in responders, i.e. all four groups
-#   -> purple Pre->Post arrows in both arms, both feeding the cycle symbol.
+# The two arms are cross-sectional response contrasts at each treatment
+# timepoint. Only one patient contributed both timepoints, so the schematic
+# must not imply a paired pre-to-post trajectory.
 g_open(id="panel-conceptual-framework")
 shell(0, BLU_BD, BLU_HD, BLU_IC, "Conceptual Framework", "brain")
 cxL, cxR = 33.0, 97.0
@@ -199,16 +197,12 @@ arrow(53, 71, 77, 71, SHIELD, 1.0, both=True, L=3.0, wd=2.2)
 line(65, 79, 65, 84, SHIELD, 0.7, dash="0.6 1.7")
 use("shield", 59, 85, 12, 12, SHIELD)
 use("lock", 61.9, 88.6, 6.2, 7.1, "#ffffff")
-T(65, 105, "Intrinsic resistance", 6.4, "bold", fill=SHIELD)
+T(65, 105, "Pre-treatment non-response", 6.4, "bold", fill=SHIELD)
 T(65, 112.5, "Pre-NR vs Pre-R", 6.0)
 
-arrow(22, 79, 22, 120.5, CYCLE, 0.8, dash="1.6 1.4", L=2.8, wd=2.0)
-arrow(108, 79, 108, 120.5, CYCLE, 0.8, dash="1.6 1.4", L=2.8, wd=2.0)
-line(33, 137, 57.5, 147, CYCLE, 0.7, dash="0.6 1.7")
-line(97, 137, 72.5, 147, CYCLE, 0.7, dash="0.6 1.7")
-use("cycle", 59, 148, 12, 12, CYCLE)
-T(65, 171, "Acquired resistance", 6.4, "bold", fill=CYCLE)
-T(65, 178.5, "(Post \u2212 Pre): NR vs R", 6.0)
+arrow(53, 145, 77, 145, CYCLE, 1.0, both=True, L=3.0, wd=2.2)
+T(65, 160, "Post-treatment non-response", 6.4, "bold", fill=CYCLE)
+T(65, 169, "Post-NR vs Post-R", 6.0)
 g_close()
 
 # ---- Panel 2: Study Design ----
@@ -279,8 +273,7 @@ All pictograms are openly licensed vector icons, embedded as SVG `<symbol>`s
 | Conceptual Framework (header) | neurology / brain | Health Icons | MIT |
 | Study Design, Validation Cohorts (headers) | people | Health Icons | MIT |
 | Sample Collection (header) | vial | Font Awesome Free 6 | CC BY 4.0 |
-| Intrinsic resistance | shield + lock | Font Awesome Free 6 | CC BY 4.0 |
-| Acquired resistance | arrows-rotate | Font Awesome Free 6 | CC BY 4.0 |
+| Pre-treatment non-response | shield + lock | Font Awesome Free 6 | CC BY 4.0 |
 | Patients (pre/post) | person, person-dress | Font Awesome Free 6 | CC BY 4.0 |
 | Primary tumour | stomach | Health Icons | MIT |
 | Liver metastasis | liver | Health Icons | MIT |
