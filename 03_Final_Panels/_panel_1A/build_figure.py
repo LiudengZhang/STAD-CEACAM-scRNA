@@ -200,7 +200,7 @@ use("lock", 61.9, 88.6, 6.2, 7.1, "#ffffff")
 T(65, 105, "Pre-treatment non-response", 6.4, "bold", fill=SHIELD)
 T(65, 112.5, "Pre-NR vs Pre-R", 6.0)
 
-arrow(53, 145, 77, 145, CYCLE, 1.0, both=True, L=3.0, wd=2.2)
+arrow(53, 129, 77, 129, CYCLE, 1.0, both=True, L=3.0, wd=2.2)
 T(65, 160, "Post-treatment non-response", 6.4, "bold", fill=CYCLE)
 T(65, 169, "Post-NR vs Post-R", 6.0)
 g_close()
@@ -245,7 +245,7 @@ g_open(id="panel-validation-cohorts")
 shell(3, GRN_BD, GRN_HD, GRN_IC, "Validation Cohorts", "check")
 rows = [(69,  "scope", "In-house Experiment", ["\u2022 H&E staining", "\u2022 Immunohistochemistry"]),
         (103, "dna",   "Bulk RNA-seq",        ["PRJEB25780", "TCGA-STAD"]),
-        (137, "cells", "scRNA-seq",           ["GSE239676", "GSE183904"]),
+        (137, "cells", "External scRNA-seq",  ["GSE239676", "GSE183904"]),
         (171, "grid",  "Spatial transcriptomics", ["GSE251950"])]
 for k, (cy, gl, title, lines) in enumerate(rows):
     use(gl, 388, cy-10, 20, 20, TEAL_D)
@@ -282,7 +282,7 @@ All pictograms are openly licensed vector icons, embedded as SVG `<symbol>`s
 | PBMC | medical sample (blood tube) | Health Icons | MIT |
 | In-house experiment | microscope with specimen | Health Icons | MIT |
 | Bulk RNA-seq | dna | Health Icons | MIT |
-| scRNA-seq | cell-nuclei | Health Icons | MIT |
+| External scRNA-seq | cell-nuclei | Health Icons | MIT |
 | Spatial transcriptomics | table-cells | Font Awesome Free 6 | CC BY 4.0 |
 
 Suggested figure-legend line (CC BY 4.0 requires attribution; MIT does not,

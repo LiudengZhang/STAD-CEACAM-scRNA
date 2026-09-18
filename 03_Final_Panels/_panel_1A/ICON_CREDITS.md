@@ -17,7 +17,7 @@ All pictograms are openly licensed vector icons, embedded as SVG `<symbol>`s
 | PBMC | medical sample (blood tube) | Health Icons | MIT |
 | In-house experiment | microscope with specimen | Health Icons | MIT |
 | Bulk RNA-seq | dna | Health Icons | MIT |
-| scRNA-seq | cell-nuclei | Health Icons | MIT |
+| External scRNA-seq | cell-nuclei | Health Icons | MIT |
 | Spatial transcriptomics | table-cells | Font Awesome Free 6 | CC BY 4.0 |
 
 Suggested figure-legend line (CC BY 4.0 requires attribution; MIT does not,
