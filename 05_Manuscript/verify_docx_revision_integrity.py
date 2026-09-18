@@ -47,6 +47,7 @@ MOVE_RANGE_TAGS = {Q(W, f"{kind}Range{edge}")
 COMMENT_TAGS = {Q(W, "commentRangeStart"), Q(W, "commentRangeEnd"),
                 Q(W, "commentReference")}
 EXPECTED_AUTHOR = "Liudeng Zhang"
+FINAL_SUPPLEMENT_EDITOR = "new editor 1"
 
 
 @dataclass(frozen=True)
@@ -290,8 +291,12 @@ def revision_noise(path: Path) -> list[str]:
 
 
 def author_integrity(path: Path) -> list[str]:
-    """Require Liudeng Zhang in revision and core document metadata."""
+    """Require the declared authors in revisions and core metadata."""
     errors = []
+    is_manuscript = "Manuscript" in path.name
+    expected_authors = ({EXPECTED_AUTHOR, FINAL_SUPPLEMENT_EDITOR}
+                        if is_manuscript else {EXPECTED_AUTHOR})
+    expected_editor = FINAL_SUPPLEMENT_EDITOR if is_manuscript else EXPECTED_AUTHOR
     with ZipFile(path) as zf:
         for name in zf.namelist():
             if name.endswith(".xml") and b"Claude" in zf.read(name):
@@ -299,17 +304,18 @@ def author_integrity(path: Path) -> list[str]:
         root = etree.fromstring(zf.read("word/document.xml"))
         authors = {node.get(Q(W, "author")) for node in root.iter()
                    if node.tag in REVISION_TAGS and node.get(Q(W, "author"))}
-        if authors and authors != {EXPECTED_AUTHOR}:
+        if authors and authors != expected_authors:
             errors.append(f"{path.name}: revision authors are {sorted(authors)!r}, "
-                          f"expected only {EXPECTED_AUTHOR!r}")
+                          f"expected {sorted(expected_authors)!r}")
         core = etree.fromstring(zf.read("docProps/core.xml"))
         creator = core.find("{http://purl.org/dc/elements/1.1/}creator")
         editor = core.find("{http://schemas.openxmlformats.org/package/2006/metadata/core-properties}lastModifiedBy")
-        for label, node in (("creator", creator), ("lastModifiedBy", editor)):
+        for label, node, expected in (("creator", creator, EXPECTED_AUTHOR),
+                                      ("lastModifiedBy", editor, expected_editor)):
             value = node.text if node is not None else None
-            if value != EXPECTED_AUTHOR:
+            if value != expected:
                 errors.append(f"{path.name}: core {label} is {value!r}, "
-                              f"expected {EXPECTED_AUTHOR!r}")
+                              f"expected {expected!r}")
     return errors
 
 
