@@ -1,0 +1,205 @@
+name: stad_ceacam
+
+# THIS FILE IS HALF AUTHORED AND HALF GENERATED, and the line between them is
+# the "# Added for the revision analyses" marker below. Everything above it is
+# maintained by hand - update_release.py:fix_environment() splits on that
+# marker and re-appends only what follows, so edits above it survive a release
+# rebuild. It is therefore the second authored file in this generated tree,
+# beside README.md; RULES.md's rule that github_repo/ is generated holds for
+# everything else here.
+#
+# WHAT THIS FILE DECLARES, AND WHY IT IS SHAPED THIS WAY. Corrected
+# 2026-10-05, measured against stad_ceacam - the environment every
+# figure in the paper was drawn in.
+#
+# Until that date this block listed thirty-four conda packages, twenty of them
+# at versions that environment never had (python 3.11.14 against 3.10.15,
+# numpy 1.23.5 against 1.26.4, scanpy 1.10.4 against 1.9.6, anndata 0.11.4
+# against 0.10.9, seaborn 0.13.2 against 0.12.2, and fifteen more). The
+# consequence was visible: a clean clone built from the old file redrew Figure
+# 4A with 57.84% of its pixels changed, and seaborn 0.12.2 against 0.13.2 is
+# the reason.
+#
+# Correcting the numbers alone was tried and is impossible. Twenty-six of the
+# thirty-four were installed from PyPI, not conda - numpy, scipy, matplotlib,
+# seaborn, scanpy and anndata, which is the entire analysis stack - and a
+# conda solve for their versions does not exist:
+#
+#     scipy 1.15.3**  does not exist (perhaps a typo or a missing channel)
+#     nothing provides requested loompy 3.0.7**
+#
+# scipy 1.15.3 was never published to conda-forge. So conda declares the
+# interpreter and the eight packages conda really provided, and the stack is a
+# pinned pip layer at the bottom of this file.
+#
+# Every version here is read with importlib.metadata, not from `conda list`,
+# which is stale for at least one package: it reports pillow 11.1.0 for that
+# environment where `import PIL` gives 12.2.0.
+#
+# Built and checked before being written: `conda env create` on this file
+# exits 0, and the environment it produces matches stad_ceacam on all
+# thirty-four packages - 34 identical, 0 different, 0 missing. install.sh's own
+# step 3 cannot establish that, because it compares the built environment
+# against the file it was built from.
+
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  # The interpreter, and the eight packages conda actually provided.
+  - python=3.10.15
+  - pandas=2.3.3
+
+  # Survival analysis
+  - lifelines=0.30.0
+
+  # Image analysis (IHC quantification)
+  - scikit-image=0.24.0
+
+  # SVG/PDF figure assembly
+  - cairosvg=2.8.2
+  - cairocffi=1.7.1
+
+  # pertpy is NOT here: it pulls a jax/chex combination that does not import
+  # alongside this stack. Figure 2F's Milo panel runs in pertpy_milo, which
+  # the Dockerfile builds and _run_all_panels.sh selects.
+
+  # R dependencies (BayesPrism deconvolution)
+  # Install separately: conda create -n r_bayesprism r-base r-data.table
+  # Then install BayesPrism from GitHub:
+  #   devtools::install_github("Danko-Lab/BayesPrism/BayesPrism")
+
+  # Added for the revision analyses
+  - statsmodels=0.14.4          # mixed-effects and mediation models
+  - rpy2=3.5.11                 # MAST differential expression
+  #   These two, and the six in the authored half above, are the only packages
+  #   of the thirty-four this file used to declare that conda actually
+  #   provided in stad_ceacam - the environment every figure in the
+  #   paper was produced in. Measured 2026-10-05. The other twenty-six were
+  #   installed from PyPI and are in the `pip:` block at the end of this file;
+  #   see its header for why they cannot be conda specs at all.
+  #
+  #   scikit-learn, openpyxl, tqdm, h5py, pymupdf, python-docx and anndata2ri
+  #   were declared here until that date. Their reasons move with them and are
+  #   repeated in the pip block: .xlsx clinical tables, direct h5ad and
+  #   count-matrix inspection, fitz for the PDF and annotation checks, and the
+  #   manuscript consistency checks.
+  #
+  #   pymupdf keeps its finding, which is now one of two. 1.26.6 is a version
+  #   conda-forge has NEVER carried - it has 1.25.1-1.25.4, 1.26.0, 1.26.1,
+  #   1.26.7 and up - so `conda env create` ended at that line with
+  #   PackagesNotFoundError and this environment could not be built at all.
+  #   1.25.4 both exists and is what was used. Measured 2026-10-05, and on the
+  #   same day the second half: it was never a conda package here either.
+
+  # 04_Revision_Analyses/11_R1.5_CEACAM_Family_and_
+  # Interactions/scripts/ceacam_family_and_interactions.py imports
+  # cellphonedb.src.core.methods on its first line, so leaving it unlisted
+  # kills that analysis with ModuleNotFoundError in every clean
+  # environment. 5.0.1 is the version it was run at here (the CellPhoneDB v5
+  # release the database zip in 02_External/CellPhoneDB/ belongs to). It goes
+  # in the pip block below, under the same --no-deps rule as cnsplots: it
+  # declares numpy, scanpy, anndata and scikit-learn without upper bounds and
+  # resolving them would move the versions every figure in the paper was
+  # produced at. geosketch and ktplotspy are the only two of its dependencies
+  # missing here and are listed beside it; numpy-groupies, requests and tqdm
+  # are already present.
+
+  # celltypist and pydeseq2 are NOT in this environment. pydeseq2 0.5.4
+  # requires numpy>=2.0.0, and this stack runs on numpy 1.26.4 - measured
+  # 2026-10-05 inside stad_ceacam, which is the environment every
+  # figure in the paper was produced in. Installing them here silently
+  # upgrades numpy and breaks scanpy and anndata for every script. They live
+  # in their own environment; see the Dockerfile.
+  #
+  # Until 2026-10-05 this paragraph said "pinned to numpy 1.23.5, which is the
+  # version every figure in the paper was produced with". 1.23.5 is what the
+  # file PINNED; 1.26.4 is what was INSTALLED, and the two had never been
+  # compared - install.sh checks the built environment against this file, which
+  # it built from this file, so the check could not see it. The argument is
+  # unaffected: 1.26.4 is below 2.0.0 exactly as 1.23.5 is.
+
+  # For the figure restyle: cnsplots supplies the type system
+  # every restyled panel is set in, through 00_Config/panel_style_cns.py. It is
+  # a PyPI package, and so are seven more below.
+  #
+  # THE PIP PACKAGES ARE NOT IN THIS FILE, and that is the whole point.
+  # They have to be installed with --no-deps: cnsplots declares matplotlib,
+  # scanpy, seaborn, numba and numpy without upper bounds, cellphonedb declares
+  # numpy, scanpy, anndata and scikit-learn the same way, and resolving either
+  # would move the versions every figure in the paper was produced at.
+  #
+  # A `pip:` block cannot carry that flag. conda writes the block to a
+  # requirements file and runs `pip install -r`, and --no-deps is not one of the
+  # options a requirements file may hold - measured 2026-10-04, pip answers
+  # `ERROR: Invalid requirement: --no-deps`, exactly as it answers an option
+  # that does not exist, while `--no-index` (one a requirements file DOES allow)
+  # parses. So `conda env create -f environment.yml` failed on this file for as
+  # long as the block was here, and so did the capsule Dockerfile, which runs
+  # the same command. Nobody met it because the environment was built by hand.
+  #
+  # --no-deps IS legal on the pip command line, so that is where it lives now:
+  # install.sh, written by write_install_sh() below, creates the environment
+  # from this file and then runs one pip command inside it. A reader still types
+  # one command. install.sh then checks what the comment here used to assert
+  # without evidence - that no pinned version moved - by reading the five pins
+  # back out of the environment afterwards and refusing if any of them did.
+  - pip
+
+  # -----------------------------------------------------------------------
+  # THE ANALYSIS STACK, AS A PINNED PIP LAYER. Added 2026-10-05.
+  # -----------------------------------------------------------------------
+  # These twenty-six were declared as conda dependencies until that date and
+  # were installed from PyPI in stad_ceacam, the environment every
+  # figure in the paper was drawn in - numpy, scipy, matplotlib, seaborn,
+  # scanpy and anndata among them, which is the whole stack.
+  #
+  # They are here and not above because the all-conda version does not exist.
+  # Writing the used versions as conda specs and running `conda env create`
+  # fails:
+  #
+  #     scipy 1.15.3**  does not exist (perhaps a typo or a missing channel)
+  #     nothing provides requested loompy 3.0.7**
+  #
+  # scipy 1.15.3 was never published to conda-forge. No choice of version
+  # numbers fixes that; the shape of the file has to change.
+  #
+  # Every version is read with importlib.metadata inside that environment, not
+  # from `conda list`, which is stale for at least one of them: it reports
+  # pillow 11.1.0 where `import PIL` gives 12.2.0.
+  #
+  # NO --no-deps here, unlike the packages install.sh installs afterwards.
+  # Those are PyPI-only packages declaring unbounded dependencies, so
+  # resolving them would move this stack. These ARE the stack; all twenty-six
+  # are pinned exactly and pip is left to check them against each other.
+  #
+  # Built and compared before being written: `conda env create` on this file
+  # exits 0, and the environment it produces matches stad_ceacam on
+  # all thirty-four declared packages - 34 identical, 0 different, 0 missing.
+  - pip:
+    - adjusttext==1.3.0
+    - anndata==0.10.9
+    - anndata2ri==1.3.2
+    - arboreto==0.1.6
+    - cellrank==2.0.6
+    - ctxcore==0.2.0
+    - gseapy==1.1.4
+    - h5py==3.16.0              # direct h5ad/count-matrix inspection
+    - loompy==3.0.7
+    - lxml==6.0.2
+    - matplotlib==3.10.5
+    - mudata==0.3.8
+    - networkx==3.4.2
+    - numpy==1.26.4
+    - openpyxl==3.1.5           # clinical tables are .xlsx
+    - pillow==12.2.0
+    - pymupdf==1.25.4           # imported as fitz by PDF/annotation checks
+    - pyscenic==0.12.1
+    - python-docx==1.2.0        # manuscript consistency checks
+    - pyyaml==6.0.3
+    - scanpy==1.9.6
+    - scikit-learn==1.7.2
+    - scipy==1.15.3
+    - seaborn==0.12.2
+    - setuptools==82.0.1
+    - tqdm==4.68.3

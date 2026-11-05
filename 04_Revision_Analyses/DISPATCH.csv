@@ -1,0 +1,26 @@
+order,module,unit,interpreter,env,condition,status,reason
+1,02_R1.3_TwoSided_Stats_Sweep,scripts/run_twosided_sweep.py,python,stad_ceacam,,run,
+2,03_R1.4_MP_Direction_PrePost,scripts/mp_direction_and_prepost.py,python,stad_ceacam,,run,
+3,03_R1.4_MP_Direction_PrePost,scripts/mp_external_validation.py,python,stad_ceacam,,run,
+4,04_R1.5_CEACAM5_vs_CEACAM6,scripts/ceacam5_vs_ceacam6.py,python,stad_ceacam,,run,
+5,04_R1.5_CEACAM5_vs_CEACAM6,scripts/dropout_and_coexpression.py,python,stad_ceacam,,run,
+6,05_R1.6_Spatial_Confounders,scripts/tcga_immune_exclusion.py,python,stad_ceacam,,run,
+8,05_R1.6_Spatial_Confounders,scripts/tcga_histology_sensitivity.py,python,stad_ceacam,,run,
+9,05_R1.6_Spatial_Confounders,scripts/spatial_confounders.py,python,stad_ceacam,,run,
+10,05_R1.6_Spatial_Confounders,scripts/spatial_distance_map.py,python,stad_ceacam,,run,
+11,05_R1.6_Spatial_Confounders,scripts/spatial_sample_level.py,python,stad_ceacam,,run,
+12,06_R1.7_MoMac_Lineage_Markers,scripts/momac_lineage.py,python,stad_ceacam,STAD_RUN_PREPARATION,run,preparation/reference-only; the approved lineage-score tables ship in this repository and a recompute from the public object would move them
+13,07_R1.8_NFkB_Specificity,scripts/nfkb_regulon_activity.py,python,stad_ceacam,,run,
+14,07_R1.8_NFkB_Specificity,scripts/nfkb_specificity.py,python,stad_ceacam,,run,
+15,08_R2.1_PreTx_Inflammatory,scripts/pretreatment_inflammatory.py,python,stad_ceacam,,run,
+16,09_R2.2_Adaptive_Immune,scripts/adaptive_immune_resource.py,python,stad_ceacam,,run,
+17,10_R1.3_CrossCohort_Convergence,scripts/run_convergence.py,python,stad_ceacam,,run,
+18,12_R1.8_DEG_Recompute,work/launch_all.sh,bash,,,skip,not dispatched: a 26-job MAST recompute that needs a sibling of the project root and whose output ships in this repository
+19,13_R1.8_Neutrophil_Rebuilt_Recompute,scripts/count_nfkb_claims.py,python,,,skip,not dispatched: gsea_13types and nfkb_per_celltype_sound13.csv ship in this repository and Figure 5F reads the latter
+20,13_R1.8_Neutrophil_Rebuilt_Recompute,scripts/merge_thirteen.sh,bash,,,skip,not dispatched: gsea_13types ships in this repository; the script is the record of how it was built
+21,13_R1.8_Neutrophil_Rebuilt_Recompute,scripts/recompute_deg_neutrophils.py,python,,,skip,not dispatched: gsea_13types and nfkb_per_celltype_sound13.csv ship in this repository and Figure 5F reads the latter
+22,13_R1.8_Neutrophil_Rebuilt_Recompute,scripts/run.sh,bash,,,skip,not dispatched: its ENV_LIB is an absolute path on the author's machine and its output ships in this repository
+23,18_BayesPrism_Deconvolution,scripts/prepare_inputs.py,python,,,skip,not dispatched: BayesPrism takes hours and is not seeded; its outputs ship in this repository and the panels read them
+24,18_BayesPrism_Deconvolution,scripts/run_tcga.R,Rscript,,,skip,not dispatched: BayesPrism takes hours and is not seeded; its outputs ship in this repository and the panels read them
+25,18_BayesPrism_Deconvolution,scripts/run_prjeb25780.R,Rscript,,,skip,not dispatched: BayesPrism takes hours and is not seeded; its outputs ship in this repository and the panels read them
+26,18_BayesPrism_Deconvolution,scripts/finalise_outputs.py,python,,,skip,not dispatched: BayesPrism takes hours and is not seeded; its outputs ship in this repository and the panels read them

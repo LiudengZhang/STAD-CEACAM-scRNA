@@ -1,0 +1,21 @@
+# Python and R
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.Rhistory
+
+# Data, deposited on Zenodo
+*.h5ad
+*.svs
+*.tiff
+01_Raw_Inputs/**
+02_Preparation_for_Panels/**
+
+# Run outputs
+*.png
+*.svg
+*.pdf
+*.log
+*.rnk
+03_Final_Panels/**/data/
+04_Revision_Analyses/*/outputs/

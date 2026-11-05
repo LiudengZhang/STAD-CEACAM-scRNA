@@ -1,0 +1,20 @@
+Patient ID,Sample,Treatment phase,R/NR Grouping,paired_with_other_timepoint,regimen
+P1,P01-P2,Post,NR,True,Neoadjuvant (mFOLFOX6+ICIs)*4
+P14,P14-P2,Post,NR,False,Neoadjuvant (mFOLFOX6+ICIs)*2
+P23,P23-P2,Post,NR,False,Neoadjuvant (mFOLFOX6+ICIs)*3
+P24,P24-P2,Post,NR,False,Neoadjuvant (SOX+ICIs)*3
+P34,P34-P2,Post,NR,False,Neoadjuvant (SOX+ICIs)*3
+P6,P06-P2,Post,NR,False,Neoadjuvant (mFOLFOX6+ICIs)*3
+P10,P10-P2,Post,R,False,Neoadjuvant (mFOLFOX6+ICIs)*3
+P11,P11-P2,Post,R,False,Neoadjuvant (SOX+ICIs)*6
+P12,P12-P2,Post,R,False,Neoadjuvant (mFOLFOX6+ICIs)*3
+P13,P13-P2,Post,R,False,Neoadjuvant (SOX+ICIs)*3
+P5,P05-P2,Post,R,False,"Neoadjuvant SOX*5, (NIPS+ICIs)*3"
+P1,P01-P1,Pre,NR,True,Neoadjuvant (mFOLFOX6+ICIs)
+P2,P02-P1,Pre,NR,False,Neoadjuvant (SOX+ICIs)*1
+P25,P25-P1,Pre,NR,False,Neoadjuvant (SOX+ICIs)*3
+P26,P26-P1,Pre,NR,False,Neoadjuvant (SOX+ICIs)*3
+P21,P21-P1,Pre,R,False,Neoadjuvant (SOX+ICIs)*3
+P22,P22-P1,Pre,R,False,Neoadjuvant (SOX+ICIs)*3
+P3,P03-P1,Pre,R,False,Neoadjuvant (SOX+ICIs)*3
+P4,P04-P1,Pre,R,False,Neoadjuvant (mFOLFOX6+ICIs)*3

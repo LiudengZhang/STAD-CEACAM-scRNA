@@ -1,0 +1,93 @@
+figure,printed_panel,size_pt,weight,font,x_mm,y_mm,cell_w_mm,cell_h_mm
+Figure 1,A,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+Figure 1,B,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+Figure 1,C,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+Figure 2,D,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+Figure 2,F,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+Figure 2,B,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+Figure 2,A,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+Figure 2,E,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+Figure 2,C,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+Figure 2,G,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+Figure 2,I,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+Figure 2,H,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+Figure 2,J,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+Figure 2,K,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+Figure 2,L,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+Figure 2,M,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+Figure 2,N,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+Figure 3,A,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+Figure 3,D,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+Figure 3,C,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+Figure 3,B,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+Figure 3,E,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+Figure 3,J,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+Figure 3,H,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+Figure 3,I,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+Figure 3,F,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+Figure 3,G,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+Figure 3,K,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+Figure 3,L,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+Figure 3,M,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+Figure 3,N,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+Figure 4,A,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+Figure 4,B,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+Figure 4,C,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+Figure 4,E,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+Figure 4,H,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+Figure 4,G,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+Figure 4,D,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+Figure 4,F,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+Figure 5,A,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+Figure 5,B,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+Figure 5,C,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+Figure 5,D,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+Figure 5,H,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+Figure 5,G,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+Figure 5,F,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+Figure 5,E,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+Figure 5,I,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+Figure 5,J,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+Figure 5,K,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+Figure 5,L,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+Figure 5,M,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+Figure 5,N,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+S1_QC_Annotation,A,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+S1_QC_Annotation,B,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+S1_QC_Annotation,C,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+S1_QC_Annotation,D,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+S1_QC_Annotation,E,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+S1_QC_Annotation,G,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+S1_QC_Annotation,F,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+S1_QC_Annotation,H,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+S2_CEACAM_Metaprogram_Validation,A,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+S2_CEACAM_Metaprogram_Validation,C,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+S2_CEACAM_Metaprogram_Validation,D,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+S2_CEACAM_Metaprogram_Validation,B,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+S2_CEACAM_Metaprogram_Validation,E,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+S2_CEACAM_Metaprogram_Validation,G,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+S2_CEACAM_Metaprogram_Validation,F,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+S3_CD8_TCells,A,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+S3_CD8_TCells,B,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+S3_CD8_TCells,C,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+S3_CD8_TCells,D,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+S4_Spatial_Validation,A,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+S4_Spatial_Validation,B,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+S4_Spatial_Validation,C,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+S4_Spatial_Validation,D,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+S4_Spatial_Validation,E,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+S4_Spatial_Validation,F,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+S5_Immune_Modules,A,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+S5_Immune_Modules,B,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+S5_Immune_Modules,C,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+S5_Immune_Modules,E,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+S5_Immune_Modules,D,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+S6_CD274_Remaining,A,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+S6_CD274_Remaining,B,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+S6_CD274_Remaining,C,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+S6_CD274_Remaining,D,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+S6_CD274_Remaining,E,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+S6_CD274_Remaining,I,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+S6_CD274_Remaining,F,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+S6_CD274_Remaining,G,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850
+S6_CD274_Remaining,H,10.0000,bold,Arial-BoldMT,0.000,2.790,2.870,3.850

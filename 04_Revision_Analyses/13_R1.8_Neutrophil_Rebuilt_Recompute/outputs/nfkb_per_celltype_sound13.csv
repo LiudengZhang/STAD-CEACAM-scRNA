@@ -1,0 +1,53 @@
+method,phase,cell_type,term,nes,nom_p,fdr_q,rank,n_sets,sets_outranking_it
+mast,post,B_cells,TNF-alpha Signaling via NF-kB,-1.784812593321813,0.0,0.0042226071892594,38,38,Oxidative Phosphorylation; Apical Junction; Interferon Alpha Response; Myc Targets V1; Complement
+ttest,post,B_cells,TNF-alpha Signaling via NF-kB,-1.2250325374702604,0.1993127147766323,1.0,38,38,Complement; Epithelial Mesenchymal Transition; IL-6/JAK/STAT3 Signaling; Apical Junction; Fatty Acid Metabolism
+mast,pre,B_cells,TNF-alpha Signaling via NF-kB,-1.6482886099430654,0.0,0.0,40,40,Oxidative Phosphorylation; Apical Junction; Myc Targets V1; Allograft Rejection; Androgen Response
+ttest,pre,B_cells,TNF-alpha Signaling via NF-kB,1.1589297129599767,0.1891592920353982,0.6917693814076719,10,40,Epithelial Mesenchymal Transition; Glycolysis; Inflammatory Response; Hypoxia; p53 Pathway
+mast,post,DC_cells,TNF-alpha Signaling via NF-kB,-1.3089389567399812,0.0802469135802469,0.6226513667319712,41,45,Protein Secretion; Oxidative Phosphorylation; Fatty Acid Metabolism; Complement; Mitotic Spindle
+ttest,post,DC_cells,TNF-alpha Signaling via NF-kB,1.6907379193871164,0.0,0.0517385645221271,2,45,Epithelial Mesenchymal Transition
+mast,pre,DC_cells,TNF-alpha Signaling via NF-kB,-1.850114619137375,0.0,0.0,47,47,Oxidative Phosphorylation; Protein Secretion; Myc Targets V1; Fatty Acid Metabolism; E2F Targets
+ttest,pre,DC_cells,TNF-alpha Signaling via NF-kB,-0.7592577680614042,0.9447236180904522,1.0,5,47,Glycolysis; Hypoxia; KRAS Signaling Up; Myc Targets V2
+mast,post,Endothelial_cells,TNF-alpha Signaling via NF-kB,-1.1645786872831678,0.2925696594427244,0.6181176754862873,32,46,Glycolysis; Protein Secretion; Apical Junction; Myc Targets V1; Myc Targets V2
+ttest,post,Endothelial_cells,TNF-alpha Signaling via NF-kB,1.2457532556333186,0.1787878787878788,1.0,2,46,Epithelial Mesenchymal Transition
+mast,pre,Endothelial_cells,TNF-alpha Signaling via NF-kB,-1.444516215242193,0.0199004975124378,0.4317420589642607,48,48,Protein Secretion; Fatty Acid Metabolism; Oxidative Phosphorylation; Glycolysis; G2-M Checkpoint
+ttest,pre,Endothelial_cells,TNF-alpha Signaling via NF-kB,2.0068181403176366,0.0,0.0,1,48,
+mast,post,Epithelial,TNF-alpha Signaling via NF-kB,-1.3428522910088585,0.0460122699386503,0.3630765164530197,38,42,Myc Targets V1; Interferon Alpha Response; Interferon Gamma Response; Complement; Allograft Rejection
+ttest,post,Epithelial,TNF-alpha Signaling via NF-kB,1.9003179569875683,0.0,0.0,1,42,
+mast,pre,Epithelial,TNF-alpha Signaling via NF-kB,-1.6251654995970612,0.0,0.0,43,43,Myc Targets V1; Oxidative Phosphorylation; Protein Secretion; Myc Targets V2; Spermatogenesis
+ttest,pre,Epithelial,TNF-alpha Signaling via NF-kB,-0.918560626601446,0.6240963855421687,0.7923317907653911,28,43,Interferon Gamma Response; Interferon Alpha Response; UV Response Dn; Unfolded Protein Response; Inflammatory Response
+mast,post,Fibroblast,TNF-alpha Signaling via NF-kB,0.820217884700618,0.7511961722488039,0.9558117195004804,16,49,Angiogenesis; Protein Secretion; Androgen Response; Estrogen Response Early; Interferon Gamma Response
+ttest,post,Fibroblast,TNF-alpha Signaling via NF-kB,1.6017596791091258,0.0,0.0,1,49,
+mast,pre,Fibroblast,TNF-alpha Signaling via NF-kB,-1.442908611612228,0.0064308681672025,0.4507374631268436,49,49,Angiogenesis; Protein Secretion; UV Response Dn; Notch Signaling; Inflammatory Response
+ttest,pre,Fibroblast,TNF-alpha Signaling via NF-kB,-1.2501931581110088,0.017,0.9324404945586208,47,49,Myc Targets V2; KRAS Signaling Dn; Protein Secretion; Reactive Oxygen Species Pathway; Bile Acid Metabolism
+mast,post,Mast_cells,TNF-alpha Signaling via NF-kB,-1.7477655030367103,0.0,0.0,40,40,Interferon Alpha Response; DNA Repair; Protein Secretion; Mitotic Spindle; Oxidative Phosphorylation
+ttest,post,Mast_cells,TNF-alpha Signaling via NF-kB,1.375037662526419,0.0196353436185133,0.5033341929779317,3,40,Fatty Acid Metabolism; UV Response Up
+mast,pre,Mast_cells,TNF-alpha Signaling via NF-kB,-1.5073310661512929,0.0,0.0,40,40,Oxidative Phosphorylation; Protein Secretion; Myc Targets V1; Pperoxisome; Fatty Acid Metabolism
+ttest,pre,Mast_cells,TNF-alpha Signaling via NF-kB,-1.5143536700776807,0.0,0.0123631680618158,40,40,Protein Secretion; Pperoxisome; DNA Repair; Myc Targets V1; E2F Targets
+mast,post,MoMac,TNF-alpha Signaling via NF-kB,0.8917187133395901,0.6489563567362429,0.8958845642518976,17,43,Estrogen Response Late; Complement; IL-6/JAK/STAT3 Signaling; Epithelial Mesenchymal Transition; Glycolysis
+ttest,post,MoMac,TNF-alpha Signaling via NF-kB,2.2283340056431222,0.0,0.0,1,43,
+mast,pre,MoMac,TNF-alpha Signaling via NF-kB,-1.5403733193020568,0.0,0.0010351609675304,45,45,Oxidative Phosphorylation; Protein Secretion; Glycolysis; Myc Targets V1; Fatty Acid Metabolism
+ttest,pre,MoMac,TNF-alpha Signaling via NF-kB,-1.001138034142407,0.5116044399596368,0.8924723127788953,21,45,Myc Targets V2; Protein Secretion; Androgen Response; Glycolysis; UV Response Dn
+mast,post,NK_cells,TNF-alpha Signaling via NF-kB,-1.785632143133624,0.0,0.0,39,39,Interferon Alpha Response; Oxidative Phosphorylation; Interferon Gamma Response; Apical Junction; Xenobiotic Metabolism
+ttest,post,NK_cells,TNF-alpha Signaling via NF-kB,1.1588285175859845,0.2211328976034858,0.9250016751380792,9,39,Myogenesis; Fatty Acid Metabolism; Coagulation; Apoptosis; Complement
+mast,pre,NK_cells,TNF-alpha Signaling via NF-kB,-1.5889997369525135,0.0,0.0,39,39,Oxidative Phosphorylation; Protein Secretion; Myc Targets V1; Fatty Acid Metabolism; Interferon Alpha Response
+ttest,pre,NK_cells,TNF-alpha Signaling via NF-kB,1.696672267995732,0.0,0.0474345691247353,1,39,
+mast,post,Neutrophils,TNF-alpha Signaling via NF-kB,-1.2250322411535337,0.1342685370741483,0.5396021182195505,22,26,Complement; Interferon Gamma Response; G2-M Checkpoint; Myc Targets V1; Interferon Alpha Response
+ttest,post,Neutrophils,TNF-alpha Signaling via NF-kB,1.3166519123518958,0.0512445095168374,0.2460688672101207,7,26,IL-2/STAT5 Signaling; Inflammatory Response; Epithelial Mesenchymal Transition; Complement; IL-6/JAK/STAT3 Signaling
+mast,pre,Neutrophils,TNF-alpha Signaling via NF-kB,-1.5587204025499168,0.0,0.407944176060118,34,34,Myc Targets V1; Oxidative Phosphorylation; Protein Secretion; p53 Pathway; mTORC1 Signaling
+ttest,pre,Neutrophils,TNF-alpha Signaling via NF-kB,-1.2524210666008162,0.037,1.0,34,34,Protein Secretion; Glycolysis; PI3K/AKT/mTOR  Signaling; Androgen Response; Oxidative Phosphorylation
+mast,post,Pericyte,TNF-alpha Signaling via NF-kB,-0.5887674758818022,0.9954545454545456,1.0,15,49,Angiogenesis; Coagulation; Inflammatory Response; Epithelial Mesenchymal Transition; Complement
+ttest,post,Pericyte,TNF-alpha Signaling via NF-kB,0.909951680001516,0.6399026763990268,0.8079966045613215,30,49,Epithelial Mesenchymal Transition; Angiogenesis; UV Response Dn; Hypoxia; Complement
+mast,pre,Pericyte,TNF-alpha Signaling via NF-kB,-1.4239953936661265,0.1241379310344827,1.0,46,49,Oxidative Phosphorylation; Spermatogenesis; Fatty Acid Metabolism; Estrogen Response Late; Protein Secretion
+ttest,pre,Pericyte,TNF-alpha Signaling via NF-kB,-1.3369771175980705,0.0,0.0728250285762668,45,49,KRAS Signaling Up; KRAS Signaling Dn; Spermatogenesis; UV Response Dn; Apoptosis
+mast,post,Plasma_cells,TNF-alpha Signaling via NF-kB,-1.440267445524558,0.0049079754601227,0.219227635652599,41,41,Interferon Alpha Response; Coagulation; Protein Secretion; Oxidative Phosphorylation; Interferon Gamma Response
+ttest,post,Plasma_cells,TNF-alpha Signaling via NF-kB,1.385684676349474,0.0024813895781637,0.2022351767887069,3,41,Myogenesis; Myc Targets V2
+mast,pre,Plasma_cells,TNF-alpha Signaling via NF-kB,-1.4710817239009826,0.0,0.0027979142820806,41,41,Oxidative Phosphorylation; Protein Secretion; Androgen Response; DNA Repair; Pperoxisome
+ttest,pre,Plasma_cells,TNF-alpha Signaling via NF-kB,-1.2008940343486234,0.2181208053691275,1.0,38,41,Glycolysis; PI3K/AKT/mTOR  Signaling; Oxidative Phosphorylation; KRAS Signaling Up; Mitotic Spindle
+mast,post,TCD4_cells,TNF-alpha Signaling via NF-kB,-1.6248718861509377,0.0,0.0,39,39,Interferon Alpha Response; Oxidative Phosphorylation; Xenobiotic Metabolism; Protein Secretion; Pperoxisome
+ttest,post,TCD4_cells,TNF-alpha Signaling via NF-kB,1.1690295765047647,0.2200956937799043,0.801828870019595,10,39,Fatty Acid Metabolism; Complement; Epithelial Mesenchymal Transition; IL-2/STAT5 Signaling; Apoptosis
+mast,pre,TCD4_cells,TNF-alpha Signaling via NF-kB,-1.572463129029965,0.0,0.0,41,41,Oxidative Phosphorylation; Protein Secretion; Apical Junction; Pperoxisome; Myc Targets V1
+ttest,pre,TCD4_cells,TNF-alpha Signaling via NF-kB,1.7489944064675536,0.0,0.0708671562942919,1,41,
+mast,post,TCD8_cells,TNF-alpha Signaling via NF-kB,-1.644682260838071,0.0,0.0,38,38,Interferon Alpha Response; Xenobiotic Metabolism; Protein Secretion; Oxidative Phosphorylation; Allograft Rejection
+ttest,post,TCD8_cells,TNF-alpha Signaling via NF-kB,1.125536646300778,0.2895299145299145,1.0,9,38,Fatty Acid Metabolism; Apoptosis; IL-2/STAT5 Signaling; p53 Pathway; Estrogen Response Early
+mast,pre,TCD8_cells,TNF-alpha Signaling via NF-kB,-1.5499256569392967,0.0,0.0,39,39,Oxidative Phosphorylation; Apical Junction; Protein Secretion; Interferon Alpha Response; Allograft Rejection
+ttest,pre,TCD8_cells,TNF-alpha Signaling via NF-kB,1.6928389282148293,0.0059970014992503,0.0155923770601039,1,39,
